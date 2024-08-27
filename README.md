@@ -1,21 +1,41 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop.
+# Capsulate
 
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
+Kotlin Multiplatform project to create, edit and lint ELTE special code blocks
 
-* `/iosApp` contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform, 
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
-
+## Platform
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
 [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
 [Kotlin/Wasm](https://kotl.in/wasm/)…
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [GitHub](https://github.com/JetBrains/compose-multiplatform/issues).
+### Gradle tasks
 
-You can open the web application by running the `:composeApp:wasmJsBrowserDevelopmentRun` Gradle task.
+#### Web: 
+
+> `:composeApp:wasmJsBrowserDevelopmentRun`
+
+## State
+
+### TODOs
+
+- Finish class definitions
+  - representation & `show()` functions
+- Drag & Drop 
+  - with drop-zones
+  - borders adjusts
+  - transfer animated
+- Create prototype language
+  - AST + Parse
+  - Interpreter + Quick run
+- Serialization
+- Export into image
+- [Test android & IOS](https://maestro.mobile.dev/)
+
+
+### Ideas
+
+- [LatexView with Katex and WebView()](https://github.com/judemanutd/KaTeXView)
+- Export into vector, html embed, LaTex?
+- System colors, where totally unconventional
+  - `kreadconfig6 --group Colors:Button --key ForegroundActive` plasma only way 
+  - Might be an `xdg` solution for a more general approach on linux

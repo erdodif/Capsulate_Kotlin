@@ -1,7 +1,8 @@
 package com.erdodif.capsulate
 
-class WasmPlatform: Platform {
-    override val name: String = "Web with Kotlin/Wasm"
-}
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 
-actual fun getPlatform(): Platform = WasmPlatform()
+@Composable
+actual fun resolveColors(): ColorScheme = MaterialTheme.colorScheme

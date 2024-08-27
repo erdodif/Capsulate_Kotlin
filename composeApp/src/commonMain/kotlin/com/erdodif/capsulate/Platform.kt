@@ -1,7 +1,6 @@
 package com.erdodif.capsulate
 
-interface Platform {
-    val name: String
-}
+import androidx.compose.material3.ColorScheme
+import androidx.compose.runtime.Composable
 
-expect fun getPlatform(): Platform
+@Composable expect fun resolveColors(): ColorScheme
