@@ -1,16 +1,21 @@
-package com.erdodif.capsulate.Structogram
+package com.erdodif.capsulate.structogram
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.Structogram.Statements.Statement
-import com.erdodif.capsulate.Structogram.Statements.StatementList
+import com.erdodif.capsulate.structogram.composables.HorizontalBorder
+import com.erdodif.capsulate.structogram.composables.StackWithSeparator
+import com.erdodif.capsulate.structogram.composables.Theme
+import com.erdodif.capsulate.structogram.statements.Statement
+import com.erdodif.capsulate.structogram.statements.StatementList
 
 class Structogram {
     var statements: StatementList
@@ -25,10 +30,11 @@ class Structogram {
 
     @Composable
     fun content(modifier: Modifier = Modifier) =
-        Column(modifier.width(IntrinsicSize.Min).border(3.dp, MaterialTheme.colorScheme.onPrimary)) {
-            for (statement in statements) {
-                statement.show(Modifier.fillMaxWidth())
-            }
+        Column(modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor).padding(Theme.borderWidth, 0.dp)) {
+            Spacer(Modifier.height(Theme.borderWidth))
+            StackWithSeparator(
+                statements,
+                { it.show(Modifier.fillMaxWidth()) }) { HorizontalBorder() }
         }
 
     companion object {

@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.Composables
+package com.erdodif.capsulate.composables
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
