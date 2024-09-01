@@ -7,7 +7,7 @@ val anyChar: Parser<Char> = {
         fail("Can't mach any char, EOF reached")
     } else {
         position++
-        pass(input[position -1])
+        pass(input[position - 1])
     }
 }
 
@@ -19,10 +19,10 @@ inline fun char(char: Char): Parser<Char> = {
         fail("Can't match for ${char}, EOF reached")
     } else {
         position += 1
-        if (input[position -1] == char) {
-            pass(input[position-1])
+        if (input[position - 1] == char) {
+            pass(input[position - 1])
         } else {
-            fail("Expected '$char', but got'${input[position-1]}'")
+            fail("Expected '$char', but got'${input[position - 1]}'")
         }
     }
 }
@@ -31,7 +31,7 @@ inline fun char(char: Char): Parser<Char> = {
  * Matches the given [string]
  */
 inline fun string(string: String): Parser<String> = {
-    if (position + string.length >= input.length) {
+    if (position + string.length > input.length) {
         fail("EOF reached")
     } else {
         var i = 0
@@ -40,9 +40,13 @@ inline fun string(string: String): Parser<String> = {
         }
         position += i
         if (i < string.length) {
-            fail("Expected '${string[i]}' in word \"${string}\"(index: $i), but found '${input[position + i]}'")
+            fail("Expected '${string[i]}' in word \"${string}\"(index: $i), but found '${input[position]}'")
         } else {
-            pass(string)
+            if (input.length <= position || input[position] in reservedChars) {
+                pass(string)
+            } else {
+                fail("String '${string}' isn't over yet (found '${input[position]}')")
+            }
         }
     }
 }
@@ -232,14 +236,16 @@ inline fun <reified T> between(
 inline fun <reified T> exactly(n: Int, crossinline parser: Parser<T>): Parser<Array<T>> = {
     val matches = arrayOfNulls<T>(n)
     var match: ParserResult<T>
-    var count = -1
+    var index = 0
     do {
-        count++
         match = parser()
-        if (match is Pass) matches[count] = (match.value)
-    } while (match is Pass && count != n)
-    if (matches.count() < n) {
-        fail("Attempt ${count}/$n [exact] failed with the error: (${(match as Fail).reason})")
+        if (match is Pass){
+            matches[index] = (match.value)
+            index++
+        }
+    } while (match is Pass && index != n)
+    if (index < n) {
+        fail("Attempt ${index + 1}/$n [exact] failed with the error: (${(match as Fail).reason})")
     } else {
         @Suppress("UNCHECKED_CAST") pass(matches as Array<T>)
     }
@@ -328,21 +334,19 @@ inline fun <reified T> delimited(
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainr1(value: Parser<T>,func: Parser<(T, T) -> T>): Parser<T> ={
+fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = {
     val resultFirst: ParserResult<T> = value()
-    if( resultFirst is Fail<*>){
+    if (resultFirst is Fail<*>) {
         resultFirst.into()
-    }
-    else{
+    } else {
         val resultValue: T = (resultFirst as Pass).value
         orEither(
             {
-                val resFunc: ParserResult<(T,T)->T> = func()
-                val resrec = chainr1(value,func)()
-                if(resFunc is Pass && resrec is Pass){
+                val resFunc: ParserResult<(T, T) -> T> = func()
+                val resrec = chainr1(value, func)()
+                if (resFunc is Pass && resrec is Pass) {
                     pass(resFunc.value(resultValue, resrec.value))
-                }
-                else{
+                } else {
                     fail("")
                 }
             },
@@ -357,15 +361,15 @@ fun <T> chainr1(value: Parser<T>,func: Parser<(T, T) -> T>): Parser<T> ={
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainl1(value: Parser<T>,func: Parser<(T, T) -> T>): Parser<T> = TODO()
+fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = TODO()
 
 // NEEDS TO BE CHECKED TODO
-fun <T> rightAssoc(func: (T,T)-> T, parser: Parser<T>, separator : Parser<*>) : Parser<T> =
+fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
     chainr1(parser, left({ pass(func) }, separator))
 
-fun <T> leftAssoc(func: (T,T)-> T, parser: Parser<T>, separator : Parser<*>) : Parser<T> = TODO()
+fun <T> leftAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> = TODO()
 
-fun <T> nonAssoc(func: (T,T)-> T, parser: Parser<T>, separator : Parser<*>) : Parser<T> = TODO()
+fun <T> nonAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> = TODO()
 
 /**
  * Asserts the parser does match the whole input file

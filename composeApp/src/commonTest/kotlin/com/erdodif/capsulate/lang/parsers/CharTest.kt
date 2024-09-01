@@ -1,0 +1,71 @@
+package com.erdodif.capsulate.lang.parsers
+
+import com.erdodif.capsulate.assertFail
+import com.erdodif.capsulate.assertPass
+import com.erdodif.capsulate.assertValue
+import com.erdodif.capsulate.lang.ParserState
+import com.erdodif.capsulate.lang.char
+import com.erdodif.capsulate.lang.digit
+import com.erdodif.capsulate.lang.satisfy
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class CharTest {
+    @Test
+    fun char_match_single_character() = assertPass(
+        ParserState("c").run { char('c')() }
+    )
+
+    @Test
+    fun char_returns_single_character() = assertValue('c',
+        ParserState("c").run { char('c')() }
+    )
+
+    @Test
+    fun char_fails_empty_string_run() = assertFail(ParserState("").run { (char('c')()) })
+
+    @Test
+    fun char_fails_empty_string_parse() = assertFail(ParserState("").parse(char('c')))
+
+    @Test
+    fun digit_pass() {
+        assertValue(0, ParserState("0").parse(digit))
+        assertValue(1, ParserState("1").parse(digit))
+        assertValue(2, ParserState("2").parse(digit))
+        assertValue(3, ParserState("3").parse(digit))
+        assertValue(4, ParserState("4").parse(digit))
+        assertValue(5, ParserState("5").parse(digit))
+        assertValue(6, ParserState("6").parse(digit))
+        assertValue(7, ParserState("7").parse(digit))
+        assertValue(8, ParserState("8").parse(digit))
+        assertValue(9, ParserState("9").parse(digit))
+    }
+
+    @Test
+    fun digit_fail() {
+        assertFail(ParserState("a").parse(digit))
+        assertFail(ParserState("_").parse(digit))
+        assertFail(ParserState("").parse(digit))
+    }
+
+    @Test
+    fun satisfy_pass_true() {
+        assertPass(ParserState("c").parse(satisfy { true }))
+        assertPass(ParserState(".").parse(satisfy { true }))
+    }
+
+    @Test
+    fun satisfy_fail_true_empty() =
+        assertFail(ParserState("").parse(satisfy { true }))
+
+    @Test
+    fun satisfy_fail_false() =
+        assertFail(ParserState("c").parse(satisfy { false }))
+
+    @Test
+    fun satisfy_pass_func() = assertPass(ParserState("c").parse(satisfy {
+        assertEquals('c', it)
+        true
+    }))
+}
