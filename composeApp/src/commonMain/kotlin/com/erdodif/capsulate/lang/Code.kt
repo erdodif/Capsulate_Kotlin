@@ -79,7 +79,9 @@ val defaultCodeHighLight = CodeHighlight.Builder {
 fun Code(code: String, modifier: Modifier = Modifier) {
     defaultCodeHighLight.apply {
         Text(code, color = Color.Gray)
-        val result: ParserResult<ArrayList<Exp>> = ParserState(code).run{ topLevel(many(pExp))() }
+        val result: ParserResult<ArrayList<Exp>> = ParserState(code).run{
+            topLevel(right(many(whiteSpace),many(pAtom)))()
+        }
         if(result is Fail<*>){
             Text(result.reason, color = Color.Red)
             return

@@ -70,11 +70,6 @@ class QuantityTest {
     )
 
     @Test
-    fun between_fail_much() = assertFail(
-        ParserState("ccccr").parse(between(2,3,char('c')))
-    )
-
-    @Test
     fun between_pass_reset(){
         val state = ParserState("cccrr")
         val result = state.parse(between(2,4,char('c')))
@@ -109,7 +104,7 @@ class QuantityTest {
         result as Pass
         assertEquals(2, result.value.size)
         assertEquals('c', result.value[1])
-        assertEquals(3, state.position)
+        assertEquals(2, state.position)
     }
 
 }

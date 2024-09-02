@@ -104,13 +104,29 @@ inline fun <reified T> many(crossinline parser: Parser<T>): Parser<ArrayList<T>>
 }
 
 /**
+ * Inverts the outcome of the match
+ *
+ * On [parser] fail, the state's position is reset
+ */
+inline fun <T> not(crossinline parser: Parser<T>): Parser<Unit> = {
+    val pos = position
+    val result: ParserResult<T> = parser()
+    if (result is Pass) {
+        fail("Expected to not match ${result.value}, but did happen")
+    } else {
+        position = pos
+        pass
+    }
+}
+
+/**
  * Tries to match the first one at first, and returns the second try on fail
  */
 inline fun <T, R> or(
     crossinline parser1: Parser<T>, crossinline parser2: Parser<R>
 ): Parser<Either<T, R>> = {
-    val result1 = parser1()
     val pos = position
+    val result1 = parser1()
     if (result1 is Pass) {
         pass(Left(result1.value))
     } else {
@@ -142,15 +158,20 @@ inline fun <T> orEither(
 /**
  * Matches both the given parsers in order
  */
-inline fun <T, R> both(
+inline fun <T, R> and(
     crossinline parser1: Parser<T>, crossinline parser2: Parser<R>
 ): Parser<Pair<T, R>> = {
     val result1 = parser1()
-    val result2 = parser2()
-    when {
-        result1 is Fail -> result1.into()
-        result2 is Fail -> result2.into()
-        else -> pass(Pair((result1 as Pass<T>).value, (result2 as Pass<R>).value))
+    if(result1 is Fail){
+        result1.into()
+    }else{
+        val result2 = parser2()
+        if(result2 is Fail){
+            result2.into()
+        }
+        else{
+            pass(Pair((result1 as Pass<T>).value, (result2 as Pass<R>).value))
+        }
     }
 }
 
@@ -212,17 +233,20 @@ inline fun <reified T> between(
     require(min <= max)
     val matches = ArrayList<T>()
     var match: ParserResult<T>
-    var count = -1
+    var index = 0
     var pos: Int
     do {
         pos = position
-        count++
         match = parser()
-        if (match is Pass) matches.add(match.value)
-    } while (match is Pass && count < max)
-    position = pos
-    if (matches.count() < min) {
-        fail("Attempt ${count}/$min [max:$max] failed with the error: (${(match as Fail).reason})")
+        if (match is Pass) {
+            matches.add(match.value)
+            index++
+        } else {
+            position = pos
+        }
+    } while (match is Pass && index < max)
+    if (index < min) {
+        fail("Attempt ${index}/$min [max:$max] failed with the error: (${(match as Fail).reason})")
     } else {
         pass(matches.toTypedArray())
     }
@@ -239,7 +263,7 @@ inline fun <reified T> exactly(n: Int, crossinline parser: Parser<T>): Parser<Ar
     var index = 0
     do {
         match = parser()
-        if (match is Pass){
+        if (match is Pass) {
             matches[index] = (match.value)
             index++
         }

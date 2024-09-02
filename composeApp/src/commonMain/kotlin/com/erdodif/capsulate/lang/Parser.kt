@@ -2,7 +2,7 @@
 
 package com.erdodif.capsulate.lang
 
-const val reservedChars = "()[]{}|$.?+-*/\"\' \t"
+const val reservedChars = "()[]{}|$.?+-*/\"\' \t\n"
 
 interface ParserResult<T>
 

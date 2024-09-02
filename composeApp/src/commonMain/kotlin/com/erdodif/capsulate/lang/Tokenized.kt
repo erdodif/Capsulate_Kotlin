@@ -10,7 +10,7 @@ inline fun _char(char:Char) : Parser<Char> = tok(char(char))
 inline fun _keyword(string :String) : Parser<String> = tok(string(string))
 
 val _nonKeyword: Parser<String> = {
-    val result: ParserResult<String> = freeWord()
+    val result: ParserResult<String> = tok(freeWord)()
     if(result is Pass && keywords.contains((result).value)){
         fail("The word '${result.value}' is reserved!")
     }

@@ -34,19 +34,14 @@ fun StatementPreview() = LazyColumn(
 
     item{
         Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            Code("""
-                int x
-                string "  dsa"
-                string "  \"dsa"
-                if  hehe
-            """.trimIndent())
+            Code("\"  dsa\" asdasd \"\" \"\\\"\"")
         }
         Spacer(Modifier.height(10.dp))
     }
 
     item{
         Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            Code("intd")
+            Code("intd ints")
         }
         Spacer(Modifier.height(10.dp))
     }

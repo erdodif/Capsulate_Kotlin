@@ -13,16 +13,20 @@ data class LamLit(val lambda: Nothing)
 data class Add(val first: Exp, val second: Exp)
 
 val pStrLit: Parser<Exp> = {
-    val result = middle(char('"'), many(or(left(char('\\'), anyChar), freeChar)), char('"'))()
+    val result: ParserResult<ArrayList<Char>> = middle(
+        char('"'),
+        many(orEither(right(char('\\'), anyChar), right(not(char('"')), anyChar))),
+        _char('"')
+    )()
     if (result is Pass) {
-        pass(StrLit((result.value).map { it.getEither() }.asString()))
+        pass(StrLit((result.value).asString()))
     } else {
         result as Fail<*>
         result.into()
     }
 }
 val pIntLit: Parser<Exp> = {
-    val isNegative = (tok(optional(char('-')))() as Pass).value == null
+    val isNegative = (optional(_char('-'))() as Pass).value == null
     val digitMatch = some(digit)()
     if (digitMatch is Fail<*>) {
         digitMatch.into()
