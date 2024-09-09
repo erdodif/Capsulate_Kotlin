@@ -54,7 +54,7 @@ inline fun string(string: String): Parser<String> = {
 /**
  * In case the [parser] fails, the state gets reset, and returns null
  */
-inline fun <T> optional(crossinline parser: Parser<T>): Parser<T?> = {
+inline fun <T> optional(crossinline parser: Parser<T>): SuccessParser<T?> = {
     val pos = position
     val result = parser()
     if (result is Fail) {
@@ -90,7 +90,7 @@ inline fun <reified T> some(crossinline parser: Parser<T>): Parser<Array<T>> = {
  *
  * Will not fail on no match and the last unsuccessful state gets reset
  */
-inline fun <reified T> many(crossinline parser: Parser<T>): Parser<ArrayList<T>> = {
+inline fun <reified T> many(crossinline parser: Parser<T>): SuccessParser<ArrayList<T>> = {
     val matches = ArrayList<T>()
     var match: ParserResult<T>
     var pos: Int
@@ -302,23 +302,6 @@ inline fun satisfy(crossinline predicate: (Char) -> Boolean): Parser<Char> = {
     }
 }
 
-/**
- * Looks for non reserved char
- */
-val freeChar: Parser<Char> = satisfy { !reservedChars.contains(it) }
-
-/**
- * Looks for a word made of non reserved characters
- */
-val freeWord: Parser<String> = {
-    val result = some(satisfy { !reservedChars.contains(it) })()
-    if (result is Fail) {
-        result.into()
-    } else {
-        result as Pass
-        pass(result.value.asString())
-    }
-}
 
 /**
  * Looks for decimal digit
@@ -330,6 +313,15 @@ val digit: Parser<Short> = {
     } else {
         (result as Fail).into()
     }
+}
+
+val natural: Parser<UInt> = some(digit).transform {
+    it.fold(0) {a, b -> a + b.toInt()}.toUInt()
+}
+
+val int: Parser<Int> = and(optional(char('-')), natural).transform { (sign, num) ->
+    if(sign == null) num.toInt()
+    else -(num.toInt())
 }
 
 /**

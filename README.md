@@ -5,7 +5,7 @@ Kotlin Multiplatform project to create, edit and lint ELTE special code blocks
 ## Platform
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
+[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),/home/erdodif
 [Kotlin/Wasm](https://kotl.in/wasm/)…
 
 ### Gradle tasks

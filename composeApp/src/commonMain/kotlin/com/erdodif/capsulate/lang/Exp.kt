@@ -12,7 +12,7 @@ data class Variable(val id: String) : Exp
 data class LamLit(val lambda: Nothing)
 data class Add(val first: Exp, val second: Exp)
 
-val pStrLit: Parser<Exp> = {
+val pStrLit: Parser<StrLit> = {
     val result: ParserResult<ArrayList<Char>> = middle(
         char('"'),
         many(orEither(right(char('\\'), anyChar), right(not(char('"')), anyChar))),
@@ -25,7 +25,7 @@ val pStrLit: Parser<Exp> = {
         result.into()
     }
 }
-val pIntLit: Parser<Exp> = {
+val pIntLit: Parser<IntLit> = {
     val isNegative = (optional(_char('-'))() as Pass).value == null
     val digitMatch = some(digit)()
     if (digitMatch is Fail<*>) {
@@ -39,7 +39,7 @@ val pIntLit: Parser<Exp> = {
         pass(IntLit(if (isNegative) -number else number))
     }
 }
-val pBoolLit: Parser<Exp> = {
+val pBoolLit: Parser<BoolLit> = {
     val result: ParserResult<Either<String,String>> = or(_keyword("true"), _keyword("false"))()
     if (result is Fail<*>) {
         result.into()
@@ -47,7 +47,7 @@ val pBoolLit: Parser<Exp> = {
         pass(BoolLit((result as Pass<*>).value is Left<*, *>))
     }
 }
-val pVariable: Parser<Exp> = {
+val pVariable: Parser<Variable> = {
     val result: ParserResult<String> = _nonKeyword()
     if(result is Fail){
         result.into()
@@ -73,7 +73,7 @@ inline fun <T>asum(parsers: Array<Parser<T>>) : Parser<T> = {
     result
 }
 
-val litOrder = arrayOf<Parser<Exp>>(
+val litOrder: Array<Parser<*>> = arrayOf<Parser<*>>(
     pIntLit,
     pBoolLit,
     //pLamLit,
@@ -82,7 +82,8 @@ val litOrder = arrayOf<Parser<Exp>>(
     //middle(char('('), pExp , char(')'))
 )
 
-val pAtom: Parser<Exp> = asum(litOrder)
+@Suppress("UNCHECKED_CAST")
+val pAtom: Parser<Exp> = asum(litOrder as Array<Parser<Exp>>)
 
 @Suppress("UNCHECKED_CAST")
 val helper: (Exp, Exp) -> Exp = { a: Exp, b:Exp -> Add(a, b) } as (Exp, Exp) -> Exp
