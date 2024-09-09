@@ -9,8 +9,18 @@ data class StrLit(val value: String) : Exp
 data class IntLit(val value: Int) : Exp
 data class BoolLit(val value: Boolean) : Exp
 data class Variable(val id: String) : Exp
-data class LamLit(val lambda: Nothing)
-data class Add(val first: Exp, val second: Exp)
+
+data class Add(val first: Exp, val second: Exp) : Exp
+data class Sub(val first: Exp, val second: Exp) : Exp
+data class Mul(val first: Exp, val second: Exp) : Exp
+data class Div(val first: Exp, val second: Exp) : Exp
+data class Floor(val expression: Exp) : Exp
+data class Ceil(val expression: Exp) : Exp
+data class Equal(val first: Exp, val second: Exp) : Exp
+data class And(val first: Exp, val second: Exp) : Exp
+data class Or(val first: Exp, val second: Exp) : Exp
+data class Not(val expression: Exp) : Exp
+data class FunctionCall(val id:String, val arguments:ArrayList<Exp>) : Exp
 
 val pStrLit: Parser<StrLit> = {
     val result: ParserResult<ArrayList<Char>> = middle(
@@ -58,21 +68,6 @@ val pVariable: Parser<Variable> = {
 }
 //val pLamLit: Parser<Exp> = TODO()
 
-inline fun <T>asum(parsers: Array<Parser<T>>) : Parser<T> = {
-    val pos = position
-    var result: ParserResult<T> = fail("Nothing matched")
-    for (factory in parsers) {
-        val tmpResult = factory()
-        if (tmpResult is Fail) {
-            position = pos
-        } else {
-            result = tmpResult
-            break
-        }
-    }
-    result
-}
-
 val litOrder: Array<Parser<*>> = arrayOf<Parser<*>>(
     pIntLit,
     pBoolLit,
@@ -85,47 +80,18 @@ val litOrder: Array<Parser<*>> = arrayOf<Parser<*>>(
 @Suppress("UNCHECKED_CAST")
 val pAtom: Parser<Exp> = asum(litOrder as Array<Parser<Exp>>)
 
-@Suppress("UNCHECKED_CAST")
-val helper: (Exp, Exp) -> Exp = { a: Exp, b:Exp -> Add(a, b) } as (Exp, Exp) -> Exp
+val helper: (Exp, Exp) -> Exp = { a: Exp, b:Exp -> Add(a, b) }
 val pAdd: Parser<Exp> = chainr1(pAtom, left({ pass(helper) }, char('+')))
 
+// Ordering and implementation missing
+val pMul :Parser<Exp> = TODO()
+val pDiv :Parser<Exp> = TODO()
+val pFloor :Parser<Exp> = TODO()
+val pCeil :Parser<Exp> = TODO()
+val pEqual :Parser<Exp> = TODO()
+val pAnd :Parser<Exp> = TODO()
+val pOr :Parser<Exp> = TODO()
+val pNot :Parser<Exp> = TODO()
+val pFunctionCall :Parser<Exp> = TODO()
+
 val pExp: Parser<Exp> = pAdd
-
-interface Statement
-
-data class If(val expression:Exp, val statements: Array<Statement>) : Statement
-data class While(val expression:Exp, val statements: Array<Statement>) : Statement
-data class Assign(val id: String, val value:Exp) : Statement
-
-/*
-val statement: Parser<Statement> = TODO()//asum(arrayOf(sIf, sWhile, sAssign))
-val program: Parser<Array<Statement>> = delimited(statement, _char(';'))
-
-val sIf : Parser<Statement> = {
-    val condition: ParserResult<Exp> = right(_keyword("if"), pExp)()
-    val program: ParserResult<Array<Statement>> = middle(_char('{'), program , _char('}'))()
-    when {
-        condition is Fail<*> -> condition.into()
-        program is Fail<*> -> program.into()
-        else -> pass(If((condition as Pass).value,(program as Pass).value))
-    }
-}
-
-//TODO
-val sWhile : Parser<Statement> = left({pass(TMPSTMT())}, freeChar)
-val sAssign : Parser<Statement> = left({pass(TMPSTMT())}, freeChar)
-
-class ParseException(reason: String): Exception(reason)
-
-fun parseProgram(input: String): Array<Statement>{
-    val result: ParserResult<Array<Statement>> = ParserState(input).run{
-        topLevel(program)()
-    }
-    if(result is Fail){
-        throw ParseException(result.reason)
-    }
-    else{
-        return (result as Pass).value
-    }
-}
-*/

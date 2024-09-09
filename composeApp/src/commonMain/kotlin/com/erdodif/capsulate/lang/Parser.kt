@@ -82,5 +82,17 @@ class ParserState(val input: String) {
     fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
 }
 
-
-
+inline fun <T>asum(parsers: Array<Parser<T>>) : Parser<T> = {
+    val pos = position
+    var result: ParserResult<T> = fail("Nothing matched")
+    for (factory in parsers) {
+        val tmpResult = factory()
+        if (tmpResult is Fail) {
+            position = pos
+        } else {
+            result = tmpResult
+            break
+        }
+    }
+    result
+}

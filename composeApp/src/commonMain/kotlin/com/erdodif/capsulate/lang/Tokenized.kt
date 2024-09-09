@@ -40,4 +40,5 @@ val _nonKeyword: Parser<String> = {
 
 val _natural : Parser<UInt> = tok(natural)
 
+val _integer: Parser<Int> = tok(int)
 
