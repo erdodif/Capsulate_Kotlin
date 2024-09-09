@@ -315,10 +315,16 @@ val digit: Parser<Short> = {
     }
 }
 
+/**
+ * Looks for a non-negative integer
+ */
 val natural: Parser<UInt> = some(digit).transform {
     it.fold(0) {a, b -> a + b.toInt()}.toUInt()
 }
 
+/**
+ * Looks for a signed integer
+ */
 val int: Parser<Int> = and(optional(char('-')), natural).transform { (sign, num) ->
     if(sign == null) num.toInt()
     else -(num.toInt())
