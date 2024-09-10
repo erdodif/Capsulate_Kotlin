@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,29 +80,45 @@ val defaultCodeHighLight = CodeHighlight.Builder {
 fun Code(code: String, modifier: Modifier = Modifier) {
     defaultCodeHighLight.apply {
         Text(code, color = Color.Gray)
-        val result: ParserResult<ArrayList<Exp>> = ParserState(code).run{
-            topLevel(right(many(whiteSpace),many(pAtom)))()
-        }
+        val result = parseProgram(code)
+        //ParserResult<ArrayList<Exp<*>>> = ParserState(code)
+            //.run{
+            //topLevel(right(many(whiteSpace),many(pAtom)))()
+        //}
         if(result is Fail<*>){
-            Text(result.reason, color = Color.Red)
+            Column {
+                Text(result.reason, color = Color.Red)
+                Text(result.state.toString(), color = Color(241,134,69))
+            }
             return
         }
+        result as Pass
         Text(
             buildAnnotatedString {
-                withStyle(
+                /*withStyle(
                     style = SpanStyle(
                         color = Color.Magenta,
                         background = Color.Black
                     )
                 ) {
-                    append((result as Pass).value.size.toString() + "\n")
-                }
-                for (token in (result as Pass).value) {
+                    //append((result as Pass).value.size.toString() + "\n")
+                    var boby = StringBuilder()
+                    result.value.map{boby.append(it.toString() + "\n")}
+                    append(boby.toString())
+                }*/
+                //for (token in (result as Pass).value) {
+                for (token in result.value) {
                     //append(token.toString())
 
                     withStyle(
                         style = SpanStyle(
-                            color = Color.Green,
+                            color = when(token){
+                                is Skip -> Color.Gray
+                                is If -> Color.Magenta
+                                is Assign -> Color.Blue
+                                is Expression -> Color.Cyan
+                                else -> Color.Red
+                            },
                             background = Color.Black
                         )
                     ) {

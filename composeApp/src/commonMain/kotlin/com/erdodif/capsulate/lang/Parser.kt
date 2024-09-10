@@ -2,7 +2,6 @@
 
 package com.erdodif.capsulate.lang
 
-const val reservedChars = "()[]{}|$.?+-*/\"\' \t\n"
 
 abstract class ParserResult<T>{
     /**
@@ -48,6 +47,29 @@ inline fun <T,R>Parser<T>.transform(crossinline lambda: (T) -> R) : Parser<R> = 
     else (res as Fail).into()
 }
 
+inline operator fun <T,R>Parser<T>.times(crossinline lambda: (T) -> R) : Parser<R> = transform(lambda)
+
+inline operator fun <T,R>Parser<T>.get(
+    crossinline onPass: (Pass<T>) -> ParserResult<R>,
+    crossinline onFail: (Fail<T>) -> ParserResult<R>
+) : Parser<R> = {
+    val res = this@get()
+    if(res is Pass){
+        onPass(res)
+    }
+    else onFail(res as Fail)
+}
+
+inline operator fun <T,R>Parser<T>.get(
+    crossinline onPass: (Pass<T>) -> ParserResult<R>
+) : Parser<R> = {
+    val res = this@get()
+    if(res is Pass){
+        onPass(res)
+    }
+    else (res as Fail).into()
+}
+
 /**
  * Tries to apply the clean [lambda] if the result is present and not null
  */
@@ -80,6 +102,9 @@ class ParserState(val input: String) {
     val pass: Pass<Unit> = Pass(Unit, this)
     fun <T> pass(value: T): Pass<T> = Pass(value, this)
     fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
+
+    override fun toString(): String = "position: $position\ntext:\n$input"
+
 }
 
 inline fun <T>asum(parsers: Array<Parser<T>>) : Parser<T> = {
@@ -87,7 +112,7 @@ inline fun <T>asum(parsers: Array<Parser<T>>) : Parser<T> = {
     var result: ParserResult<T> = fail("Nothing matched")
     for (factory in parsers) {
         val tmpResult = factory()
-        if (tmpResult is Fail) {
+        if (tmpResult is Fail<T>) {
             position = pos
         } else {
             result = tmpResult

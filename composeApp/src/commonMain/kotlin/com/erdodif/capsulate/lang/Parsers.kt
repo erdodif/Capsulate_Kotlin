@@ -68,7 +68,7 @@ inline fun <T> optional(crossinline parser: Parser<T>): SuccessParser<T?> = {
  *
  * Will fail on no match, the last unsuccessful state gets reset
  */
-inline fun <reified T> some(crossinline parser: Parser<T>): Parser<Array<T>> = {
+inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<T>> = {
     val matches = ArrayList<T>()
     var match: ParserResult<T>
     var pos: Int
@@ -81,7 +81,7 @@ inline fun <reified T> some(crossinline parser: Parser<T>): Parser<Array<T>> = {
     if (matches.isEmpty()) {
         (match as Fail<T>).into()
     } else {
-        pass(matches.toTypedArray())
+        pass(matches)
     }
 }
 
@@ -162,28 +162,30 @@ inline fun <T, R> and(
     crossinline parser1: Parser<T>, crossinline parser2: Parser<R>
 ): Parser<Pair<T, R>> = {
     val result1 = parser1()
-    if(result1 is Fail){
+    if (result1 is Fail) {
         result1.into()
-    }else{
+    } else {
         val result2 = parser2()
-        if(result2 is Fail){
+        if (result2 is Fail) {
             result2.into()
-        }
-        else{
+        } else {
             pass(Pair((result1 as Pass<T>).value, (result2 as Pass<R>).value))
         }
     }
 }
+
+inline operator fun <T, R> Parser<T>.plus(crossinline other: Parser<R>): Parser<Pair<T, R>> =
+    and(this, other)
 
 /**
  * Matches both the parsers, discarding the second value
  */
 inline fun <T> left(crossinline parser1: Parser<T>, crossinline parser2: Parser<*>): Parser<T> = {
     val result1 = parser1()
-    val result2 = parser2()
     if (result1 is Fail<*>) {
         result1.into()
     } else {
+        val result2 = parser2()
         if (result2 is Fail<*>) {
             result2.into()
         } else {
@@ -197,11 +199,10 @@ inline fun <T> left(crossinline parser1: Parser<T>, crossinline parser2: Parser<
  */
 inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser<T>): Parser<T> = {
     val result1 = parser1()
-    val result2 = parser2()
     if (result1 is Fail<*>) {
         result1.into()
     } else {
-        result2
+        parser2()
     }
 }
 
@@ -210,16 +211,8 @@ inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser
  */
 inline fun <T> middle(
     crossinline left: Parser<*>, crossinline a: Parser<T>, crossinline right: Parser<*>
-): Parser<T> = {
-    val leftResult = left()
-    val result = a()
-    val rightResult = right()
-    when {
-        leftResult is Fail -> leftResult.into()
-        result is Fail -> result
-        rightResult is Fail -> rightResult.into()
-        else -> result
-    }
+): Parser<T> {
+    return right(left, left(a, right))
 }
 
 /**
@@ -306,49 +299,35 @@ inline fun satisfy(crossinline predicate: (Char) -> Boolean): Parser<Char> = {
 /**
  * Looks for decimal digit
  */
-val digit: Parser<Short> = {
-    val result = satisfy { it in '0'..'9' }()
-    if (result is Pass) {
-        pass((result.value.code - '0'.code).toShort())
-    } else {
-        (result as Fail).into()
-    }
-}
+val digit: Parser<Short> = satisfy { it in '0'..'9' } * { (it.code - '0'.code).toShort() }
 
 /**
  * Looks for a non-negative integer
  */
-val natural: Parser<UInt> = some(digit).transform {
-    it.fold(0) {a, b -> a + b.toInt()}.toUInt()
-}
+val natural: Parser<UInt> = some(digit) * { it.fold(0) { a, b -> a + b.toInt() }.toUInt() }
 
 /**
  * Looks for a signed integer
  */
 val int: Parser<Int> = and(optional(char('-')), natural).transform { (sign, num) ->
-    if(sign == null) num.toInt()
+    if (sign == null) num.toInt()
     else -(num.toInt())
 }
 
 /**
  * Looks for simple whitespace characters
  */
-val whiteSpace: Parser<Unit> = {
-    val result = or(char(' '), char('\t'))()
-    if (result is Fail<*>) {
-        result.into()
-    } else {
-        pass
-    }
-}
+val whiteSpace: Parser<Unit> = or(char(' '), char('\t'))[{ Pass(Unit, it.state) }, { it.into() }]
 
 /**
- * Matches for a [parser] with trailing [delim] delimiter, keeping only [parser]'s match
+ * Matches for a [parser] with [delim] delimiter, keeping only [parser]'s match
  */
 inline fun <reified T> delimited(
     crossinline parser: Parser<T>,
     crossinline delim: Parser<*>
-): Parser<ArrayList<T>> = { many(left(parser, delim))() }
+): Parser<ArrayList<T>> = (many(left(parser, delim)) + parser) * {
+    it.first.apply { this.add(it.second) }
+}
 
 // NEEDS TO BE CHECKED TODO
 /**
@@ -389,20 +368,24 @@ fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = TODO()
 fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
     chainr1(parser, left({ pass(func) }, separator))
 
-fun <T> leftAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> = TODO()
+fun <T> leftAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
+    chainl1(parser, left({ pass(func) }, separator))
 
-fun <T> nonAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> = TODO()
+inline fun <reified T> nonAssoc(
+    crossinline func: (T, T) -> T,
+    crossinline parser: Parser<T>,
+    crossinline separator: Parser<*>
+): Parser<T> =
+    delimited(parser, separator)[{
+        when (it.value.size) {
+            1 -> Pass(it.value[0], it.state)
+            2 -> Pass(func(it.value[0], it.value[1]), it.state)
+            else -> Fail("Too many associacion found.", it.state)
+        }
+    }]
 
 /**
  * Asserts the parser does match the whole input file
  */
-inline fun <T> topLevel(crossinline parser: Parser<T>): Parser<T> = {
-    many(whiteSpace)()
-    val result = parser()
-    val eof = EOF()
-    when {
-        result is Fail -> result
-        eof is Fail -> eof.into()
-        else -> result
-    }
-}
+inline fun <T> topLevel(crossinline parser: Parser<T>): Parser<T> =
+    middle(many(whiteSpace), parser, EOF)

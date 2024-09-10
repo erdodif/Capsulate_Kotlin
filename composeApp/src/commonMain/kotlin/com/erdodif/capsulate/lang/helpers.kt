@@ -1,5 +1,13 @@
 package com.erdodif.capsulate.lang
 
+fun ArrayList<Char>.asString(): String{
+    val boby = StringBuilder()
+    for(char in this){
+        boby.append(char)
+    }
+    return boby.toString()
+}
+
 fun Array<Char>.asString(): String{
     val boby = StringBuilder()
     for(char in this){

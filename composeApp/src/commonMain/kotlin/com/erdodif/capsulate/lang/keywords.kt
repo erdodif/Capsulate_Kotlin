@@ -1,14 +1,14 @@
 package com.erdodif.capsulate.lang
 
+const val reservedChars = "()[]{}|$:.?=+-;,*/\"\' \t\n"
+
 val keywords = arrayOf(
     "true",
     "false",
     "not",
-    "sign",
     "if",
-    "then",
     "do",
     "for",
-    "lam",
-    "end"
+    "while",
+    "skip"
 )

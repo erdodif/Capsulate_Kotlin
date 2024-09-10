@@ -31,13 +31,28 @@ fun StatementPreview() = LazyColumn(
     horizontalAlignment = Alignment.CenterHorizontally,
     contentPadding = PaddingValues(4.dp, 10.dp)
 ) {
-
     item{
         Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            Code("\"  dsa\" asdasd \"\" \"\\\"\"")
+            Code("skip;")
         }
         Spacer(Modifier.height(10.dp))
     }
+
+    item{
+        Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
+            Code("a := 2;")
+        }
+        Spacer(Modifier.height(10.dp))
+    }
+
+
+    item{
+        Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
+            Code("if 0 = 1 { skip; } else { skip; };")
+        }
+        Spacer(Modifier.height(10.dp))
+    }
+
 
     item{
         Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
@@ -48,7 +63,7 @@ fun StatementPreview() = LazyColumn(
 
     item{
         Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            Code("true")
+            Code("true;")
         }
         Spacer(Modifier.height(10.dp))
     }
