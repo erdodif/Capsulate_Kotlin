@@ -17,10 +17,10 @@ val freeChar: Parser<Char> = satisfy { !reservedChars.contains(it) }
 val freeWord: Parser<String> = {
     val result = some(satisfy { !reservedChars.contains(it) })()
     if (result is Fail) {
-        result.into()
+        result.to()
     } else {
         result as Pass
-        pass(result.value.asString())
+        pass(result.match.start,result.value.asString())
     }
 }
 

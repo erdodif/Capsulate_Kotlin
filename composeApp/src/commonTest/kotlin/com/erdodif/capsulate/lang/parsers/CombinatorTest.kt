@@ -3,8 +3,10 @@ package com.erdodif.capsulate.lang.parsers
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertFailsAt
 import com.erdodif.capsulate.assertPass
+import com.erdodif.capsulate.assertPassAt
 import com.erdodif.capsulate.assertValue
 import com.erdodif.capsulate.lang.Left
+import com.erdodif.capsulate.lang.MatchPos
 import com.erdodif.capsulate.lang.ParserState
 import com.erdodif.capsulate.lang.Pass
 import com.erdodif.capsulate.lang.Right
@@ -19,7 +21,7 @@ class CombinatorTest {
     @Test
     fun and_pass(){
         val result = ParserState("cr").parse(and(char('c'), char('r')))
-        assertPass(result)
+        assertPassAt(result, MatchPos(0,2))
         result as Pass
         assertEquals('c', result.value.first)
         assertEquals('r', result.value.second)
@@ -40,6 +42,12 @@ class CombinatorTest {
     )
 
     @Test
+    fun or_pass_first_at() = assertPassAt(ParserState("c").parse(or(char('c'),char('r'))),MatchPos(0,1))
+
+    @Test
+    fun or_pass_second_at() = assertPassAt(ParserState("r").parse(or(char('c'),char('r'))),MatchPos(0,1))
+
+    @Test
     fun or_pass_first() = assertValue(Left('c'), ParserState("c").parse(or(char('c'),char('c'))))
 
     @Test
@@ -52,7 +60,7 @@ class CombinatorTest {
     fun not_fail() = assertFail(ParserState("c").parse(not(char('c'))))
 
     @Test
-    fun not_pass() = assertPass(ParserState("x").parse(not(char('c'))))
+    fun not_pass() = assertPassAt(ParserState("x").parse(not(char('c'))), MatchPos(0,0))
 
     @Test
     fun not_reset() {

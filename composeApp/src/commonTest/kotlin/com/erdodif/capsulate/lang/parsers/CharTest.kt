@@ -2,28 +2,30 @@ package com.erdodif.capsulate.lang.parsers
 
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPass
+import com.erdodif.capsulate.assertPassAt
 import com.erdodif.capsulate.assertValue
+import com.erdodif.capsulate.lang.MatchPos
 import com.erdodif.capsulate.lang.ParserState
 import com.erdodif.capsulate.lang.char
 import com.erdodif.capsulate.lang.digit
 import com.erdodif.capsulate.lang.satisfy
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class CharTest {
     @Test
-    fun char_match_single_character() = assertPass(
-        ParserState("c").run { char('c')() }
+    fun char_match_single_character() = assertPassAt(
+        ParserState("c").parse(char('c')), MatchPos(0, 1)
     )
 
     @Test
-    fun char_returns_single_character() = assertValue('c',
-        ParserState("c").run { char('c')() }
+    fun char_returns_single_character() = assertValue(
+        'c',
+        ParserState("c").parse(char('c'))
     )
 
     @Test
-    fun char_fails_empty_string_run() = assertFail(ParserState("").run { (char('c')()) })
+    fun char_fails_empty_string_run() = assertFail(ParserState("").run { char('c')() })
 
     @Test
     fun char_fails_empty_string_parse() = assertFail(ParserState("").parse(char('c')))

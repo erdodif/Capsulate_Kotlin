@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.lang
 
 import com.erdodif.capsulate.assertPass
+import com.erdodif.capsulate.assertPassAt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -8,7 +9,7 @@ class LiteralTest {
     @Test
     fun pStrLit_pass_char_only(){
         val result = ParserState("\"s\"").parse(pStrLit)
-        assertPass(result)
+        assertPassAt(result, MatchPos(0,3))
         result as Pass
         assertEquals("s",(result.value as StrLit).value)
     }

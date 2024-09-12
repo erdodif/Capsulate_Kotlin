@@ -99,18 +99,18 @@ fun ParserState.statement(): ParserResult<Statement> {
 
 val program: Parser<ArrayList<Statement>> = { some(left({ statement() }, or(_char(';'), EOF)))() }
 
-val sError: Parser<Statement> = some(satisfy { it !in ";\n" }) * { LineError(it.asString()) }
+val sError: Parser<Statement> = some(satisfy { it !in ";\n" }) / { LineError(it.asString()) }
 
-val sSkip: Parser<Statement> = _keyword("skip") * { Skip() }
+val sSkip: Parser<Statement> = _keyword("skip") / { Skip() }
 
-val sExpression: Parser<Statement> = pExp * { Expression(it) }
+val sExpression: Parser<Statement> = pExp / ::Expression
 
 val sIf: Parser<Statement> = (
         right(_keyword("if"), pExp) + middle(
             _char('{'), program, _char('}')) + right(
                 _keyword("else"), middle(_char('{'), program, _char('}'))
             )
-        ) * { If(it.first.first, it.first.second, it.second) }
+        ) / { If(it.first.first, it.first.second, it.second) }
 /*
 {
 val condition: ParserResult<Exp<*>> = right(_keyword("if"), pExp)()
@@ -146,35 +146,35 @@ if (condition is Fail) {
 
 val sWhile: Parser<Statement> = (
         right(_keyword("while"), pExp) + middle(_char('{'), program, _char('}'))
-        ) * { While(it.first, it.second) }
+        ) / { While(it.first, it.second) }
 
 val sDoWhile: Parser<Statement> =
     right(
         _keyword("do"),
         middle(_char('{'), program, _char('}')) + right(_keyword("while"), pExp)
-    ) * {
+    ) / {
         DoWhile(it.second, it.first)
     }
 
 val sParallelAssign: Parser<Statement> = {
     val words = delimited(_nonKeyword, char(','))()
     if (words is Fail<*>) {
-        words.into()
+        words.to()
     } else {
         words as Pass
         val assignW = _keyword(":=")
         if (assignW is Fail<*>) {
-            assignW.into()
+            assignW.to()
         } else {
             val values = delimited(pExp, char(','))()
-            if (values is Fail<*>) values.into()
+            if (values is Fail<*>) values.to()
             else if (words.value.size != (values as Pass).value.size) fail("The number of parameters does not match the number of values to assign.")
-            else pass(ParallelAssign(words.value.zip(values.value) as ArrayList))
+            else pass(words.match.start, ParallelAssign(words.value.zip(values.value) as ArrayList))
         }
     }
 }
 
-val sAssign: Parser<Statement> = and(_nonKeyword, right(_keyword(":="), pExp)) * {
+val sAssign: Parser<Statement> = and(_nonKeyword, right(_keyword(":="), pExp)) / {
     Assign(it.first, it.second)
 }
 

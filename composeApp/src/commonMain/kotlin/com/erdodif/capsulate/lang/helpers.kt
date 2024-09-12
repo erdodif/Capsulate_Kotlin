@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.lang
 
+import androidx.compose.ui.text.substring
+
 fun ArrayList<Char>.asString(): String{
     val boby = StringBuilder()
     for(char in this){
@@ -29,3 +31,5 @@ inline fun <T> Either<T, T>.getEither(): T = if (this is Left<T, T>) {
 } else {
     (this as Right<T, T>).value
 }
+
+operator fun String.get(start:Int, end:Int): String = this.substring(start..<end)

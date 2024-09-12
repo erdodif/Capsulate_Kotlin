@@ -4,23 +4,28 @@ interface Exp<T : Value> {
     fun evaluate(env: Env): T
 }
 
-data class StrLit(val value: String) : Exp<VStr> {
+abstract class Token(val match: MatchPos) {
+    inline val ParserState.matchedToken: String
+        get() = input[match.start, match.end]
+}
+
+class StrLit(val value: String, match: MatchPos) : Exp<VStr>, Token(match) {
     override fun evaluate(env: Env): VStr = VStr(value)
 }
 
-data class IntLit(val value: Int) : Exp<VWhole> {
+class IntLit(val value: Int, match: MatchPos) : Exp<VWhole>, Token(match) {
     override fun evaluate(env: Env): VWhole = VWhole(value)
 }
 
-data class NatLit(val value: UInt) : Exp<VNat> {
+class NatLit(val value: UInt, match: MatchPos) : Exp<VNat>, Token(match) {
     override fun evaluate(env: Env): VNat = VNat(value)
 }
 
-data class BoolLit(val value: Boolean) : Exp<VBool> {
+class BoolLit(val value: Boolean, match: MatchPos) : Exp<VBool>, Token(match) {
     override fun evaluate(env: Env): VBool = VBool(value)
 }
 
-data class Variable(val id: String) : Exp<Value> {
+class Variable(val id: String, match: MatchPos) : Exp<Value>, Token(match) {
     override fun evaluate(env: Env): Value {
         val param = env.get(id)
         if (param is Left) {
@@ -31,7 +36,7 @@ data class Variable(val id: String) : Exp<Value> {
     }
 }
 
-data class Add(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
+class Add(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
     override fun evaluate(env: Env): VNum {
         val resultFirst = first.evaluate(env)
         val resultSecond = second.evaluate(env)
@@ -115,6 +120,8 @@ data class Div(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
 }
 
 data class Equal(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
+    constructor(expressions: Pair<Exp<*>, Exp<*>>) : this(expressions.first, expressions.second)
+
     override fun evaluate(env: Env): VBool {
         val value1 = first.evaluate(env)
         val value2 = second.evaluate(env)
@@ -172,26 +179,28 @@ val pStrLit: Parser<StrLit> = middle(
     char('"'),
     many(orEither(right(char('\\'), anyChar), right(not(char('"')), anyChar))),
     _char('"')
-) * { StrLit(it.asString()) }
+) * { res, pos -> StrLit(res.asString(),pos) }
 
 val pIntLit: Parser<IntLit> = {
-    val isNegative = (optional(_char('-'))() as Pass).value == null
+    val start = position
+    val isNegative = optional(_char('-'))().value == null
     val digitMatch = some(digit)()
     if (digitMatch is Fail<*>) {
-        digitMatch.into()
+        digitMatch.to()
     } else {
         var number: Int = 0
         for (digit in (digitMatch as Pass).value) {
             number *= 10
             number += digit
         }
-        pass(IntLit(if (isNegative) -number else number))
+        val match = MatchPos(start, position)
+        pass(match.start, IntLit(if (isNegative) -number else number, match))
     }
 }
 val pBoolLit: Parser<BoolLit> =
-    or(_keyword("true"), _keyword("false")) * { BoolLit(it is Left<*, *>) }
+    or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*, *>, pos) }
 
-val pVariable: Parser<Variable> = _nonKeyword * { Variable(it) }
+val pVariable: Parser<Variable> = _nonKeyword * ::Variable
 
 val litOrder: Array<Parser<*>> = arrayOf(
     pIntLit,
@@ -206,24 +215,24 @@ typealias ExParser = Parser<Exp<*>>
 @Suppress("UNCHECKED_CAST")
 val pAtom: ExParser = asum(litOrder as Array<Parser<Exp<*>>>)
 
-val pEqual: ExParser = (pAtom + right(_char('='), pAtom)) * { Equal(it.first, it.second) }
+val pEqual: ExParser = (pAtom + right(_char('='), pAtom)) / ::Equal
 
 //val helper: (Exp, Exp) -> Exp =
 // Ordering and implementation missing
 val pMul: ExParser =
-    chainr1(pEqual, left({ pass { a, b -> Mul(a, b) } }, _char('*')))
+    chainr1(pEqual, left({ pass(position,::Mul)  }, _char('*')))
 val pDiv: ExParser =
-    chainl1(pMul, left({ pass { a, b -> Sub(a, b) } }, _char('/')))
+    chainl1(pMul, left({pass(position,::Div) }, _char('/')))
 val pAdd: ExParser =
-    chainr1(pDiv , left({ pass { a: Exp<*>, b: Exp<*> -> Add(a, b) } }, _char('+')))
+    chainr1(pDiv, left({ pass(position,::Add)  }, _char('+')))
 val pSub: Parser<Exp<*>> =
-    chainl1(pAdd, left({ pass { a: Exp<*>, b: Exp<*> -> Sub(a, b) } }, _char('-')))
+    chainl1(pAdd, left({ pass(position,::Sub)  }, _char('-')))
 val pOr: ExParser =
-    chainl1(pDiv, left({ pass { a: Exp<*>, b: Exp<*> -> Or(a, b) } }, _char('|')))
+    chainl1(pDiv, left({ pass(position,::Or)  }, _char('|')))
 val pAnd: ExParser =
-    chainl1(pOr, left({ pass { a: Exp<*>, b: Exp<*> -> Or(a, b) } }, _char('&')))
+    chainl1(pOr, left({ pass(position,::And) }, _char('&')))
 val pNot: ExParser =
-    right(_char('!'), pOr) * { Not(it) }
+    right(_char('!'), pOr) / { Not(it) }
 val pFunctionCall: ExParser = { fail("NOT IMPLEMENTED") }
 
 val pExp: ExParser = pNot as Parser<Exp<*>>

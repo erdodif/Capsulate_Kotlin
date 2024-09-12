@@ -18,6 +18,7 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 
 ### TODOs
 
+- Parser needs positioning to implement syntax-highlight
 - Finish class definitions
   - representation & `show()` functions
 - Drag & Drop 

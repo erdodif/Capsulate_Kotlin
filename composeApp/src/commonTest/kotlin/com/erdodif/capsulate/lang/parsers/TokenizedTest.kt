@@ -13,7 +13,7 @@ class TokenizedTest {
     fun tok_pass_eof_empty() = assertPass(ParserState("").parse(tok(EOF)))
 
     @Test
-    fun tok_pass_true_ws() = assertPass(ParserState("  ").parse(tok { pass(Unit) }))
+    fun tok_pass_true_ws() = assertPass(ParserState("  ").parse(tok { pass(0,Unit) }))
 
     @Test
     fun tok_pass_char_only() = assertPass(ParserState("c").parse(tok(char('c'))))
