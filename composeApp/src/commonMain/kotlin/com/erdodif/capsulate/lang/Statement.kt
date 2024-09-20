@@ -26,6 +26,7 @@ data class If(
 class Skip : Statement {
     override fun evaluate(env: Env) {}
 }
+
 data class While(val condition: Exp<*>, val statements: ArrayList<Statement>) : Statement {
     override fun evaluate(env: Env) {
         var result = condition.evaluate(env)
@@ -38,6 +39,7 @@ data class While(val condition: Exp<*>, val statements: ArrayList<Statement>) : 
         }
     }
 }
+
 data class DoWhile(val condition: Exp<*>, val statements: ArrayList<Statement>) : Statement {
     override fun evaluate(env: Env) {
         var result: Any?
@@ -50,25 +52,25 @@ data class DoWhile(val condition: Exp<*>, val statements: ArrayList<Statement>) 
         }
     }
 }
+
 data class Assign(val id: String, val value: Exp<*>) : Statement {
     override fun evaluate(env: Env) = env.set(id, value.evaluate(env))
 
 }
+
 data class ParallelAssign(val assigns: ArrayList<Pair<String, Exp<*>>>) : Statement {
     override fun evaluate(env: Env) {
         for (assign in assigns) env.set(assign.first, assign.second.evaluate(env))
     }
 }
-data class Expression(val expression: Exp<*>): Statement{
+
+data class Expression(val expression: Exp<*>) : Statement {
     override fun evaluate(env: Env) {
         expression.evaluate(env)
     }
 }
-data class LineError(val content: String) : Statement{
-    override fun evaluate(env: Env) {
-        throw RuntimeException("Tried to run lineError as code: \"$content\"")
-    }
-}
+
+data class LineError(val content: String)
 
 data class Parallel(val blocks: ArrayList<ArrayList<Statement>>) : Statement {
     override fun evaluate(env: Env) {
@@ -82,67 +84,45 @@ data class Wait(val condition: Exp<*>) : Statement {
     }
 }
 
-fun ParserState.statement(): ParserResult<Statement> {
-    return asum(
+val ParserState.statement: Parser<Statement>
+    get() = asum(
         arrayOf(
             sSkip,
+            sAssign,
             sIf,
             sWhile,
             sDoWhile,
-            sAssign,
             sParallelAssign,
-            sExpression,
-            sError
+            sExpression
+        )
+    )
+
+val lineEnd: Parser<Unit> = tok(or(char(';'), char('\n'))) / {}
+val program: Parser<ArrayList<Statement>> = { some(left(statement, or(lineEnd, EOF)))() }
+
+val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
+    some(
+        or(
+            left(statement, or(lineEnd, EOF)), left(
+                sError, or(lineEnd, EOF)
+            )
         )
     )()
 }
 
-val program: Parser<ArrayList<Statement>> = { some(left({ statement() }, or(_char(';'), EOF)))() }
-
-val sError: Parser<Statement> = some(satisfy { it !in ";\n" }) / { LineError(it.asString()) }
+val sError: Parser<LineError> = some(satisfy { it !in ";\n" }) / { LineError(it.asString()) }
 
 val sSkip: Parser<Statement> = _keyword("skip") / { Skip() }
 
-val sExpression: Parser<Statement> = pExp / ::Expression
+val sExpression: Parser<Statement> = pExp / { Expression(it) }
 
 val sIf: Parser<Statement> = (
         right(_keyword("if"), pExp) + middle(
-            _char('{'), program, _char('}')) + right(
-                _keyword("else"), middle(_char('{'), program, _char('}'))
-            )
+            _char('{'), program, _char('}')
+        ) + right(
+            _keyword("else"), middle(_char('{'), program, _char('}'))
+        )
         ) / { If(it.first.first, it.first.second, it.second) }
-/*
-{
-val condition: ParserResult<Exp<*>> = right(_keyword("if"), pExp)()
-if (condition is Fail) {
-    condition.into()
-} else {
-    val programTrue: ParserResult<ArrayList<Statement>> =
-        middle(_char('{'), program, _char('}'))()
-    if (programTrue is Fail) {
-        programTrue.into()
-    } else {
-        val elseW = _keyword("else")()
-        if (elseW is Fail) {
-            elseW.into()
-        } else {
-            val programFalse: ParserResult<ArrayList<Statement>> =
-                middle(_char('{'), program, _char('}'))()
-            if (programFalse is Fail) {
-                programFalse.into()
-            } else {
-                pass(
-                    If(
-                        (condition as Pass).value,
-                        (programTrue as Pass).value,
-                        (programFalse as Pass).value
-                    )
-                )
-            }
-        }
-    }
-}
-}*/
 
 val sWhile: Parser<Statement> = (
         right(_keyword("while"), pExp) + middle(_char('{'), program, _char('}'))
@@ -168,8 +148,12 @@ val sParallelAssign: Parser<Statement> = {
         } else {
             val values = delimited(pExp, char(','))()
             if (values is Fail<*>) values.to()
-            else if (words.value.size != (values as Pass).value.size) fail("The number of parameters does not match the number of values to assign.")
-            else pass(words.match.start, ParallelAssign(words.value.zip(values.value) as ArrayList))
+            else if (words.value.size != (values as Pass).value.size) {
+                fail("The number of parameters does not match the number of values to assign.")
+            } else pass(
+                words.match.start,
+                ParallelAssign(words.value.zip(values.value) as ArrayList)
+            )
         }
     }
 }
@@ -194,6 +178,10 @@ fun parseProgram(input: String): ParserResult<ArrayList<Statement>> {
     else{
         return (result as Pass).value
     }*/
+}
+
+fun parseLines(input: String): ParserResult<ArrayList<Either<Statement,LineError>>>{
+    return ParserState(input).run(topLevel(halfProgram))
 }
 
 fun Env.runProgram(statements: ArrayList<Statement>) {

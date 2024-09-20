@@ -200,7 +200,7 @@ val pIntLit: Parser<IntLit> = {
 val pBoolLit: Parser<BoolLit> =
     or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*, *>, pos) }
 
-val pVariable: Parser<Variable> = _nonKeyword * ::Variable
+val pVariable: Parser<Variable> = _nonKeyword * { it, pos -> Variable(it, pos)}
 
 val litOrder: Array<Parser<*>> = arrayOf(
     pIntLit,
@@ -215,7 +215,7 @@ typealias ExParser = Parser<Exp<*>>
 @Suppress("UNCHECKED_CAST")
 val pAtom: ExParser = asum(litOrder as Array<Parser<Exp<*>>>)
 
-val pEqual: ExParser = (pAtom + right(_char('='), pAtom)) / ::Equal
+val pEqual: ExParser = (pAtom + right(_char('='), pAtom)) / {it -> Equal(it)}
 
 //val helper: (Exp, Exp) -> Exp =
 // Ordering and implementation missing
