@@ -87,24 +87,17 @@ data class Wait(val condition: Exp<*>) : Statement {
 val ParserState.statement: Parser<Statement>
     get() = asum(
         arrayOf(
-            sSkip,
-            sAssign,
-            sIf,
-            sWhile,
-            sDoWhile,
-            sParallelAssign,
-            sExpression
+            sSkip, sAssign, sIf, sWhile, sDoWhile, sParallelAssign, sExpression
         )
     )
 
-val lineEnd: Parser<Unit> = tok(or(char(';'), char('\n'))) / {}
-val program: Parser<ArrayList<Statement>> = { some(left(statement, or(lineEnd, EOF)))() }
+val program: Parser<ArrayList<Statement>> = { some(left(statement, or(_lineEnd, EOF)))() }
 
 val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
     some(
         or(
-            left(statement, or(lineEnd, EOF)), left(
-                sError, or(lineEnd, EOF)
+            left(statement, or(_lineEnd, EOF)), left(
+                sError, or(_lineEnd, EOF)
             )
         )
     )()
@@ -116,25 +109,25 @@ val sSkip: Parser<Statement> = _keyword("skip") / { Skip() }
 
 val sExpression: Parser<Statement> = pExp / { Expression(it) }
 
-val sIf: Parser<Statement> = (
-        right(_keyword("if"), pExp) + middle(
-            _char('{'), program, _char('}')
-        ) + right(
-            _keyword("else"), middle(_char('{'), program, _char('}'))
+val sIf: Parser<Statement> = (right(_keyword("if"), pExp) + middle(
+    _char('{'), program, _char('}')
+) + right(
+    _keyword("else"), middle(_char('{'), program, _char('}'))
+)) / { If(it.first.first, it.first.second, it.second) }
+
+val sWhile: Parser<Statement> =
+    (right(_keyword("while"), pExp) + middle(_char('{'), program, _char('}'))) / {
+        While(
+            it.first,
+            it.second
         )
-        ) / { If(it.first.first, it.first.second, it.second) }
-
-val sWhile: Parser<Statement> = (
-        right(_keyword("while"), pExp) + middle(_char('{'), program, _char('}'))
-        ) / { While(it.first, it.second) }
-
-val sDoWhile: Parser<Statement> =
-    right(
-        _keyword("do"),
-        middle(_char('{'), program, _char('}')) + right(_keyword("while"), pExp)
-    ) / {
-        DoWhile(it.second, it.first)
     }
+
+val sDoWhile: Parser<Statement> = right(
+    _keyword("do"), middle(_char('{'), program, _char('}')) + right(_keyword("while"), pExp)
+) / {
+    DoWhile(it.second, it.first)
+}
 
 val sParallelAssign: Parser<Statement> = {
     val words = delimited(_nonKeyword, char(','))()
@@ -151,8 +144,7 @@ val sParallelAssign: Parser<Statement> = {
             else if (words.value.size != (values as Pass).value.size) {
                 fail("The number of parameters does not match the number of values to assign.")
             } else pass(
-                words.match.start,
-                ParallelAssign(words.value.zip(values.value) as ArrayList)
+                words.match.start, ParallelAssign(words.value.zip(values.value) as ArrayList)
             )
         }
     }
@@ -165,24 +157,27 @@ val sAssign: Parser<Statement> = and(_nonKeyword, right(_keyword(":="), pExp)) /
 
 class ParseException(reason: String) : Exception(reason)
 
-fun parseProgram(input: String): ParserResult<ArrayList<Statement>> {
-    return ParserState(input).run { topLevel(program)() }
-    /*
-    val result: ParserResult<ArrayList<Statement>> = ParserState(input).run{
-        topLevel(program)()
-    }
-    if(result is Fail){
-        return arrayListOf<Statement>()
-        //throw ParseException(result.reason)
-    }
-    else{
-        return (result as Pass).value
-    }*/
-}
+fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
+    ParserState(input).parse(topLevel(program))
 
-fun parseLines(input: String): ParserResult<ArrayList<Either<Statement,LineError>>>{
-    return ParserState(input).run(topLevel(halfProgram))
-}
+@Suppress("UNCHECKED_CAST")
+fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> = ParserState(input).parse(
+    many(
+        asum(
+            arrayOf(
+                _anyKeyword * { it, pos -> KeyWord(it,pos) },
+                pComment as Parser<Token>,
+                pIntLit as Parser<Token>,
+                pBoolLit as Parser<Token>,
+                pStrLit as Parser<Token>,
+                pVariable as Parser<Token>,
+                _reservedChar * { it, pos -> Symbol(it,pos) },
+                _lineEnd * { it, pos -> LineEnd(it,pos) }
+            )
+        )
+    )
+)
+
 
 fun Env.runProgram(statements: ArrayList<Statement>) {
     for (statement in statements) statement.evaluate(this)

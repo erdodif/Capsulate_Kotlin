@@ -328,7 +328,7 @@ val digit: Parser<Short> = satisfy { it in '0'..'9' } / { (it.code - '0'.code).t
 /**
  * Looks for a non-negative integer
  */
-val natural: Parser<UInt> = some(digit) / { it.fold(0) { a, b -> a + b.toInt() }.toUInt() }
+val natural: Parser<UInt> = some(digit) / { it.fold(0) { a, b -> a * 10 + b.toInt() }.toUInt() }
 
 /**
  * Looks for a signed integer

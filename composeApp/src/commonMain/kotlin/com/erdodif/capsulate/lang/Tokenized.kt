@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.lang
 
+
+val pLineEnd: Parser<Char> = orEither(char(';'), char('\n'))
 /**
  * Removes the whitespaces, then match the given [parser]
  */
@@ -20,25 +22,29 @@ val freeWord: Parser<String> = {
         result.to()
     } else {
         result as Pass
-        pass(result.match.start,result.value.asString())
+        pass(result.match.start, result.value.asString())
     }
 }
 
-inline fun _char(char:Char) : Parser<Char> = tok(char(char))
+inline fun _char(char: Char): Parser<Char> = tok(char(char))
 
-inline fun _keyword(string :String) : Parser<String> = tok(string(string))
+inline fun _keyword(string: String): Parser<String> = tok(string(string))
+
+val _anyKeyword: Parser<String> = asum(keywords.map { _keyword(it) }.toTypedArray())
+
+val _reservedChar: Parser<Char> = asum(reservedChars.map { _char(it) }.toTypedArray())
 
 val _nonKeyword: Parser<String> = {
     val result: ParserResult<String> = tok(freeWord)()
-    if(result is Pass && keywords.contains((result).value)){
+    if (result is Pass && keywords.contains((result).value)) {
         fail("The word '${result.value}' is reserved!")
-    }
-    else{
+    } else {
         result
     }
 }
 
-val _natural : Parser<UInt> = tok(natural)
+val _natural: Parser<UInt> = tok(natural)
 
 val _integer: Parser<Int> = tok(int)
 
+val _lineEnd: Parser<Char> = tok(pLineEnd)

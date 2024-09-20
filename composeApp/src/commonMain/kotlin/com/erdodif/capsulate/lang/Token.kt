@@ -4,10 +4,21 @@ interface Exp<T : Value> {
     fun evaluate(env: Env): T
 }
 
-abstract class Token(val match: MatchPos) {
+open class Token(val match: MatchPos) {
     inline val ParserState.matchedToken: String
         get() = input[match.start, match.end]
 }
+
+class KeyWord(val id: String, match: MatchPos): Token(match)
+class Symbol(val id: Char, match: MatchPos): Token(match)
+class LineEnd(val char: Char, match: MatchPos): Token(match)
+class Comment(val content: String, match: MatchPos): Token(match)
+
+val pComment: Parser<Comment> = orEither(
+        right(and(char('/'), _char('/')),left(many(right(not(char('\n')), anyChar)),or(char('\n'), EOF))),
+        right(and(char('/'), _char('*')),left(many(right(not(and(char('*'), _char('/'))), anyChar)), and(char('*'), _char('/'))))
+    ) * {it, pos -> Comment(it.asString(), pos)}
+
 
 class StrLit(val value: String, match: MatchPos) : Exp<VStr>, Token(match) {
     override fun evaluate(env: Env): VStr = VStr(value)
@@ -181,22 +192,8 @@ val pStrLit: Parser<StrLit> = middle(
     _char('"')
 ) * { res, pos -> StrLit(res.asString(),pos) }
 
-val pIntLit: Parser<IntLit> = {
-    val start = position
-    val isNegative = optional(_char('-'))().value == null
-    val digitMatch = some(digit)()
-    if (digitMatch is Fail<*>) {
-        digitMatch.to()
-    } else {
-        var number: Int = 0
-        for (digit in (digitMatch as Pass).value) {
-            number *= 10
-            number += digit
-        }
-        val match = MatchPos(start, position)
-        pass(match.start, IntLit(if (isNegative) -number else number, match))
-    }
-}
+val pIntLit: Parser<IntLit> = _integer * { it, pos -> IntLit(it, pos)}
+
 val pBoolLit: Parser<BoolLit> =
     or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*, *>, pos) }
 
