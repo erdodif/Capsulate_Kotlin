@@ -147,9 +147,9 @@ fun CodeEditor(code: String = "", modifier: Modifier = Modifier, onValueChange: 
                     var lastLine = 0
                     lineBreaks.map { pos ->
                         i++
-                        val currline = it.getLineForOffset(pos + 1)
-                        lineNums += "$i" + "\n".repeat(currline - lastLine)
-                        lastLine = currline
+                        val currentLine = it.getLineForOffset(pos + 1)
+                        lineNums += "$i" + "\n".repeat(currentLine - lastLine)
+                        lastLine = currentLine
                     }
                     lineNums += "${i + 1}"
                 }
