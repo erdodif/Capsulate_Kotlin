@@ -133,23 +133,7 @@ fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
 fun CodeEditor(code: String = "", modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
     defaultCodeHighLight.apply {
         val textStyle = TextStyle(fontFamily = fonts, fontSize = 18.sp)
-        val textMeasurer = rememberTextMeasurer()
-        val density = LocalDensity.current
         val lineBreaks = lineBreakPositions(code)
-        //DESKTOP MISALIGNED after 55 chars
-        val width by remember {
-            derivedStateOf {
-                max(
-                    textMeasurer.measure(
-                        "MMM",
-                        style = textStyle,
-                        overflow = TextOverflow.Visible,
-                        density = density,
-                    ).size.width / 3, 1
-                )
-            }
-        }
-        var widthInChar by remember { mutableStateOf(1) }
         var lineNums by remember { mutableStateOf("") }
         val coroutineScope = rememberCoroutineScope()
         BasicTextField(value = code, onValueChange = onValueChange,
@@ -158,9 +142,6 @@ fun CodeEditor(code: String = "", modifier: Modifier = Modifier, onValueChange: 
             cursorBrush = SolidColor(Color.Cyan),
             onTextLayout = {
                 coroutineScope.launch {
-                    widthInChar = max(
-                        ceil(it.size.width.toFloat() / width).toInt() + 1, 1
-                    )
                     lineNums = ""
                     var i = 0
                     var lastLine = 0
@@ -201,21 +182,13 @@ fun CodeEditor(code: String = "", modifier: Modifier = Modifier, onValueChange: 
                 }
             }) {
             Row(Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
-                var i = 0
-                val text = code.split('\n').map {
-                    i += 1
-                    i.toString() + "\n".repeat(max(it.length / widthInChar + 1, 1))
-
-                }.fold("", String::plus)
-                if (widthInChar > 1) {
-                    Text(
-                        text = lineNums,//text[0, text.length - 1],
-                        modifier = Modifier.padding(3.dp, 0.dp, 2.dp, 0.dp),
-                        fontSize = textStyle.fontSize,
-                        fontFamily = textStyle.fontFamily,
-                        color = Color(80, 80, 80)
-                    )
-                }
+                Text(
+                    text = lineNums,
+                    modifier = Modifier.padding(3.dp, 0.dp, 2.dp, 0.dp),
+                    fontSize = textStyle.fontSize,
+                    fontFamily = textStyle.fontFamily,
+                    color = Color(80, 80, 80)
+                )
                 Spacer(
                     Modifier.padding(4.dp, 1.dp)
                         .background(Color(37, 37, 37, 200))
