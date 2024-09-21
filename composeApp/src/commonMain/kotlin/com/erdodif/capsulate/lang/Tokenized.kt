@@ -1,7 +1,8 @@
 package com.erdodif.capsulate.lang
 
 
-val pLineEnd: Parser<Char> = orEither(char(';'), char('\n'))
+val pLineEnd: Parser<Char> = asum(lineEnd.map { char(it) }.toTypedArray())
+
 /**
  * Removes the whitespaces, then match the given [parser]
  */
@@ -11,20 +12,12 @@ inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = left(parser, many
 /**
  * Looks for non reserved char
  */
-val freeChar: Parser<Char> = satisfy { !reservedChars.contains(it) }
+val freeChar: Parser<Char> = satisfy { it !in reservedChars && it !in lineEnd }
 
 /**
  * Looks for a word made of non reserved characters
  */
-val freeWord: Parser<String> = {
-    val result = some(satisfy { !reservedChars.contains(it) })()
-    if (result is Fail) {
-        result.to()
-    } else {
-        result as Pass
-        pass(result.match.start, result.value.asString())
-    }
-}
+val freeWord: Parser<String> = some(freeChar) / { it.asString() }
 
 inline fun _char(char: Char): Parser<Char> = tok(char(char))
 

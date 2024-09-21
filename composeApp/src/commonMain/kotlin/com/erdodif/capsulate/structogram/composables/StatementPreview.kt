@@ -8,12 +8,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.CodeEditor
+import com.erdodif.capsulate.lang.parseProgram
 import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.structogram.statements.IfStatement
 import com.erdodif.capsulate.structogram.statements.LoopStatement
@@ -23,6 +31,7 @@ import com.erdodif.capsulate.structogram.statements.Block
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.SwitchStatement
 import com.erdodif.capsulate.structogram.statements.SwitchStatementWithElse
+import io.github.aakira.napier.Napier
 
 @Composable
 fun StatementPreview() = LazyColumn(
@@ -31,24 +40,20 @@ fun StatementPreview() = LazyColumn(
     contentPadding = PaddingValues(4.dp, 10.dp)
 ) {
     item{
+        var code by rememberSaveable { mutableStateOf("if 0 = 1 {\n  skip;\n  a := \"sad\\\"as\"; \n" +
+                "} \nelse { skip; };") }
         Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            CodeEditor()
+            CodeEditor(code) { code = it }
         }
         Spacer(Modifier.height(10.dp))
-    }
-
-    item{
-        Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            CodeEditor("a := 2;")
-        }
-        Spacer(Modifier.height(10.dp))
-    }
-
-
-    item{
-        Box (Modifier.background(Color(0,0,0,70)).padding(10.dp)){
-            CodeEditor("if 0 = 1 { skip; } " +
-                    "\nelse { skip; };")
+        Button(
+         onClick = {
+             Napier.d {
+                 parseProgram(code).toString()
+             }
+          }
+        ){
+            Text("Log content")
         }
         Spacer(Modifier.height(10.dp))
     }

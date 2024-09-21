@@ -1,6 +1,8 @@
 package com.erdodif.capsulate.lang
 
-const val reservedChars = "()[]{}|$:.?=+-;,*/\"\' \t"
+const val lineEnd = "\n\r"
+
+const val reservedChars = "()[]{}|$;,.:?=+-*/\"\' \t"
 
 val keywords = arrayOf(
     "true",
@@ -14,4 +16,3 @@ val keywords = arrayOf(
     "skip"
 )
 
-const val lineEnd = "\n;"
