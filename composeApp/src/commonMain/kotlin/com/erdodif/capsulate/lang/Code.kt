@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,25 +22,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.SubcomposeSlotReusePolicy
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.UrlAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.erdodif.capsulate.composables.fonts
 import kotlinx.coroutines.launch
-import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.min
 
 class CodeHighlight private constructor(
     val constant: Color,
@@ -119,6 +121,30 @@ class CodeHighlight private constructor(
         }
     }
 
+    fun visualTransformation(code: String, tokenStream: ParserResult<ArrayList<Token>>) =
+        VisualTransformation {
+            if (tokenStream is Fail<*>) {
+                TransformedText(buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = Color.Red, background = Color.Black))
+                    { append(code) }
+                }, OffsetMapping.Identity)
+            } else {
+                tokenStream as Pass
+                TransformedText(buildAnnotatedString {
+                    for (token in tokenStream.value) {
+                        withStyle(
+                            SpanStyle(
+                                color = token.highlight(),
+                                fontWeight = token.weight(),
+                                fontStyle = token.style()
+                            )
+                        ) {
+                            append(code[token.match.start, token.match.end])
+                        }
+                    }
+                }, OffsetMapping.Identity)
+            }
+        }
 }
 
 val defaultCodeHighLight = CodeHighlight.Builder {}.build()
@@ -128,62 +154,48 @@ fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
     else null
 }.filterNotNull()
 
-
+@OptIn(ExperimentalTextApi::class)
 @Composable
-fun CodeEditor(code: String = "", modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
+fun CodeEditor(
+    code: String = "",
+    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit
+) {
+    val tokenStream= tokenizeProgram(code)
     defaultCodeHighLight.apply {
         val textStyle = TextStyle(fontFamily = fonts, fontSize = 18.sp)
         val lineBreaks = lineBreakPositions(code)
-        var lineNums by remember { mutableStateOf("") }
+        var lineCountContent by remember { mutableStateOf("") }
         val coroutineScope = rememberCoroutineScope()
-        BasicTextField(value = code, onValueChange = onValueChange,
+        val str = AnnotatedString.Builder(code.length).apply {
+            withStyle(SpanStyle()) { append(code) }
+            pushUrlAnnotation(UrlAnnotation("http://google.com"))
+        }.toAnnotatedString()
+        val transform by remember(code, tokenStream){ derivedStateOf{ visualTransformation(code, tokenStream) }}
+        BasicTextField(
+            value = str.text, onValueChange = onValueChange,
             textStyle = textStyle,
             modifier = modifier.background(Color(44, 44, 44)),
             cursorBrush = SolidColor(Color.Cyan),
             onTextLayout = {
                 coroutineScope.launch {
-                    lineNums = ""
+                    lineCountContent = ""
                     var i = 0
                     var lastLine = 0
                     lineBreaks.map { pos ->
                         i++
                         val currentLine = it.getLineForOffset(pos + 1)
-                        lineNums += "$i" + "\n".repeat(currentLine - lastLine)
+                        lineCountContent += "$i" + "\n".repeat(currentLine - lastLine)
                         lastLine = currentLine
                     }
-                    lineNums += "${i + 1}"
+                    lineCountContent += "${i + 1}"
                 }
             },
-            visualTransformation = object : VisualTransformation {
-                override fun filter(text: AnnotatedString): TransformedText {
-                    val result = tokenizeProgram(code)
-                    if (result is Fail<*>) {
-                        return TransformedText(buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = Color.Red,
-                                    background = Color.Black
-                                )
-                            ) { append(code) }
-                        }, OffsetMapping.Identity)
-                    }
-                    result as Pass
-                    return TransformedText(buildAnnotatedString {
-                        for (token in result.value) withStyle(
-                            style = SpanStyle(
-                                color = token.highlight(),
-                                fontWeight = token.weight(),
-                                fontStyle = token.style()
-                            )
-                        ) {
-                            append(code[token.match.start, token.match.end])
-                        }
-                    }, OffsetMapping.Identity)
-                }
-            }) {
+            visualTransformation = transform
+        ) {
             Row(Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
                 Text(
-                    text = lineNums,
+                    text = lineCountContent,
                     modifier = Modifier.padding(3.dp, 0.dp, 2.dp, 0.dp),
                     fontSize = textStyle.fontSize,
                     fontFamily = textStyle.fontFamily,

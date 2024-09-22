@@ -38,6 +38,9 @@ open class ParserState(val input: String) {
     inline fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
 
     override fun toString(): String = "position: $position\ntext:\n$input"
+
+    operator fun get(match: MatchPos): String = input[match.start, match.end]
+    operator fun get(start: Int, end: Int): String = input[start, end]
 }
 
 sealed class ParserResult<T> {
@@ -65,6 +68,7 @@ sealed class ParserResult<T> {
             this.to()
         }
 }
+
 data class Pass<T>(val value: T, val state: ParserState, val match: MatchPos) : ParserResult<T>()
 data class Fail<T>(val reason: String, val state: ParserState) : ParserResult<T>() {
     @Suppress("UNCHECKED_CAST")
@@ -78,7 +82,7 @@ typealias Parser<T> = ParserState.() -> ParserResult<T>
 /**
  * A function that tries to create T value from the current [ParserState] context
  */
-typealias ParserWith<T,R> = ParserState.(R) -> ParserResult<T>
+typealias ParserWith<T, R> = ParserState.(R) -> ParserResult<T>
 /**
  * A [Parser] that will always pass
  */
@@ -96,11 +100,12 @@ inline fun <T, R> Parser<T>.fMap(crossinline lambda: ParserState.(T) -> R): Pars
 /**
  * Calls the given transformation [lambda] on the result if the parser passes
  */
-inline fun <T, R> Parser<T>.fMapPos(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R> = {
-    val res = this@fMapPos()
-    if (res is Pass) res.fMapPos(lambda)
-    else (res as Fail).to()
-}
+inline fun <T, R> Parser<T>.fMapPos(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R> =
+    {
+        val res = this@fMapPos()
+        if (res is Pass) res.fMapPos(lambda)
+        else (res as Fail).to()
+    }
 
 inline operator fun <T, R> Parser<T>.times(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R> =
     fMapPos(lambda)

@@ -4,7 +4,7 @@ package com.erdodif.capsulate.lang
 val pLineEnd: Parser<Char> = asum(lineEnd.map { char(it) }.toTypedArray())
 
 /**
- * Removes the whitespaces, then match the given [parser]
+ * Matches the given [parser], then removes the whitespaces
  */
 inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = left(parser, many(whiteSpace))
 

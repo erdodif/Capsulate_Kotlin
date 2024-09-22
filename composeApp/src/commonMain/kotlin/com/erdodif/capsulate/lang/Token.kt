@@ -2,11 +2,11 @@ package com.erdodif.capsulate.lang
 
 interface Exp<T : Value> {
     fun evaluate(env: Env): T
+    fun toString(state: ParserState) :String
 }
 
 open class Token(val match: MatchPos) {
-    inline val ParserState.matchedToken: String
-        get() = input[match.start, match.end]
+    inline fun matchedToken(parserState: ParserState): String = parserState.input[match.start, match.end]
 }
 
 class KeyWord(val id: String, match: MatchPos): Token(match)
@@ -22,18 +22,22 @@ val pComment: Parser<Comment> = orEither(
 
 class StrLit(val value: String, match: MatchPos) : Exp<VStr>, Token(match) {
     override fun evaluate(env: Env): VStr = VStr(value)
+    override fun toString(state: ParserState): String = state[match]
 }
 
 class IntLit(val value: Int, match: MatchPos) : Exp<VWhole>, Token(match) {
     override fun evaluate(env: Env): VWhole = VWhole(value)
+    override fun toString(state: ParserState): String = state[match]
 }
 
 class NatLit(val value: UInt, match: MatchPos) : Exp<VNat>, Token(match) {
     override fun evaluate(env: Env): VNat = VNat(value)
+    override fun toString(state: ParserState): String = state[match]
 }
 
 class BoolLit(val value: Boolean, match: MatchPos) : Exp<VBool>, Token(match) {
     override fun evaluate(env: Env): VBool = VBool(value)
+    override fun toString(state: ParserState): String = state[match]
 }
 
 class Variable(val id: String, match: MatchPos) : Exp<Value>, Token(match) {
@@ -45,6 +49,7 @@ class Variable(val id: String, match: MatchPos) : Exp<Value>, Token(match) {
             throw RuntimeException("Variable '$id' is not defined!")
         }
     }
+    override fun toString(state: ParserState): String = state[match]
 }
 
 class Add(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
@@ -65,6 +70,7 @@ class Add(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
         }
         return VWhole(resultFirst.value + resultSecond.value)
     }
+    override fun toString(state: ParserState): String = first.toString(state)+" + "+second.toString(state)
 }
 
 data class Sub(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
@@ -88,6 +94,7 @@ data class Sub(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
         }
         return VWhole(resultFirst.value - resultSecond.value)
     }
+    override fun toString(state: ParserState): String = first.toString(state)+" - "+second.toString(state)
 }
 
 data class Mul(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
@@ -108,6 +115,7 @@ data class Mul(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
         }
         return VWhole(resultFirst.value * resultSecond.value)
     }
+    override fun toString(state: ParserState): String = first.toString(state)+" × "+second.toString(state)
 }
 
 data class Div(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
@@ -128,7 +136,10 @@ data class Div(val first: Exp<*>, val second: Exp<*>) : Exp<VNum> {
         }
         return VWhole(resultFirst.value / resultSecond.value)
     }
+
+    override fun toString(state: ParserState): String = first.toString(state)+" / "+second.toString(state)
 }
+
 
 data class Equal(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
     constructor(expressions: Pair<Exp<*>, Exp<*>>) : this(expressions.first, expressions.second)
@@ -141,6 +152,7 @@ data class Equal(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
         }
         return VBool(value1 == value2)
     }
+    override fun toString(state: ParserState): String = first.toString(state)+" = "+second.toString(state)
 }
 
 data class And(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
@@ -155,6 +167,7 @@ data class And(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
         }
         return VBool(value1.value && value2.value)
     }
+    override fun toString(state: ParserState): String = first.toString(state)+" ∧ "+second.toString(state)
 }
 
 data class Or(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
@@ -169,6 +182,7 @@ data class Or(val first: Exp<*>, val second: Exp<*>) : Exp<VBool> {
         }
         return VBool(value1.value || value2.value)
     }
+    override fun toString(state: ParserState): String = first.toString(state)+" ∨ "+second.toString(state)
 }
 
 data class Not(val expression: Exp<*>) : Exp<VBool> {
@@ -180,10 +194,12 @@ data class Not(val expression: Exp<*>) : Exp<VBool> {
             throw RuntimeException("Type must be Logical")
         }
     }
+    override fun toString(state: ParserState): String = "¬" + expression.toString(state)
 }
 
 data class FunctionCall(val id: String, val arguments: ArrayList<Exp<*>>) : Exp<Nothing> {
     override fun evaluate(env: Env): Nothing = TODO()
+    override fun toString(state: ParserState): String = TODO()
 }
 
 val pStrLit: Parser<StrLit> = middle(
@@ -225,11 +241,11 @@ val pAdd: ExParser =
 val pSub: Parser<Exp<*>> =
     chainl1(pAdd, left({ pass(position,::Sub)  }, _char('-')))
 val pOr: ExParser =
-    chainl1(pDiv, left({ pass(position,::Or)  }, _char('|')))
+    chainl1(pSub, left({ pass(position,::Or)  }, _char('|')))
 val pAnd: ExParser =
     chainl1(pOr, left({ pass(position,::And) }, _char('&')))
 val pNot: ExParser =
-    right(_char('!'), pOr) / { Not(it) }
+    right(_char('!'), pAnd) / { Not(it) }
 val pFunctionCall: ExParser = { fail("NOT IMPLEMENTED") }
 
-val pExp: ExParser = pNot as Parser<Exp<*>>
+val pExp: ExParser = pAtom//pNot as Parser<Exp<*>>

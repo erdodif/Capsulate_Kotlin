@@ -84,6 +84,9 @@ data class Wait(val condition: Exp<*>) : Statement {
     }
 }
 
+fun <T> delimit(parser: Parser<T>): Parser<T> =
+    left(parser, or(some(_lineEnd), and(many(_lineEnd), EOF)))
+
 val ParserState.statement: Parser<Statement>
     get() = asum(
         arrayOf(
@@ -91,23 +94,14 @@ val ParserState.statement: Parser<Statement>
         )
     )
 
-val program: Parser<ArrayList<Statement>> = { some(left(statement, or(_lineEnd, EOF)))() }
+val program: Parser<ArrayList<Statement>> = { left(some(right(many(_lineEnd),statement)),many(_lineEnd))() }
 
-val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
-    some(
-        or(
-            left(statement, or(_lineEnd, EOF)), left(
-                sError, or(_lineEnd, EOF)
-            )
-        )
-    )()
-}
+val sError: Parser<LineError> =
+    delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
 
-val sError: Parser<LineError> = some(satisfy { it !in ";\n" }) / { LineError(it.asString()) }
+val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
 
-val sSkip: Parser<Statement> = _keyword("skip") / { Skip() }
-
-val sExpression: Parser<Statement> = pExp / { Expression(it) }
+val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
 val sIf: Parser<Statement> = (right(_keyword("if"), pExp) + middle(
     _char('{'), program, _char('}')
@@ -124,7 +118,8 @@ val sWhile: Parser<Statement> =
     }
 
 val sDoWhile: Parser<Statement> = right(
-    _keyword("do"), middle(_char('{'), program, _char('}')) + right(_keyword("while"), pExp)
+    _keyword("do"),
+    middle(_char('{'), program, _char('}')) + delimit(right(_keyword("while"), pExp))
 ) / {
     DoWhile(it.second, it.first)
 }
@@ -154,6 +149,12 @@ val sAssign: Parser<Statement> = and(_nonKeyword, right(_keyword(":="), pExp)) /
     Assign(it.first, it.second)
 }
 
+val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
+    orEither(
+        topLevel(many(right(many(_lineEnd), or(statement, sError)))),
+        topLevel(many(_lineEnd) / { arrayListOf() })
+    )()
+}
 
 class ParseException(reason: String) : Exception(reason)
 
@@ -161,22 +162,17 @@ fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
     ParserState(input).parse(topLevel(program))
 
 @Suppress("UNCHECKED_CAST")
-fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> = ParserState(input).parse(
-    many(
-        asum(
-            arrayOf(
-                _anyKeyword * { it, pos -> KeyWord(it,pos) },
-                pComment as Parser<Token>,
-                pIntLit as Parser<Token>,
-                pBoolLit as Parser<Token>,
-                pStrLit as Parser<Token>,
-                pVariable as Parser<Token>,
-                _reservedChar * { it, pos -> Symbol(it,pos) },
-                _lineEnd * { it, pos -> LineEnd(it,pos) }
-            )
-        )
-    )
-)
+fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> =
+    ParserState(input).parse(topLevel(tok(many(asum(arrayOf(
+        _anyKeyword * { it, pos -> KeyWord(it, pos) },
+        pComment as Parser<Token>,
+        pIntLit as Parser<Token>,
+        pBoolLit as Parser<Token>,
+        pStrLit as Parser<Token>,
+        pVariable as Parser<Token>,
+        _reservedChar * { it, pos -> Symbol(it, pos) },
+        _lineEnd * { it, pos -> LineEnd(it, pos) }
+    ))))))
 
 
 fun Env.runProgram(statements: ArrayList<Statement>) {

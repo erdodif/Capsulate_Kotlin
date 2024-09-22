@@ -44,7 +44,7 @@ inline fun string(string: String): Parser<String> = {
         if (i < string.length) {
             fail("Expected '${string[i]}' in word \"${string}\"(index: $i), but found '${input[position]}'")
         } else {
-            if (input.length <= position || input[position] in reservedChars) {
+            if (input.length <= position || input[position] in reservedChars || input[position] in lineEnd) {
                 pass(start, string)
             } else {
                 fail("String '${string}' isn't over yet (found '${input[position]}')")
