@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_logo_trolley_color">#131313</color>
+    <color name="ic_logo_struc_border">#000D40</color>
+    <color name="ic_logo_struc_fill">#2099CF</color>
+</resources>
