@@ -20,6 +20,8 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 
 - scopes can't have `{` and  `}` in one line with a single statement
   - so far it has to be delimited by either `;` or `\n`
+  - exp encapsulation within `()`
+  - statement encapsulation within `{}`
 - Finish class definitions
   - representation & `show()` functions
 - Drag & Drop 
