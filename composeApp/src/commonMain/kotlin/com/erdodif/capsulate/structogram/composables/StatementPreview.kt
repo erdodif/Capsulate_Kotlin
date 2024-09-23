@@ -50,8 +50,8 @@ fun StatementPreview() = LazyColumn(
     item {
         var code by rememberSaveable {
             mutableStateOf(
-                "if 0 = 1 {\n  skip;\n  a := \"sad\\\"as\"; \n" +
-                        "} \nelse { skip; };\nwhile 0 {skip;}"
+                "if 0 {\n  skip\n  a := \"sad\\\"as\" \n" +
+                        "} \nelse { skip; }\nwhile true {skip;}"
             )
         }
         val result by remember { derivedStateOf { ParserState(code).parse(halfProgram) } }
@@ -97,28 +97,6 @@ fun StatementPreview() = LazyColumn(
                 Text((result as Fail).reason, color = Color.Red)
             }
         }
-        Spacer(Modifier.height(10.dp))
-    }
-
-    item {
-        Structogram.fromStatements(
-            ParallelStatement(
-                arrayOf(
-                    LoopStatement(
-                        "if true",
-                        arrayOf(Command("Hello"), Command("World"), Command("World2"))
-                    )
-                ),
-                arrayOf(AwaitStatement("When possible"), Command("Say Hi")),
-                arrayOf(
-                    LoopStatement(
-                        "if true",
-                        arrayOf(Command("Hello"), Command("Make it possible")),
-                        false
-                    )
-                )
-            ),
-        ).content()
         Spacer(Modifier.height(10.dp))
     }
 

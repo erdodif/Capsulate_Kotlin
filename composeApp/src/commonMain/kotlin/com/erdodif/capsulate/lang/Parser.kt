@@ -114,8 +114,8 @@ inline operator fun <T, R> Parser<T>.div(crossinline lambda: ParserState.(T) -> 
     fMap(lambda)
 
 inline operator fun <T, R> Parser<T>.get(
-    crossinline onPass: (Pass<T>) -> ParserResult<R>,
-    crossinline onFail: (Fail<T>) -> ParserResult<R>
+    crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>,
+    crossinline onFail: ParserState.(Fail<T>) -> ParserResult<R>
 ): Parser<R> = {
     val res = this@get()
     if (res is Pass) {
@@ -124,7 +124,7 @@ inline operator fun <T, R> Parser<T>.get(
 }
 
 inline operator fun <T, R> Parser<T>.get(
-    crossinline onPass: (Pass<T>) -> ParserResult<R>
+    crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>
 ): Parser<R> = {
     val res = this@get()
     if (res is Pass) {

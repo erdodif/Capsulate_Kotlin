@@ -53,6 +53,24 @@ inline fun string(string: String): Parser<String> = {
     }
 }
 
+inline fun charSeq(string: String): Parser<String> = {
+    val start = position
+    if (position + string.length > input.length) {
+        fail("EOF reached")
+    } else {
+        var i = 0
+        while (i < string.length && string[i] == input[position + i]) {
+            i++
+        }
+        position += i
+        if (i < string.length) {
+            fail("Expected '${string[i]}' in word \"${string}\"(index: $i), but found '${input[position]}'")
+        } else {
+            pass(start, string)
+        }
+    }
+}
+
 /**
  * In case the [parser] fails, the state gets reset, and returns null
  */

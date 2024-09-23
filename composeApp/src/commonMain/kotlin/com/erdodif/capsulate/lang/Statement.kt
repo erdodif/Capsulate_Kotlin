@@ -94,7 +94,7 @@ val ParserState.statement: Parser<Statement>
         )
     )
 
-val program: Parser<ArrayList<Statement>> = { left(some(right(many(_lineEnd),statement)),many(_lineEnd))() }
+val program: Parser<ArrayList<Statement>> = { some(middle(many(_lineEnd), statement, many(_lineEnd)))() }
 
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
@@ -103,14 +103,13 @@ val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
 
 val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
-val sIf: Parser<Statement> = (right(_keyword("if"), pExp) + middle(
-    _char('{'), program, _char('}')
-) + right(
-    _keyword("else"), middle(_char('{'), program, _char('}'))
+val sIf: Parser<Statement> = (right(_keyword("if"), pExp) +
+        middle(_char('{'), program, delimit(_char('}'))) + right(
+    _keyword("else"), middle(_char('{'), program, delimit(_char('}')))
 )) / { If(it.first.first, it.first.second, it.second) }
 
 val sWhile: Parser<Statement> =
-    (right(_keyword("while"), pExp) + middle(_char('{'), program, _char('}'))) / {
+    (right(_keyword("while"), pExp) + middle(_char('{'), program, delimit(_char('}')))) / {
         While(
             it.first,
             it.second
@@ -124,26 +123,16 @@ val sDoWhile: Parser<Statement> = right(
     DoWhile(it.second, it.first)
 }
 
-val sParallelAssign: Parser<Statement> = {
-    val words = delimited(_nonKeyword, char(','))()
-    if (words is Fail<*>) {
-        words.to()
-    } else {
-        words as Pass
-        val assignW = _keyword(":=")
-        if (assignW is Fail<*>) {
-            assignW.to()
-        } else {
-            val values = delimited(pExp, char(','))()
-            if (values is Fail<*>) values.to()
-            else if (words.value.size != (values as Pass).value.size) {
-                fail("The number of parameters does not match the number of values to assign.")
-            } else pass(
-                words.match.start, ParallelAssign(words.value.zip(values.value) as ArrayList)
+val sParallelAssign: Parser<Statement> =
+    (delimited(_nonKeyword, _char(',')) + right(tok(charSeq(":=")), delimit(delimited(pExp, _char(',')))))[{
+        if (it.value.second.size != it.value.first.size) {
+            fail(
+                "The number of parameters does not match the number of values to assign."
             )
-        }
-    }
-}
+        } else pass(
+            it.match.start, ParallelAssign(it.value.first.zip(it.value.second) as ArrayList)
+        )
+    }]
 
 val sAssign: Parser<Statement> = and(_nonKeyword, right(_keyword(":="), pExp)) / {
     Assign(it.first, it.second)
