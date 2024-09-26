@@ -37,13 +37,13 @@ open class ParserState(val input: String) {
 
     inline fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
 
-    override fun toString(): String = "position: $position\ntext:\n$input"
+    override fun toString(): String = "position: $position, text:\n$input"
 
     operator fun get(match: MatchPos): String = input[match.start, match.end]
     operator fun get(start: Int, end: Int): String = input[start, end]
 }
 
-sealed class ParserResult<T> {
+sealed class ParserResult<T>(open val state: ParserState) {
     /**
      * Calls the given transformation [lambda] if [Pass], or does nothing on [Fail]
      */
@@ -69,8 +69,8 @@ sealed class ParserResult<T> {
         }
 }
 
-data class Pass<T>(val value: T, val state: ParserState, val match: MatchPos) : ParserResult<T>()
-data class Fail<T>(val reason: String, val state: ParserState) : ParserResult<T>() {
+data class Pass<T>(val value: T, override val state: ParserState, val match: MatchPos) : ParserResult<T>(state)
+data class Fail<T>(val reason: String, override val state: ParserState) : ParserResult<T>(state) {
     @Suppress("UNCHECKED_CAST")
     fun <R> to(): Fail<R> = this as Fail<R>
 }
