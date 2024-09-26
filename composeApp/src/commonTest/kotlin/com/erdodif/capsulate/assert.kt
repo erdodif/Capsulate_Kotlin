@@ -1,5 +1,6 @@
 package com.erdodif.capsulate
 
+import com.erdodif.capsulate.lang.Exp
 import com.erdodif.capsulate.lang.Fail
 import com.erdodif.capsulate.lang.MatchPos
 import com.erdodif.capsulate.lang.Parser
@@ -10,30 +11,43 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 inline fun <T> assertPass(value: ParserResult<T>) =
-    assertTrue("Expected Pass, but got Fail with reason: ${(value as? Fail)?.reason}") {
+    assertTrue("Expected Pass, but got Fail with reason: ${(value as? Fail)?.reason}\nState=${value.state}") {
         value is Pass<T>
     }
 
 inline fun <T> assertPassAt(value: ParserResult<T>, at: MatchPos) {
-    assertTrue("Expected Pass, but got Fail with reason: ${(value as? Fail)?.reason}") {
+    assertTrue(
+        "Expected Pass, but got Fail with reason: ${(value as? Fail)?.reason}\nState=${value.state}"
+    ) {
         value is Pass<T>
     }
     assertEquals(
         at,
         (value as Pass).match,
-        "Expected match[${at.start}, ${at.end}], actual: match[${value.match.start}, ${value.match.end}]"
+        "Expected match[${at.start}, ${at.end}], actual: match[${
+            value.match.start
+        }, ${value.match.end}]\nState=${value.state}"
     )
 }
 
-inline fun <T> assertFail(value: ParserResult<T>) =
-    assertTrue("Expected Fail, but Passed with value: ${(value as? Pass)?.value}") {
-        value is Fail<T>
+inline fun <T> assertFail(value: ParserResult<T>) {
+    if (value is Pass) {
+        if (value.value is Exp<*>) {
+            throw AssertionError(
+                "Expected Fail, but Passed with value: ${
+                    (value.value as Exp<*>).toString(value.state)
+                }\nState=${value.state}"
+            )
+        } else {
+            throw AssertionError("Expected Fail, but Passed with value: ${value.value
+                }\nState=${value.state}")
+        }
     }
+}
+
 
 inline fun <T> assertFailsAt(
-    expectedIndex: Int,
-    initialState: ParserState,
-    crossinline parser: Parser<T>
+    expectedIndex: Int, initialState: ParserState, crossinline parser: Parser<T>
 ) {
     val result = initialState.parse { parser() }
     assertTrue("Expected Fail at $expectedIndex, but Passed with value: ${(result as? Pass)?.value}") {
@@ -50,8 +64,6 @@ inline fun <T> assertValue(expected: T, result: ParserResult<T>) {
     assertPass(result)
     result as Pass
     assertEquals(
-        expected,
-        result.value,
-        "Expected Pass result of $expected, but got ${result.value}"
+        expected, result.value, "Expected Pass result of $expected, but got ${result.value}"
     )
 }
