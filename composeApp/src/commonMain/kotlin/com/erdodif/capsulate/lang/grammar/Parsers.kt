@@ -389,8 +389,8 @@ fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
     (value + { vMatch ->
         orEither(
             (func + chainr1(value, func)) / { it.first(vMatch.value, it.second) }
-        ) { pass(vMatch.match.start, value) }
-    }) * { a, _ -> a.first }
+        ) { pass(vMatch.match.start, vMatch.value) }
+    }) * { a, _ -> a.second }
 
 // NEEDS TO BE CHECKED TODO
 /**
@@ -398,26 +398,20 @@ fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = {
-    val valueFirst = value()
-    if (valueFirst is Fail) {
-        valueFirst.to()
-    } else {
-        valueFirst as Pass<T>
-        val pos = position
-        fun chainh(val1: T, func: Parser<(T, T) -> T>, value: Parser<T>): Parser<T> =
-            (func + value)[{ chainh(it.value.first(val1, it.value.second), func, value)() },
-                { position = pos; it.to() }]
-
-        val result = chainh(valueFirst.value, func, value)()
-        if (result is Fail) {
-            position = pos
-            valueFirst
-        } else {
-            result
+fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
+    value[{ valueFirst ->
+        var pos = position
+        var res = (func + value)()
+        var acc = valueFirst.value
+        while(res is Pass){
+            acc = res.value.first(acc, res.value.second)
+            pos = position
+            res = (func + value)()
         }
-    }
-}
+        position = pos
+        pass(valueFirst.match.start,acc)
+    }]
+
 
 // NEEDS TO BE CHECKED TODO
 fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =

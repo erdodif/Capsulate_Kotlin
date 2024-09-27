@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.composables.CodeEditor
+import com.erdodif.capsulate.lang.grammar.Exp
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
@@ -47,7 +48,7 @@ fun StatementPreview() = LazyColumn(
     item {
         var code by rememberSaveable {
             mutableStateOf(
-                "if 0 {\n  skip\n  a := \"sad\\\"as\" \n" +
+                "if 0 {\n  skip\n  a + \"sad\\\"as\" \n" +
                         "} \nelse { skip; }\nwhile true {skip;}"
             )
         }
@@ -65,6 +66,7 @@ fun StatementPreview() = LazyColumn(
         ) {
             Text("Log content")
         }
+        @Suppress("UNCHECKED_CAST")
         Column(Modifier.background(Color(46, 46, 46, 100))) {
             if (result is Pass) {
                 Structogram.fromStatements(*(result as Pass<List<Either<Statement, LineError>>>).value.filterNot { it is Right<*, *> }
@@ -77,14 +79,19 @@ fun StatementPreview() = LazyColumn(
                     }.toTypedArray()).content()
                 for (res in (result as Pass<List<Either<Statement, LineError>>>).value.iterator()) {
                     if (res is Left<*, *>) {
-                        Text(res.value.toString(), color = Color.Magenta)
+                        if(res.value is Exp<*>){
+                        Text(res.value.toString(ParserState(code)), color = MaterialTheme.colorScheme.secondary)
+                        }
+                        else{
+                        Text(res.value.toString(), color = MaterialTheme.colorScheme.secondary)
+                        }
                     } else {
                         res as Right<*, LineError>
-                        Text(res.value.content, color = Color(140, 34, 17))
+                        Text(res.value.content, color = MaterialTheme.colorScheme.error)
                     }
                 }
             } else {
-                Text((result as Fail).reason, color = Color.Red)
+                Text((result as Fail).reason, color = MaterialTheme.colorScheme.error)
             }
         }
         Spacer(Modifier.height(10.dp))

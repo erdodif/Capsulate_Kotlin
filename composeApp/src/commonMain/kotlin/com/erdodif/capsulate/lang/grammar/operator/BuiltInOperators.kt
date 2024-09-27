@@ -12,7 +12,6 @@ object Add : BinaryOperator(
     14,
     "+",
     _char('+'),
-    Fixation.INFIX,
     Association.RIGHT,
     { a, b ->
         val resultFirst = a.evaluate(this)
@@ -39,7 +38,6 @@ object Sub : BinaryOperator(
     12,
     "-",
     _char('-'),
-    Fixation.INFIX,
     Association.LEFT,
     { a, b ->
         val resultFirst = a.evaluate(this)
@@ -66,7 +64,6 @@ object Mul : BinaryOperator(
     18,
     "*",
     _char('*'),
-    Fixation.INFIX,
     Association.RIGHT,
     { a, b ->
         val resultFirst = a.evaluate(this)
@@ -92,7 +89,6 @@ object Div : BinaryOperator(
     16,
     "/",
     _char('/'),
-    Fixation.INFIX,
     Association.LEFT,
     { a, b ->
         val resultFirst = a.evaluate(this)
@@ -118,7 +114,6 @@ object Equal : BinaryOperator(
     10,
     "=",
     _char('='),
-    Fixation.INFIX,
     Association.NONE,
     { a, b ->
         val value1 = a.evaluate(this)
@@ -135,7 +130,6 @@ object And: BinaryOperator(
     6,
     "&",
     _char('&'),
-    Fixation.INFIX,
     Association.LEFT,
     { a, b ->
         val value1 = a.evaluate(this)
@@ -156,7 +150,6 @@ object Or: BinaryOperator(
     5,
     "|",
     _char('|'),
-    Fixation.INFIX,
     Association.LEFT,
     { a, b ->
         val value1 = a.evaluate(this)
@@ -189,5 +182,3 @@ object Not : UnaryOperator(
 )
 
 // FunctionCall TODO
-
-val builtInOperators = listOf(Add, Sub, Mul, Div, And, Or, Not, Equal)

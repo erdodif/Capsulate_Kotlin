@@ -4,7 +4,7 @@ const val whiteSpaceChars = " \t"
 
 const val lineEnd = "\n\r;"
 
-const val reservedChars = "()[]{}|$,.:?=+-*/\"\'"
+const val reservedChars = "()[]{}|&,.:?=+-*/\"\'"
 
 val keywords = arrayOf(
     "true",

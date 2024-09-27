@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.grammar
 
+import com.erdodif.capsulate.lang.grammar.operator.OperatorTable
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -88,21 +89,20 @@ val pBoolLit: Parser<BoolLit> =
 
 val pVariable: Parser<Variable> = _nonKeyword[{
     if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
-    else pass(it.match.start,Variable(it.value, it.match))
+    else pass(it.match.start, Variable(it.value, it.match))
 }]
 
 val litOrder: Array<Parser<*>> = arrayOf(
     pIntLit,
     pBoolLit,
     pStrLit,
-    pVariable,
-    // { middle(char('('), pExp , char(')'))() } //TODO: Circular dependency has to be resolved with pExp
+    pVariable
 )
 
 typealias ExParser = Parser<Exp<*>>
 
 @Suppress("UNCHECKED_CAST")
-val pAtom: ExParser = asum(*litOrder as Array<Parser<Exp<*>>>)
+fun pAtom(): ExParser =
+    asum(*litOrder as Array<Parser<Exp<*>>>, middle(_char('('), pExp, _char(')')))
 
-// TODO: add OperatorTable into pExp
-val pExp: ExParser = pAtom
+val pExp: ExParser = OperatorTable().parser(pAtom())
