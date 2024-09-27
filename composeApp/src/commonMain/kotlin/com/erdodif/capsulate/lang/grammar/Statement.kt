@@ -108,12 +108,12 @@ fun <T> delimit(parser: Parser<T>): Parser<T> =
 
 val ParserState.statement: Parser<Statement>
     get() = asum(
-        sExpression, sSkip, sAssign, sIf, sWhile, sDoWhile, sParallelAssign
+        sExpression, sSkip, sAssign, sParallelAssign, sIf, sWhile, sDoWhile
     )
 
 val program: Parser<ArrayList<Statement>> =
     //{ right(many(_lineEnd),delimited(statement, some(_lineEnd)))() }
-    { some(middle(many(_lineEnd), statement, many(_lineEnd)))() }
+    { some(middle(many(_lineEnd), delimit(statement), many(_lineEnd)))() }
 
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
@@ -122,13 +122,13 @@ val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
 
 val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
-val sIf: Parser<Statement> = (right(_keyword("if"), pExp) +
-        middle(_char('{'), program, delimit(_char('}'))) + right(
-    _keyword("else"), middle(_char('{'), program, delimit(_char('}')))
+val sIf: Parser<Statement> = (middle(_keyword("if"), pExp, many(_char('\n'))) +
+        middle(_char('{'), program, delimit(_char('}') + many(_char('\n')))) + right(
+    _keyword("else") +  many(_char('\n')), middle(_char('{'), program, delimit(_char('}')))
 )) / { If(it.first.first, it.first.second, it.second) }
 
 val sWhile: Parser<Statement> =
-    (right(_keyword("while"), pExp) + middle(_char('{'), program, delimit(_char('}')))) / {
+    (middle(_keyword("while"), pExp, many(_char('\n'))) + middle(_char('{'), program, delimit(_char('}')))) / {
         While(
             it.first,
             it.second
@@ -136,8 +136,8 @@ val sWhile: Parser<Statement> =
     }
 
 val sDoWhile: Parser<Statement> = right(
-    _keyword("do"),
-    middle(_char('{'), program, _char('}')) + delimit(right(_keyword("while"), pExp))
+    _keyword("do") + many(_char('\n')),
+    middle(_char('{'), program, right(_char('}'), many(_char('\n')))) + delimit(right(_keyword("while"), pExp))
 ) / {
     DoWhile(it.second, it.first)
 }
@@ -153,7 +153,7 @@ val sParallelAssign: Parser<Statement> =
         )
     }]
 
-val sAssign: Parser<Statement> = and(_nonKeyword, right(_keyword(":="), pExp)) / {
+val sAssign: Parser<Statement> = delimit(_nonKeyword + right(_keyword(":="), pExp)) / {
     Assign(it.first, it.second)
 }
 

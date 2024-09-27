@@ -1,17 +1,17 @@
 package com.erdodif.capsulate.lang.util
 
 import com.erdodif.capsulate.lang.grammar.char
-import com.erdodif.capsulate.lang.grammar.string
 import com.erdodif.capsulate.lang.grammar.int
+import com.erdodif.capsulate.lang.grammar.keywords
 import com.erdodif.capsulate.lang.grammar.left
+import com.erdodif.capsulate.lang.grammar.lineEnd
 import com.erdodif.capsulate.lang.grammar.many
 import com.erdodif.capsulate.lang.grammar.natural
+import com.erdodif.capsulate.lang.grammar.reservedChars
 import com.erdodif.capsulate.lang.grammar.satisfy
 import com.erdodif.capsulate.lang.grammar.some
+import com.erdodif.capsulate.lang.grammar.string
 import com.erdodif.capsulate.lang.grammar.whiteSpace
-import com.erdodif.capsulate.lang.grammar.keywords
-import com.erdodif.capsulate.lang.grammar.lineEnd
-import com.erdodif.capsulate.lang.grammar.reservedChars
 import com.erdodif.capsulate.lang.grammar.whiteSpaceChars
 
 
@@ -26,7 +26,8 @@ inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = left(parser, many
 /**
  * Looks for non reserved char
  */
-val freeChar: Parser<Char> = satisfy { it !in whiteSpaceChars && it !in reservedChars && it !in lineEnd }
+val freeChar: Parser<Char> =
+    satisfy { it !in whiteSpaceChars && it !in reservedChars && it !in lineEnd }
 
 /**
  * Looks for a word made of non reserved characters
@@ -42,14 +43,13 @@ val _anyKeyword: Parser<String> = asum(*keywords.map { _keyword(it) }.toTypedArr
 val reservedChar: Parser<Char> = asum(*reservedChars.map { char(it) }.toTypedArray())
 val _reservedChar: Parser<Char> = tok(reservedChar)
 
-val _nonKeyword: Parser<String> = {
-    val result: ParserResult<String> = tok(freeWord)()
-    if (result is Pass && keywords.contains((result).value)) {
-        fail("The word '${result.value}' is reserved!")
+val _nonKeyword: Parser<String> = tok(freeWord)[{
+    if (keywords.contains(it.value)) {
+        fail("The word '${it.value}' is reserved!")
     } else {
-        result
+        it
     }
-}
+}]
 
 val _natural: Parser<UInt> = tok(natural)
 

@@ -44,7 +44,8 @@ abstract class Statement {
 
             is DoWhile -> LoopStatement(
                 statement.condition.toString(state),
-                statement.statements.map { fromTokenized(state, it) }.toTypedArray()
+                statement.statements.map { fromTokenized(state, it) }.toTypedArray(),
+                false
             )
 
             is Expression -> Command("EXP: ${statement.expression.toString(state)}")
