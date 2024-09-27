@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -67,7 +68,7 @@ fun StatementPreview() = LazyColumn(
             Text("Log content")
         }
         @Suppress("UNCHECKED_CAST")
-        Column(Modifier.background(Color(46, 46, 46, 100))) {
+        Column(Modifier.fillMaxWidth().background(Color(46, 46, 46, 100)).padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (result is Pass) {
                 Structogram.fromStatements(*(result as Pass<List<Either<Statement, LineError>>>).value.filterNot { it is Right<*, *> }
                     .map {
@@ -77,6 +78,10 @@ fun StatementPreview() = LazyColumn(
                             it.value as com.erdodif.capsulate.lang.grammar.Statement
                         )
                     }.toTypedArray()).content()
+                var opened by remember { mutableStateOf(false) }
+                Spacer(Modifier.height(10.dp))
+                Button({opened = !opened}){ Text(if(opened) "Close line matches" else "Expand Line matches")}
+                if(opened)
                 for (res in (result as Pass<List<Either<Statement, LineError>>>).value.iterator()) {
                     if (res is Left<*, *>) {
                         if(res.value is Exp<*>){
