@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -22,22 +23,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.lang.CodeEditor
-import com.erdodif.capsulate.lang.Either
-import com.erdodif.capsulate.lang.Fail
-import com.erdodif.capsulate.lang.Left
-import com.erdodif.capsulate.lang.LineError
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.Pass
-import com.erdodif.capsulate.lang.Right
-import com.erdodif.capsulate.lang.halfProgram
-import com.erdodif.capsulate.lang.parseProgram
-import com.erdodif.capsulate.lang.tokenizeProgram
+import com.erdodif.capsulate.composables.CodeEditor
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.grammar.LineError
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.grammar.halfProgram
+import com.erdodif.capsulate.lang.grammar.parseProgram
+import com.erdodif.capsulate.lang.grammar.tokenizeProgram
 import com.erdodif.capsulate.structogram.Structogram
-import com.erdodif.capsulate.structogram.statements.AwaitStatement
-import com.erdodif.capsulate.structogram.statements.Command
-import com.erdodif.capsulate.structogram.statements.LoopStatement
-import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.Statement
 import io.github.aakira.napier.Napier
 
@@ -55,7 +52,6 @@ fun StatementPreview() = LazyColumn(
             )
         }
         val result by remember { derivedStateOf { ParserState(code).parse(halfProgram) } }
-        val tokenStream by remember(code) { derivedStateOf { tokenizeProgram(code) } }
         Box(Modifier.background(Color(0, 0, 0, 70)).padding(10.dp)) {
             CodeEditor(code) { code = it }
         }
@@ -76,17 +72,11 @@ fun StatementPreview() = LazyColumn(
                         it as Left<*, *>
                         Statement.fromTokenized(
                             ParserState(code),
-                            it.value as com.erdodif.capsulate.lang.Statement
+                            it.value as com.erdodif.capsulate.lang.grammar.Statement
                         )
                     }.toTypedArray()).content()
                 for (res in (result as Pass<List<Either<Statement, LineError>>>).value.iterator()) {
                     if (res is Left<*, *>) {
-                        /*Structogram.fromStatements(
-                        )
-                        Statement.fromTokenized(res.value as com.erdodif.capsulate.lang.Statement)*/
-                        /*if(res.value is com.erdodif.capsulate.lang.Statement){
-                        }*/
-                        //Text(res.toString(), color= Color.Magenta)
                         Text(res.value.toString(), color = Color.Magenta)
                     } else {
                         res as Right<*, LineError>

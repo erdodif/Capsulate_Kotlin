@@ -1,6 +1,21 @@
 @file:Suppress("UNUSED")
 
-package com.erdodif.capsulate.lang
+package com.erdodif.capsulate.lang.grammar
+
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.SuccessParser
+import com.erdodif.capsulate.lang.util.div
+import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.getEither
+import com.erdodif.capsulate.lang.util.times
 
 val anyChar: Parser<Char> = {
     if (position >= input.length) {
@@ -32,28 +47,6 @@ inline fun char(char: Char): Parser<Char> = {
  * Matches the given [string]
  */
 inline fun string(string: String): Parser<String> = {
-    val start = position
-    if (position + string.length > input.length) {
-        fail("EOF reached")
-    } else {
-        var i = 0
-        while (i < string.length && string[i] == input[position + i]) {
-            i++
-        }
-        position += i
-        if (i < string.length) {
-            fail("Expected '${string[i]}' in word \"${string}\"(index: $i), but found '${input[position]}'")
-        } else {
-            if (input.length <= position || input[position] in reservedChars || input[position] in lineEnd) {
-                pass(start, string)
-            } else {
-                fail("String '${string}' isn't over yet (found '${input[position]}')")
-            }
-        }
-    }
-}
-
-inline fun charSeq(string: String): Parser<String> = {
     val start = position
     if (position + string.length > input.length) {
         fail("EOF reached")
@@ -360,6 +353,7 @@ val int: Parser<Int> = and(optional(char('-')), natural) / { (sign, num) ->
  */
 val whiteSpace: Parser<Unit> =
     or(char(' '), char('\t'))[{ Pass(Unit, it.state, it.match) }, { it.to() }]
+// asum(whiteSpaceChars.map{char(it)}.toTypedArray())[{ Pass(Unit, it.state, it.match) }, { it.to() }]
 
 /**
  * Matches for a [parser] with [delim] delimiter, keeping only [parser]'s match

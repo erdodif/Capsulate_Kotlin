@@ -2,11 +2,11 @@ package com.erdodif.capsulate.lang.parsers
 
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.char
-import com.erdodif.capsulate.lang.left
-import com.erdodif.capsulate.lang.middle
-import com.erdodif.capsulate.lang.right
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.grammar.char
+import com.erdodif.capsulate.lang.grammar.left
+import com.erdodif.capsulate.lang.grammar.middle
+import com.erdodif.capsulate.lang.grammar.right
 import kotlin.test.Test
 
 class DiscardTest {

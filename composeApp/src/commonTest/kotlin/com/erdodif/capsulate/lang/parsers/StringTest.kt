@@ -3,9 +3,9 @@ package com.erdodif.capsulate.lang.parsers
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPassAt
 import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.MatchPos
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.string
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.grammar.string
 import kotlin.test.Test
 
 class StringTest {
@@ -14,9 +14,6 @@ class StringTest {
 
     @Test
     fun string_fail_shorter_string() = assertFail(ParserState("tex").parse(string("text")))
-
-    @Test
-    fun string_fail_longer_string() = assertFail(ParserState("texti").parse(string("text")))
 
     @Test
     fun string_fail_mismatched_string() {

@@ -1,11 +1,11 @@
 package com.erdodif.capsulate.lang.parsers
 
 import com.erdodif.capsulate.assertPass
-import com.erdodif.capsulate.lang.EOF
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.and
-import com.erdodif.capsulate.lang.char
-import com.erdodif.capsulate.lang.tok
+import com.erdodif.capsulate.lang.grammar.EOF
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.grammar.and
+import com.erdodif.capsulate.lang.grammar.char
+import com.erdodif.capsulate.lang.util.tok
 import kotlin.test.Test
 
 class TokenizedTest {
@@ -22,5 +22,5 @@ class TokenizedTest {
     fun tok_pass_char_ws() = assertPass(ParserState("c  ").parse(tok(char('c'))))
 
     @Test
-    fun tok_pass_chars() = assertPass(ParserState("c  r").parse(and(tok(char('c')),char('r'))))
+    fun tok_pass_chars() = assertPass(ParserState("c  r").parse(and(tok(char('c')), char('r'))))
 }

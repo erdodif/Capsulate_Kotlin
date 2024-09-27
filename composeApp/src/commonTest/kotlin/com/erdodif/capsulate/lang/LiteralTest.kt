@@ -2,6 +2,11 @@ package com.erdodif.capsulate.lang
 
 import com.erdodif.capsulate.assertPass
 import com.erdodif.capsulate.assertPassAt
+import com.erdodif.capsulate.lang.grammar.StrLit
+import com.erdodif.capsulate.lang.grammar.pStrLit
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

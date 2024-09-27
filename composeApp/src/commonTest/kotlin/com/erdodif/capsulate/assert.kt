@@ -1,12 +1,12 @@
 package com.erdodif.capsulate
 
-import com.erdodif.capsulate.lang.Exp
-import com.erdodif.capsulate.lang.Fail
-import com.erdodif.capsulate.lang.MatchPos
-import com.erdodif.capsulate.lang.Parser
-import com.erdodif.capsulate.lang.ParserResult
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.Pass
+import com.erdodif.capsulate.lang.grammar.Exp
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -32,7 +32,7 @@ inline fun <T> assertPassAt(value: ParserResult<T>, at: MatchPos) {
 
 inline fun <T> assertFail(value: ParserResult<T>) {
     if (value is Pass) {
-        if (value.value is Exp<*>) {
+        if (value.value is Exp<*> ) {
             throw AssertionError(
                 "Expected Fail, but Passed with value: ${
                     (value.value as Exp<*>).toString(value.state)

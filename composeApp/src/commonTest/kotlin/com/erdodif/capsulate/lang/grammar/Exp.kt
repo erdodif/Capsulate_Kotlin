@@ -2,19 +2,12 @@ package com.erdodif.capsulate.lang.grammar
 
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPass
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.Pass
-import com.erdodif.capsulate.lang.pBoolLit
-import com.erdodif.capsulate.lang.pComment
-import com.erdodif.capsulate.lang.pIntLit
-import com.erdodif.capsulate.lang.pStrLit
-import com.erdodif.capsulate.lang.pVariable
-import com.erdodif.capsulate.lang.plus
-import com.erdodif.capsulate.lang.topLevel
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class Exp {
+class ExpTest {
 
     @Test
     fun boolLit_pass() {
@@ -72,15 +65,4 @@ class Exp {
         assertFail(ParserState("\"asd\"\"").parse(topLevel(pStrLit)))
     }
 
-    @Test
-    fun commentPass(){
-        assertPass(ParserState("//asda//s /**/ ").parse(topLevel(pComment)))
-        assertPass(ParserState("/**/").parse(topLevel(pComment)))
-        assertPass(ParserState("/*asd asd*/").parse(topLevel(pComment)))
-        assertPass(ParserState("/*//*/").parse(topLevel(pComment)))
-        assertPass(ParserState("/* ** /*/").parse(topLevel(pComment)))
-        assertPass(ParserState("/*/* /*/").parse(topLevel(pComment)))
-        assertPass(ParserState("//asdasdasdas\na").parse(topLevel(pComment + pVariable)))
-        assertPass(ParserState("/*\nasd\nd*/ a").parse(topLevel(pComment + pVariable)))
-    }
 }

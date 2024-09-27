@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.lang
+package com.erdodif.capsulate.lang.grammar
 
 import com.erdodif.capsulate.specification.Type
 
@@ -6,7 +6,7 @@ interface Value{
     override operator fun equals(other:Any?):Boolean
 }
 
-abstract class VNum: Value{ abstract val value:Int}
+abstract class VNum: Value { abstract val value:Int}
 data class VNat(private val _value: UInt) : VNum(){   // ℕ
     override val value: Int
         get() = _value.toInt()

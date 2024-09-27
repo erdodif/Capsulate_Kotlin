@@ -3,7 +3,6 @@ package com.erdodif.capsulate
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.erdodif.capsulate.resources.Res
-import com.erdodif.capsulate.resources.app_name
 import io.github.aakira.napier.Antilog
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.LogLevel
@@ -13,7 +12,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
 fun main() = application {
-    val appName = stringResource(Res.string.app_name)
+    val appName = "" // stringResource(Res.string.app_name)
     Window(
         onCloseRequest = ::exitApplication,
         title = appName,

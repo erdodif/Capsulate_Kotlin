@@ -1,15 +1,15 @@
 package com.erdodif.capsulate.lang.grammar.operator
 
-import com.erdodif.capsulate.lang.Env
-import com.erdodif.capsulate.lang.Exp
-import com.erdodif.capsulate.lang.Parser
-import com.erdodif.capsulate.lang.ParserResult
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.Value
-import com.erdodif.capsulate.lang.leftAssoc
-import com.erdodif.capsulate.lang.nonAssoc
-import com.erdodif.capsulate.lang.pExp
-import com.erdodif.capsulate.lang.rightAssoc
+import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.grammar.Exp
+import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.grammar.Value
+import com.erdodif.capsulate.lang.grammar.leftAssoc
+import com.erdodif.capsulate.lang.grammar.nonAssoc
+import com.erdodif.capsulate.lang.grammar.pExp
+import com.erdodif.capsulate.lang.grammar.rightAssoc
 
 enum class Association {
     LEFT,
@@ -107,4 +107,9 @@ open class BinaryOperator(
     }
 }
 
-typealias OperatorTable = List<BinaryOperator>
+class OperatorTable(val operators: List<Operator> = builtInOperators){
+
+    companion object{
+        val builtInOperators= arrayOf(Add,Sub, Mul,Div, Not, And, Or, Equal).sortedBy { it.bindingStrength }
+    }
+}

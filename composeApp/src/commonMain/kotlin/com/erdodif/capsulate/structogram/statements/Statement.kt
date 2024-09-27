@@ -2,14 +2,14 @@ package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.erdodif.capsulate.lang.Assign
-import com.erdodif.capsulate.lang.DoWhile
-import com.erdodif.capsulate.lang.Expression
-import com.erdodif.capsulate.lang.If
-import com.erdodif.capsulate.lang.ParallelAssign
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.Skip
-import com.erdodif.capsulate.lang.While
+import com.erdodif.capsulate.lang.grammar.Assign
+import com.erdodif.capsulate.lang.grammar.DoWhile
+import com.erdodif.capsulate.lang.grammar.Expression
+import com.erdodif.capsulate.lang.grammar.If
+import com.erdodif.capsulate.lang.grammar.ParallelAssign
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.grammar.Skip
+import com.erdodif.capsulate.lang.grammar.While
 
 typealias StatementList = Array<Statement>
 
@@ -23,7 +23,7 @@ abstract class Statement {
     companion object { // TODO, should one statement implement it's representation
         fun fromTokenized(
             state: ParserState,
-            statement: com.erdodif.capsulate.lang.Statement
+            statement: com.erdodif.capsulate.lang.grammar.Statement
         ): Statement = when (statement) {
             is If -> IfStatement(
                 statement.condition.toString(state),

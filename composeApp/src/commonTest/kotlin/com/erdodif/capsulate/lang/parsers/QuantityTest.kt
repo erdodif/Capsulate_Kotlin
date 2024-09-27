@@ -3,15 +3,15 @@ package com.erdodif.capsulate.lang.parsers
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPassAt
 import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.MatchPos
-import com.erdodif.capsulate.lang.ParserState
-import com.erdodif.capsulate.lang.Pass
-import com.erdodif.capsulate.lang.between
-import com.erdodif.capsulate.lang.char
-import com.erdodif.capsulate.lang.exactly
-import com.erdodif.capsulate.lang.many
-import com.erdodif.capsulate.lang.optional
-import com.erdodif.capsulate.lang.some
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.lang.grammar.between
+import com.erdodif.capsulate.lang.grammar.char
+import com.erdodif.capsulate.lang.grammar.exactly
+import com.erdodif.capsulate.lang.grammar.many
+import com.erdodif.capsulate.lang.grammar.optional
+import com.erdodif.capsulate.lang.grammar.some
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

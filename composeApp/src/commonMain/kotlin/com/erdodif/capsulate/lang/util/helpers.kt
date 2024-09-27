@@ -1,6 +1,4 @@
-package com.erdodif.capsulate.lang
-
-import androidx.compose.ui.text.substring
+package com.erdodif.capsulate.lang.util
 
 fun ArrayList<Char>.asString(): String{
     val boby = StringBuilder()

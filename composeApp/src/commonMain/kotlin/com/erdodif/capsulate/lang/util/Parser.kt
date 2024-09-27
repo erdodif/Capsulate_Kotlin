@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "UNUSED")
 
-package com.erdodif.capsulate.lang
+package com.erdodif.capsulate.lang.util
 
 data class MatchPos(val start: Int, val end: Int)
 
@@ -39,8 +39,8 @@ open class ParserState(val input: String) {
 
     override fun toString(): String = "position: $position, text:\n$input"
 
-    operator fun get(match: MatchPos): String = input[match.start, match.end]
     operator fun get(start: Int, end: Int): String = input[start, end]
+    operator fun get(match: MatchPos): String = input.get(match.start, match.end)
 }
 
 sealed class ParserResult<T>(open val state: ParserState) {
@@ -147,7 +147,7 @@ inline fun <T, R> Parser<T?>.applyIfPos(crossinline lambda: ParserState.(T, Matc
         if (it != null) lambda(it, pos) else null
     }
 
-inline fun <T> asum(parsers: Array<Parser<T>>): Parser<T> = {
+inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {
     val pos = position
     var result: ParserResult<T> = fail("Nothing matched")
     for (factory in parsers) {

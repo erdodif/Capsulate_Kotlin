@@ -1,6 +1,19 @@
-package com.erdodif.capsulate.lang
+package com.erdodif.capsulate.lang.grammar
 
-import com.erdodif.capsulate.lang.grammar.operator.builtInOperators
+import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.Parameter
+import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util._char
+import com.erdodif.capsulate.lang.util._integer
+import com.erdodif.capsulate.lang.util._keyword
+import com.erdodif.capsulate.lang.util._nonKeyword
+import com.erdodif.capsulate.lang.util.asString
+import com.erdodif.capsulate.lang.util.asum
+import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.times
 
 interface Exp<T : Value> {
     fun evaluate(env: Env): T
@@ -73,13 +86,10 @@ val pIntLit: Parser<IntLit> = _integer * { it, pos -> IntLit(it, pos) }
 val pBoolLit: Parser<BoolLit> =
     or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*, *>, pos) }
 
-val pVariable: Parser<Variable> =
-    (satisfy { !it.isDigit() && it !in reservedChars } + _nonKeyword) * { it, pos ->
-        Variable(
-            it.first + it.second,
-            pos
-        )
-    }
+val pVariable: Parser<Variable> = _nonKeyword[{
+    if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
+    else pass(it.match.start,Variable(it.value, it.match))
+}]
 
 val litOrder: Array<Parser<*>> = arrayOf(
     pIntLit,
@@ -92,7 +102,7 @@ val litOrder: Array<Parser<*>> = arrayOf(
 typealias ExParser = Parser<Exp<*>>
 
 @Suppress("UNCHECKED_CAST")
-val pAtom: ExParser = asum(litOrder as Array<Parser<Exp<*>>>)
+val pAtom: ExParser = asum(*litOrder as Array<Parser<Exp<*>>>)
 
 // TODO: add OperatorTable into pExp
-val pExp: ExParser = pAtom//pNot as Parser<Exp<*>>
+val pExp: ExParser = pAtom

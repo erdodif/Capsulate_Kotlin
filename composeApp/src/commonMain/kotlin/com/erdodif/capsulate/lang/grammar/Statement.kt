@@ -1,4 +1,23 @@
-package com.erdodif.capsulate.lang
+package com.erdodif.capsulate.lang.grammar
+
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util._anyKeyword
+import com.erdodif.capsulate.lang.util._char
+import com.erdodif.capsulate.lang.util._keyword
+import com.erdodif.capsulate.lang.util._lineEnd
+import com.erdodif.capsulate.lang.util._nonKeyword
+import com.erdodif.capsulate.lang.util.asString
+import com.erdodif.capsulate.lang.util.asum
+import com.erdodif.capsulate.lang.util.div
+import com.erdodif.capsulate.lang.util.freeChar
+import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.reservedChar
+import com.erdodif.capsulate.lang.util.times
+import com.erdodif.capsulate.lang.util.tok
 
 interface Statement {
     fun evaluate(env: Env)
@@ -85,16 +104,16 @@ data class Wait(val condition: Exp<*>) : Statement {
 }
 
 fun <T> delimit(parser: Parser<T>): Parser<T> =
-    left(parser, or(some(_lineEnd), and(many(_lineEnd), EOF)))
+    left(parser, many(_lineEnd))
 
 val ParserState.statement: Parser<Statement>
     get() = asum(
-        arrayOf(
-            sSkip, sAssign, sIf, sWhile, sDoWhile, sParallelAssign, sExpression
-        )
+        sExpression, sSkip, sAssign, sIf, sWhile, sDoWhile, sParallelAssign
     )
 
-val program: Parser<ArrayList<Statement>> = { some(middle(many(_lineEnd), statement, many(_lineEnd)))() }
+val program: Parser<ArrayList<Statement>> =
+    //{ right(many(_lineEnd),delimited(statement, some(_lineEnd)))() }
+    { some(middle(many(_lineEnd), statement, many(_lineEnd)))() }
 
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
@@ -124,7 +143,7 @@ val sDoWhile: Parser<Statement> = right(
 }
 
 val sParallelAssign: Parser<Statement> =
-    (delimited(_nonKeyword, _char(',')) + right(tok(charSeq(":=")), delimit(delimited(pExp, _char(',')))))[{
+    (delimited(_nonKeyword, _char(',')) + right(tok(string(":=")), delimit(delimited(pExp, _char(',')))))[{
         if (it.value.second.size != it.value.first.size) {
             fail(
                 "The number of parameters does not match the number of values to assign."
@@ -152,16 +171,17 @@ fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
 
 @Suppress("UNCHECKED_CAST")
 fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> =
-    ParserState(input).parse(topLevel(tok(many(asum(arrayOf(
-        _anyKeyword * { it, pos -> KeyWord(it, pos) },
+    ParserState(input).parse(topLevel(many(asum(
+        _lineEnd * { it, pos -> LineEnd(it, pos) },
+        pVariable as Parser<Token>,
         pComment as Parser<Token>,
         pIntLit as Parser<Token>,
         pBoolLit as Parser<Token>,
         pStrLit as Parser<Token>,
-        pVariable as Parser<Token>,
-        _reservedChar * { it, pos -> Symbol(it, pos) },
-        _lineEnd * { it, pos -> LineEnd(it, pos) }
-    ))))))
+        _anyKeyword * { it, pos -> KeyWord(it, pos) },
+        tok(reservedChar) * { it, pos -> Symbol(it, pos) },
+        tok(some(freeChar))* { _, pos -> Token(pos)}
+    ))))
 
 
 fun Env.runProgram(statements: ArrayList<Statement>) {

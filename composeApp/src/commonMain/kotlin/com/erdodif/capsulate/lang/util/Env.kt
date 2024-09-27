@@ -1,5 +1,8 @@
-package com.erdodif.capsulate.lang
+package com.erdodif.capsulate.lang.util
 
+import com.erdodif.capsulate.lang.grammar.Value
+import com.erdodif.capsulate.lang.grammar.Statement
+import com.erdodif.capsulate.lang.grammar.type
 import com.erdodif.capsulate.specification.Type
 
 class Parameter(val id: String, val type: Type, var value: Value)
