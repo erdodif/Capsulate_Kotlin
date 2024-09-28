@@ -113,7 +113,7 @@ val ParserState.statement: Parser<Statement>
 
 val program: Parser<ArrayList<Statement>> =
     //{ right(many(_lineEnd),delimited(statement, some(_lineEnd)))() }
-    { some(middle(many(_lineEnd), delimit(statement), many(_lineEnd)))() }
+    { many(middle(many(_lineEnd), delimit(statement), many(_lineEnd)))() }
 
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }

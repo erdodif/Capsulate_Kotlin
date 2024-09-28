@@ -30,16 +30,16 @@ kotlin {
         }
         binaries.executable()
     }
-    
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-    
+
     jvm("desktop")
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -50,7 +50,7 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         val desktopMain by getting
 
@@ -65,6 +65,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.kotlin.test)
             implementation(libs.napier)
+            implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.5.4")
+            implementation("io.github.vinceglb:filekit-core:0.8.2")
+            implementation("io.github.vinceglb:filekit-compose:0.8.2")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -77,7 +80,7 @@ kotlin {
             implementation(libs.kotlin.test.junit)
         }
         iosMain.dependencies {
-           // implementation(libs.kotlin.test.native)
+// implementation(libs.kotlin.test.native)
         }
     }
 }
@@ -119,7 +122,7 @@ android {
     }
 }
 
-compose.resources{
+compose.resources {
     publicResClass = true
     packageOfResClass = "com.erdodif.capsulate.resources"
     generateResClass = always

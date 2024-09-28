@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -94,7 +95,7 @@ fun Modifier.awaitIndicator(): Modifier = this.drawBehind {
 }
 
 @Composable
-fun commandPlaceHolder() = Spacer(Theme.commandModifier)
+fun commandPlaceHolder() = StatementText("")
 
 @Composable
 fun StatementText(

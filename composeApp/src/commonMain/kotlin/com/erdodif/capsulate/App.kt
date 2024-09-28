@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.erdodif.capsulate.composables.EditorPage
 import com.erdodif.capsulate.structogram.composables.StatementPreview
 import com.erdodif.capsulate.structogram.composables.Theme
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -20,7 +21,7 @@ fun App() {
             Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            StatementPreview()
+            EditorPage()
         }
     }
 }
