@@ -111,7 +111,7 @@ object Div : BinaryOperator(
 )
 
 object Equal : BinaryOperator(
-    10,
+    4,
     "=",
     _char('='),
     Association.NONE,
@@ -166,17 +166,32 @@ object Or: BinaryOperator(
     }
 )
 
-object Not : UnaryOperator(
+object Sign : UnaryOperator(
     20,
     "-",
     _char('-'),
     Fixation.PREFIX,
     {
         val res = it.evaluate(this)
+        if (res is VNum) {
+            VWhole(- res.value)
+        } else {
+            throw RuntimeException("Type must be a Number")
+        }
+    }
+)
+
+object Not : UnaryOperator(
+    20,
+    "!",
+    _char('!'),
+    Fixation.PREFIX,
+    {
+        val res = it.evaluate(this)
         if (res is VBool) {
             VBool(!res.value)
         } else {
-            throw RuntimeException("Type must be Logical (for now)") //TODO
+            throw RuntimeException("Type must be Logical")
         }
     }
 )

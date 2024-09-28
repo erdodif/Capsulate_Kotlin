@@ -67,3 +67,13 @@ inline fun <T> assertValue(expected: T, result: ParserResult<T>) {
         expected, result.value, "Expected Pass result of $expected, but got ${result.value}"
     )
 }
+
+inline fun<T> assertTrue(expected: (Pass<T>) -> Boolean, result: ParserResult<T>){
+    assertPass(result)
+    assertTrue(expected(result as Pass), "Expected calculation to pass, it didn't on value: ${result.value}")
+}
+
+inline fun<T> assertFalse(expected: (Pass<T>) -> Boolean, result: ParserResult<T>){
+    assertPass(result)
+    assertTrue(!expected(result as Pass),"Expected calculation to fail, it did pass on value: ${result.value}")
+}

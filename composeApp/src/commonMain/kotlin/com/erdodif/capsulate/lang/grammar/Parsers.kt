@@ -356,27 +356,27 @@ val whiteSpace: Parser<Unit> =
 // asum(whiteSpaceChars.map{char(it)}.toTypedArray())[{ Pass(Unit, it.state, it.match) }, { it.to() }]
 
 /**
- * Matches for a [parser] with [delim] delimiter, keeping only [parser]'s match
+ * Matches for a [parser] with [delimiter] delimiter, keeping only [parser]'s match
  *
- * Expects at least one match
+ * Expects at least one delimiter (as well as two parser match around)
  */
 inline fun <reified T> delimited1(
     crossinline parser: Parser<T>,
-    crossinline delim: Parser<*>
-): Parser<ArrayList<T>> = (some(left(parser, delim)) + parser) / {
+    crossinline delimiter: Parser<*>
+): Parser<ArrayList<T>> = (some(left(parser, delimiter)) + parser) / {
     it.first.apply { this.add(it.second) }
 }
 
 /**
- * Matches for a [parser] with [delim] delimiter, keeping only [parser]'s match
+ * Matches for a [parser] with [delimiter] delimiter, keeping only [parser]'s match
  *
- * Result can be empty
+ * Result cannot be empty
  */
 inline fun <reified T> delimited(
     crossinline parser: Parser<T>,
-    crossinline delim: Parser<*>
-): Parser<ArrayList<T>> = (many(left(parser, delim)) + parser) / {
-    it.first.apply { this.add(it.second) }
+    crossinline delimiter: Parser<*>
+): Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
+    it.first.apply { add(it.second) }
 }
 
 // NEEDS TO BE CHECKED TODO
@@ -403,13 +403,13 @@ fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
         var pos = position
         var res = (func + value)()
         var acc = valueFirst.value
-        while(res is Pass){
+        while (res is Pass) {
             acc = res.value.first(acc, res.value.second)
             pos = position
             res = (func + value)()
         }
         position = pos
-        pass(valueFirst.match.start,acc)
+        pass(valueFirst.match.start, acc)
     }]
 
 
@@ -427,6 +427,7 @@ inline fun <reified T> nonAssoc(
 ): Parser<T> =
     delimited(parser, separator)[{
         when (it.value.size) {
+            0 -> Fail("No association found.", it.state)
             1 -> Pass(it.value[0], it.state, it.match)
             2 -> Pass(func(it.value[0], it.value[1]), it.state, it.match)
             else -> Fail("Too many association found.", it.state)

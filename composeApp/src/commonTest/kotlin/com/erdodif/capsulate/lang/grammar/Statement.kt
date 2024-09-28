@@ -8,7 +8,7 @@ import kotlin.test.Test
 class Statement {
 
     @Test
-    fun commentPass(){
+    fun comment_pass(){
         assertPass(ParserState("//asda//s /**/ ").parse(topLevel(pComment)))
         assertPass(ParserState("/**/").parse(topLevel(pComment)))
         assertPass(ParserState("/*asd asd*/").parse(topLevel(pComment)))
@@ -21,7 +21,7 @@ class Statement {
     }
 
     @Test
-    fun commentFail(){
+    fun comment_fail(){
         assertFail(ParserState("//asda//s /**/\nd").parse(topLevel(pComment)))
         assertFail(ParserState("/**/w").parse(topLevel(pComment)))
         assertFail(ParserState("/*asd*/asd*///").parse(topLevel(pComment)))
@@ -35,5 +35,9 @@ class Statement {
         assertFail(ParserState("/*\nasd\nd a").parse(topLevel(pComment + pVariable)))
     }
 
+    @Test
+    fun assign_pass(){
+        assertPass(ParserState("a := 1 ").parse(topLevel(sAssign)))
+    }
 
 }

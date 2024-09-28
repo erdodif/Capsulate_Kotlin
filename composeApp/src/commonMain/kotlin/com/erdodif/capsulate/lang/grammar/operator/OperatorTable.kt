@@ -9,8 +9,11 @@ import com.erdodif.capsulate.lang.grammar.orEither
 import com.erdodif.capsulate.lang.grammar.right
 import com.erdodif.capsulate.lang.grammar.rightAssoc
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.div
 
 enum class Association {
@@ -30,6 +33,13 @@ class UnaryCalculation(
     val fixation: Fixation,
     val operation: Env.(Exp<*>) -> Value
 ) : Exp<Value> {
+    constructor(first: Exp<*>, operator: UnaryOperator) : this(
+        first,
+        operator.label,
+        operator.fixation,
+        operator.operation
+    )
+
     override fun evaluate(env: Env): Value {
         env.run {
             return operation(param)
@@ -37,7 +47,11 @@ class UnaryCalculation(
     }
 
     override fun toString(state: ParserState): String =
-        if (fixation == Fixation.PREFIX) "$label ${param.toString(state)}" else "${param.toString(state)} $label"
+        if (fixation == Fixation.PREFIX) "$label ${param.toString(state)}" else "${
+            param.toString(
+                state
+            )
+        } $label"
 }
 
 class BinaryCalculation(
@@ -46,6 +60,13 @@ class BinaryCalculation(
     val label: String = "∘",
     val operation: Env.(Exp<*>, Exp<*>) -> Value
 ) : Exp<Value> {
+    constructor(first: Exp<*>, second: Exp<*>, operator: BinaryOperator) : this(
+        first,
+        second,
+        operator.label,
+        operator.operation
+    )
+
     override fun evaluate(env: Env): Value {
         env.run {
             return operation(first, second)
@@ -76,21 +97,11 @@ open class UnaryOperator(
 ) : Operator(bindingStrength, label, operatorParser) {
     override fun parse(weakerParser: Parser<Exp<*>>): Parser<Exp<*>> = orEither(when (fixation) {
         Fixation.PREFIX -> right(operatorParser, weakerParser) / {
-            UnaryCalculation(
-                it,
-                label,
-                fixation,
-                operation
-            )
+            UnaryCalculation(it, this@UnaryOperator)
         }
 
         Fixation.POSTFIX -> left(weakerParser, operatorParser) / {
-            UnaryCalculation(
-                it,
-                label,
-                fixation,
-                operation
-            )
+            UnaryCalculation(it, this@UnaryOperator)
         }
     }, weakerParser)
 }
@@ -105,19 +116,19 @@ open class BinaryOperator(
     override fun parse(weakerParser: Parser<Exp<*>>): Parser<Exp<*>> =
         when (association) {
             Association.LEFT -> leftAssoc(
-                { a, b -> BinaryCalculation(a, b, label, operation) },
+                { a, b -> BinaryCalculation(a, b, this@BinaryOperator) },
                 weakerParser,
                 operatorParser
             )
 
             Association.RIGHT -> rightAssoc(
-                { a, b -> BinaryCalculation(a, b, label, operation) },
+                { a, b -> BinaryCalculation(a, b, this@BinaryOperator) },
                 weakerParser,
                 operatorParser
             )
 
             Association.NONE -> nonAssoc(
-                { a, b -> BinaryCalculation(a, b, label, operation) },
+                { a, b -> BinaryCalculation(a, b, this@BinaryOperator) },
                 weakerParser,
                 operatorParser
             )
@@ -125,6 +136,7 @@ open class BinaryOperator(
 }
 
 class OperatorTable(private var operators: List<Operator> = builtInOperators) {
+    constructor(vararg operators: Operator) : this(operators.toList())
 
     init {
         operators = operators.sortedByDescending { it.bindingStrength }
@@ -139,8 +151,20 @@ class OperatorTable(private var operators: List<Operator> = builtInOperators) {
 
     companion object {
         val builtInOperators =
-            arrayListOf(Add, Sub, Mul, Div, And, Or, Not, Equal)
+            arrayListOf(Add, Sub, Sign, Mul, Div, And, Or, Not, Equal)
     }
 
     fun parser(atomParser: Parser<Exp<*>>): Parser<Exp<*>> = this[0, atomParser]
+
+    fun verboseParser(atomParser: Parser<Exp<*>>): Parser<Exp<*>> = {
+        val stringBuilder = StringBuilder()
+        var lastResult: ParserResult<Exp<*>> = fail("OperatorTable empty.")
+        for (i in operators.indices) {
+            lastResult = get(i, atomParser)()
+            if (lastResult is Pass<*>) break
+            lastResult as Fail
+            stringBuilder.append("\n'${operators[i].label}' (strength: ${operators[i].bindingStrength}) failed at ${lastResult.state.position} with reason: ${lastResult.reason}")
+        }
+        lastResult
+    }
 }
