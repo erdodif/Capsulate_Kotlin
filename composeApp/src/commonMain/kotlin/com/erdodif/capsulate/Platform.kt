@@ -10,8 +10,13 @@ import androidx.compose.runtime.Composable
 // No `expect` keyword here
 annotation class KParcelize()
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect interface KParcelable
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 expect annotation class KIgnoredOnParcel()
+
+@Composable
+expect fun locateSetting()

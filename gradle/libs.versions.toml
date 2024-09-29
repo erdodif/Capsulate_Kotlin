@@ -1,7 +1,7 @@
 [versions]
 agp = "8.6.1"
 android-compileSdk = "34"
-android-minSdk = "24"
+android-minSdk = "27"
 android-targetSdk = "34"
 androidx-activityCompose = "1.9.1"
 androidx-appcompat = "1.7.0"
@@ -21,9 +21,11 @@ kotlinx-coroutines = "1.8.1"
 kotlinxIoCore = "0.5.4"
 kotlinxSerializationJson = "1.7.3"
 napier = "2.7.1"
+permissions = "0.18.0"
 
 [libraries]
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
+circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -43,6 +45,9 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIoCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+permissions = { module = "dev.icerock.moko:permissions", version.ref = "permissions" }
+permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "permissions" }
+permissions-test = { module = "dev.icerock.moko:permissions-test", version.ref = "permissions" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

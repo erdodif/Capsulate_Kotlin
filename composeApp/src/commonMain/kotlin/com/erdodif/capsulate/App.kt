@@ -25,29 +25,28 @@ import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.foundation.rememberCircuitNavigator
+import io.github.aakira.napier.Napier
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
 fun App() {
+    val backStack = rememberSaveableBackStack(root = EmptyScreen)
+    val navigator = rememberCircuitNavigator(backStack) {
+        //Last page is popped, time to exit the app
+    }
+    val circuit = Circuit.Builder()
+        .addPresenterFactory(EmptyScreenPresenter.Factory)
+        .addUi<EmptyScreen, EmptyScreen.State> { state, modifier -> EmptyPage(state, modifier) }
+        .addPresenterFactory(ProjectPresenter.Factory)
+        .addUi<ProjectScreen, ProjectScreen.State> { state, modifier ->
+            ProjectPage.Content(state, modifier)
+        }
+        .build()
     MaterialTheme(colorScheme = resolveColors()) {
         Theme.initialize()
-        val backStack = rememberSaveableBackStack(root = EmptyScreen)
-        val navigator = rememberCircuitNavigator(backStack) {
-            //Last page is popped, time to exit the app
-        }
-        val circuit = Circuit.Builder()
-            .addPresenterFactory(EmptyScreenPresenter.Factory)
-            .addUi<EmptyScreen, EmptyScreen.State> { state, modifier -> EmptyPage(state, modifier) }
-            .addPresenterFactory(ProjectPresenter.Factory)
-            .addUi<ProjectScreen, ProjectScreen.State> { state, modifier ->
-                ProjectPage.Content(state, modifier)
-            }
-            .build()
-
-
         Column(
-            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
+            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primaryContainer),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircuitCompositionLocals(circuit) {

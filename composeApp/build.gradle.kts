@@ -1,8 +1,8 @@
+import com.android.aaptcompiler.shouldIgnoreElement
+import com.android.build.gradle.internal.packaging.defaultExcludes
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -14,33 +14,15 @@ plugins {
 }
 
 kotlin {
-
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        moduleName = "composeApp"
-        browser {
-            val projectDirPath = project.projectDir.path
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(projectDirPath)
-                    }
-                }
-            }
-        }
-        binaries.executable()
-    }
+    jvmToolchain(21)
+    jvm("desktop")
 
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-
-    jvm("desktop")
 
     listOf(
         iosX64(),
@@ -68,10 +50,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.kotlin.test)
             implementation(libs.napier)
-            implementation(libs.kotlinx.io.core)
+            implementation("dev.zwander:kmpfile:0.6.0")
+            implementation("dev.zwander:kmpfile-filekit:0.6.0")
+            implementation("dev.zwander:kmpfile-okio:0.6.0")
+            implementation("com.squareup.okio:okio:3.9.1")
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
             implementation(libs.circuit.foundation)
+            implementation(libs.circuit.overlay)
             implementation(libs.kotlinx.serialization.json)
         }
         desktopMain.dependencies {
@@ -102,8 +88,8 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    sourceSets["main"].res.srcDirs("src/androidMain/res", "src/main/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+    sourceSets["main"].res.srcDirs("src/main/res", "src/commonMain/composeResources")
+    sourceSets["main"].resources.srcDirs("src/commonMain/resources", "src/commonMain/composeResources")
 
     defaultConfig {
         applicationId = "com.erdodif.capsulate"
@@ -123,8 +109,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
@@ -137,6 +123,7 @@ android {
 compose.resources {
     publicResClass = true
     packageOfResClass = "com.erdodif.capsulate.resources"
+    defaultExcludes.plus("drawable-anydpi-v26/*")
     generateResClass = always
 }
 
