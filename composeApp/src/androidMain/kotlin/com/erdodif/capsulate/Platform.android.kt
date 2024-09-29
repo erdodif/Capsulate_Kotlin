@@ -20,3 +20,7 @@ actual fun resolveColors(): ColorScheme {
         else -> MaterialTheme.colorScheme
     }
 }
+
+actual typealias KParcelable = android.os.Parcelable
+
+actual typealias  KIgnoredOnParcel= kotlinx.parcelize.IgnoredOnParcel

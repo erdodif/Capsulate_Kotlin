@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+    id("kotlin-parcelize")
+    kotlin("plugin.serialization") version "1.5.30"
 }
 
 kotlin {
@@ -57,6 +59,7 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
+            implementation(compose.animation)
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
@@ -65,9 +68,11 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.kotlin.test)
             implementation(libs.napier)
-            implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.5.4")
-            implementation("io.github.vinceglb:filekit-core:0.8.2")
-            implementation("io.github.vinceglb:filekit-compose:0.8.2")
+            implementation(libs.kotlinx.io.core)
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.compose)
+            implementation(libs.circuit.foundation)
+            implementation(libs.kotlinx.serialization.json)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -81,6 +86,13 @@ kotlin {
         }
         iosMain.dependencies {
 // implementation(libs.kotlin.test.native)
+        }
+        androidTarget {
+            @OptIn(ExperimentalKotlinGradlePluginApi::class)
+            compilerOptions.freeCompilerArgs.addAll(
+                "-P",
+                "plugin:org.jetbrains.kotlin.parcelize:additionalAnnotation=com.erdodif.capsulate.KParcelize"
+            )
         }
     }
 }
