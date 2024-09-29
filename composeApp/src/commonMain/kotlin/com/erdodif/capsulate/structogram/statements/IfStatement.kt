@@ -28,7 +28,7 @@ open class IfStatement(
     var falseBranch: StatementList = arrayOf()
 ) : Statement() {
     @Composable
-    override fun show(modifier: Modifier) = Column(modifier.fillMaxWidth()) {
+    override fun show(modifier: Modifier) = Column(modifier.width(intrinsicSize = IntrinsicSize.Min)) {
         StatementText(
             condition,
             modifier = Modifier.fillMaxWidth().caseIndicator().elseIndicator()
@@ -38,9 +38,9 @@ open class IfStatement(
         Row(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.height(IntrinsicSize.Min)
+            modifier = Modifier.height(IntrinsicSize.Min).background(MaterialTheme.colorScheme.primary).fillMaxWidth()
         ) {
-            Column(Modifier.fillMaxHeight().width(IntrinsicSize.Min).background(
+            Column(Modifier.fillMaxHeight().width(IntrinsicSize.Max).background(
                 MaterialTheme.colorScheme.primary)) {
                 StackWithSeparator(trueBranch, { it.show(Modifier.fillMaxWidth()) }) { HorizontalBorder() }
             }

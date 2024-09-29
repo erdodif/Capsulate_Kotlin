@@ -18,15 +18,27 @@ import com.erdodif.capsulate.pages.EmptyScreenPresenter
 import com.erdodif.capsulate.pages.ProjectPage
 import com.erdodif.capsulate.pages.ProjectPresenter
 import com.erdodif.capsulate.pages.ProjectScreen
-import com.erdodif.capsulate.project.Project
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.foundation.rememberCircuitNavigator
-import io.github.aakira.napier.Napier
+import com.slack.circuit.runtime.screen.Screen
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+val defaultScreenError: @Composable (Screen, Modifier) -> Unit= { screen, modifier ->
+    Column(modifier, verticalArrangement = Arrangement.Center) {
+        Text(
+            "Asked screen unreachable ($screen)",
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(10.dp),
+            MaterialTheme.colorScheme.error
+        )
+    }
+}
 
 @Composable
 @Preview
@@ -53,20 +65,9 @@ fun App() {
                 NavigableCircuitContent(
                     navigator = navigator,
                     backStack = backStack,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    unavailableRoute = defaultScreenError
                 )
-                { screen, modifier ->
-                    Column(modifier, verticalArrangement = Arrangement.Center) {
-                        Text(
-                            "Asked screen unreachable ($screen)",
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .background(MaterialTheme.colorScheme.errorContainer)
-                                .padding(10.dp),
-                            MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
             }
         }
     }

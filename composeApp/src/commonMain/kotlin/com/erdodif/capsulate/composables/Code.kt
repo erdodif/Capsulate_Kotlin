@@ -1,14 +1,15 @@
 package com.erdodif.capsulate.composables
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +41,6 @@ import com.erdodif.capsulate.lang.grammar.Comment
 import com.erdodif.capsulate.lang.grammar.IntLit
 import com.erdodif.capsulate.lang.grammar.KeyWord
 import com.erdodif.capsulate.lang.grammar.LineEnd
-import com.erdodif.capsulate.lang.grammar.LineError
 import com.erdodif.capsulate.lang.grammar.StrLit
 import com.erdodif.capsulate.lang.grammar.Symbol
 import com.erdodif.capsulate.lang.grammar.Token
@@ -181,6 +182,7 @@ fun CodeEditor(
             withStyle(SpanStyle()) { append(code) }
             pushUrlAnnotation(UrlAnnotation("http://google.com"))
         }.toAnnotatedString()
+        val scrollState = rememberScrollState(0)
         val transform by remember(code, tokenStream){ derivedStateOf{ visualTransformation(code, tokenStream) }}
         BasicTextField(
             value = str.text, onValueChange = onValueChange,
@@ -203,21 +205,23 @@ fun CodeEditor(
             },
             visualTransformation = transform
         ) {
-            Row(Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
-                Text(
-                    text = lineCountContent,
-                    modifier = Modifier.padding(3.dp, 0.dp, 2.dp, 0.dp),
-                    fontSize = textStyle.fontSize,
-                    fontFamily = textStyle.fontFamily,
-                    color = Color(80, 80, 80)
-                )
-                Spacer(
-                    Modifier.padding(4.dp, 1.dp)
-                        .background(Color(37, 37, 37, 200))
-                        .fillMaxHeight()
-                        .width(2.dp)
-                )
-                it()
+            Column(Modifier.verticalScroll(scrollState)) {
+                Row(Modifier) {
+                    Text(
+                        text = lineCountContent,
+                        modifier = Modifier.padding(3.dp, 0.dp, 2.dp, 0.dp),
+                        fontSize = textStyle.fontSize,
+                        fontFamily = textStyle.fontFamily,
+                        overflow = TextOverflow.Visible,
+                        color = Color(80, 80, 80)
+                    )
+                    Spacer(
+                        Modifier.padding(4.dp, 1.dp)
+                            .background(Color(37, 37, 37, 200))
+                            .width(2.dp)
+                    )
+                    it()
+                }
             }
         }
     }

@@ -73,7 +73,7 @@ fun EmptyPage(state: EmptyScreen.State, modifier: Modifier) {
     ) {
         Icon(
             painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
-            "Logo",
+            "Logo", // STOPSHIP: Locale 
             Modifier.size(160.dp).padding(10.dp),
             tint = MaterialTheme.colorScheme.onPrimaryContainer
         ) // STOPSHIP: Locale
@@ -91,7 +91,7 @@ fun EmptyPage(state: EmptyScreen.State, modifier: Modifier) {
             Button(
                 { state.eventHandler(EmptyScreen.Event.ToProjectPage) },
                 Modifier.align(Alignment.CenterHorizontally)
-            ) { Text("Open Project") }
+            ) { Text("Open Folder") } // STOPSHIP: Locale
         }
     }
 }
