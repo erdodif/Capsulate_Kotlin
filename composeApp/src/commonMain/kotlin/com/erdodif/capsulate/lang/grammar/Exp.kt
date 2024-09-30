@@ -102,7 +102,9 @@ val litOrder: Array<Parser<*>> = arrayOf(
 typealias ExParser = Parser<Exp<*>>
 
 @Suppress("UNCHECKED_CAST")
-fun pAtom(): ExParser =
-    asum(*litOrder as Array<Parser<Exp<*>>>, middle(_char('('), pExp, _char(')')))
+inline fun pAtom(): ExParser = {
+    // Can't be directly assigned, or else the pExp reference ------v___v would be null
+    asum(*litOrder as Array<Parser<Exp<*>>>, middle(_char('('), pExp, _char(')')))()
+}
 
 val pExp: ExParser = OperatorTable().parser(pAtom())

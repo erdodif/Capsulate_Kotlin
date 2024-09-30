@@ -47,11 +47,11 @@ class UnaryCalculation(
     }
 
     override fun toString(state: ParserState): String =
-        if (fixation == Fixation.PREFIX) "$label ${param.toString(state)}" else "${
+        if (fixation == Fixation.PREFIX) "($label ${param.toString(state)})" else "(${
             param.toString(
                 state
             )
-        } $label"
+        } $label)"
 }
 
 class BinaryCalculation(
@@ -74,7 +74,7 @@ class BinaryCalculation(
     }
 
     override fun toString(state: ParserState): String =
-        "${first.toString(state)} $label ${second.toString(state)}"
+        "(${first.toString(state)} $label ${second.toString(state)})"
 }
 
 abstract class Operator(

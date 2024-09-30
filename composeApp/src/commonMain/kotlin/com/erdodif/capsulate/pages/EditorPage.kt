@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -134,7 +135,7 @@ data object EditorPage : Ui<EditorScreen.State> {
                 }
             }
         ) {
-            Column(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (state.showCode)
                     CodeEditor(
                         state.code,
@@ -148,9 +149,9 @@ data object EditorPage : Ui<EditorScreen.State> {
                 if (state.showStructogram)
                     if (state.structogram != null) {
                         state.structogram.content(
-                            Modifier.fillMaxWidth().heightIn(
+                            Modifier.heightIn(
                                 10.dp,
-                                if (state.showCode) 500.dp else Dp.Unspecified
+                                if (state.showCode) 300.dp else Dp.Unspecified
                             ).verticalScroll(
                                 rememberScrollState()
                             )
