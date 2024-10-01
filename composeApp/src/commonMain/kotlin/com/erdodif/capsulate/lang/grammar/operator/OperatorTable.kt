@@ -139,7 +139,7 @@ class OperatorTable(private var operators: List<Operator> = builtInOperators) {
     constructor(vararg operators: Operator) : this(operators.toList())
 
     init {
-        operators = operators.sortedByDescending { it.bindingStrength }
+        operators = operators.sortedBy { it.bindingStrength }
     }
 
     operator fun get(index: Int, atomParser: Parser<Exp<*>>): Parser<Exp<*>> =
