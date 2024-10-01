@@ -85,7 +85,7 @@ abstract class Operator(
     operator fun compareTo(other: Operator) =
         this.bindingStrength.compareTo(other.bindingStrength)
 
-    abstract fun parse(weakerParser: Parser<Exp<*>>): Parser<Exp<*>>
+    abstract fun parse(strongerParser: Parser<Exp<*>>): Parser<Exp<*>>
 }
 
 open class UnaryOperator(
@@ -95,15 +95,15 @@ open class UnaryOperator(
     val fixation: Fixation,
     val operation: Env.(Exp<*>) -> Value
 ) : Operator(bindingStrength, label, operatorParser) {
-    override fun parse(weakerParser: Parser<Exp<*>>): Parser<Exp<*>> = orEither(when (fixation) {
-        Fixation.PREFIX -> right(operatorParser, weakerParser) / {
+    override fun parse(strongerParser: Parser<Exp<*>>): Parser<Exp<*>> = orEither(when (fixation) {
+        Fixation.PREFIX -> right(operatorParser, strongerParser) / {
             UnaryCalculation(it, this@UnaryOperator)
         }
 
-        Fixation.POSTFIX -> left(weakerParser, operatorParser) / {
+        Fixation.POSTFIX -> left(strongerParser, operatorParser) / {
             UnaryCalculation(it, this@UnaryOperator)
         }
-    }, weakerParser)
+    }, strongerParser)
 }
 
 open class BinaryOperator(
@@ -113,23 +113,23 @@ open class BinaryOperator(
     val association: Association,
     val operation: Env.(Exp<*>, Exp<*>) -> Value
 ) : Operator(bindingStrength, label, operatorParser) {
-    override fun parse(weakerParser: Parser<Exp<*>>): Parser<Exp<*>> =
+    override fun parse(strongerParser: Parser<Exp<*>>): Parser<Exp<*>> =
         when (association) {
             Association.LEFT -> leftAssoc(
                 { a, b -> BinaryCalculation(a, b, this@BinaryOperator) },
-                weakerParser,
+                strongerParser,
                 operatorParser
             )
 
             Association.RIGHT -> rightAssoc(
                 { a, b -> BinaryCalculation(a, b, this@BinaryOperator) },
-                weakerParser,
+                strongerParser,
                 operatorParser
             )
 
             Association.NONE -> nonAssoc(
                 { a, b -> BinaryCalculation(a, b, this@BinaryOperator) },
-                weakerParser,
+                strongerParser,
                 operatorParser
             )
         }

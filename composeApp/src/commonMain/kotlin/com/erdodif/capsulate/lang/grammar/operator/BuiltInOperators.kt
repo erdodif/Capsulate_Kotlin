@@ -196,4 +196,30 @@ object Not : UnaryOperator(
     }
 )
 
+object Factorial : UnaryOperator(
+    20,
+    "!",
+    _char('!'),
+    Fixation.POSTFIX,
+    {
+        val res = it.evaluate(this)
+        if (res is VNum) {
+            val range =
+            if (res.value > 0){
+                1..res.value
+            }
+            else if (res.value < 0){
+                res.value..<0
+            }
+            else {
+                0..0
+            }
+            val result = range.fold(1, Int::times)
+            VWhole(result)
+        } else {
+            throw RuntimeException("Type must be Logical")
+        }
+    }
+)
+
 // FunctionCall TODO
