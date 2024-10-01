@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Resources" pattern="(file[Capsulate.composeApp.main]:res//*||file[Capsulate.composeApp.main]:*/)&amp;&amp;!file[Capsulate.composeApp.main]:kotlin//*&amp;&amp;!file[Capsulate.composeApp.main]:AndroidManifest.xml||file[Capsulate.composeApp.commonMain]:com/erdodif/capsulate/resources/Res.kt||file[Capsulate.composeApp.commonMain]:com/erdodif/capsulate/resources//*" />
+</component>
