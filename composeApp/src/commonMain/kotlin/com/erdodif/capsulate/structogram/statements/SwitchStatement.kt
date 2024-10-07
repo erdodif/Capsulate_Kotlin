@@ -30,10 +30,10 @@ open class SwitchStatement(var blocks: Array<Block>) : Statement() {
 // TODO: Needs to be a Layout, because the measurement phase can fix the one frame lag on resize
 
     @Composable
-    override fun show(modifier: Modifier) = Row(Modifier.height(IntrinsicSize.Min)) {
+    override fun show(modifier: Modifier) = Row(modifier.height(IntrinsicSize.Min)) {
         var maxHeight by remember { mutableStateOf(0.dp) }
         StackWithSeparator(blocks, {
-            Column(Modifier.width(IntrinsicSize.Min)) {
+            Column(Modifier.weight(1f, true)) {
                 StatementText(
                     it.condition, modifier = Modifier.caseIndicator().fillMaxWidth().padding(
                         Theme.casePadding
@@ -43,7 +43,7 @@ open class SwitchStatement(var blocks: Array<Block>) : Statement() {
                 )
                 HorizontalBorder()
                 StackWithSeparator(it.statements, {
-                    it.show()
+                    it.show(Modifier.fillMaxWidth())
                 }
                 ) { HorizontalBorder() }
             }
@@ -54,11 +54,11 @@ open class SwitchStatement(var blocks: Array<Block>) : Statement() {
 class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementList) :
     SwitchStatement(blocks) {
     @Composable
-    override fun show(modifier: Modifier) = Row(Modifier.height(IntrinsicSize.Min)) {
+    override fun show(modifier: Modifier) = Row(modifier.height(IntrinsicSize.Min)) {
         var maxHeight by remember { mutableStateOf(0.dp) }
         val density = LocalDensity.current.density
         StackWithSeparator(blocks, {
-            Column(Modifier.width(IntrinsicSize.Min)) {
+            Column(Modifier.weight(1f, true)) {
                 StatementText(
                     it.condition, modifier = Modifier
                         .onSizeChanged { maxHeight = max(maxHeight, (it.height.toFloat() / density).dp) }
@@ -69,13 +69,13 @@ class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementLis
                 )
                 HorizontalBorder()
                 StackWithSeparator(it.statements, {
-                    it.show()
+                    it.show(Modifier.fillMaxWidth())
                 }
                 ) { HorizontalBorder() }
             }
         }) { VerticalBorder() }
         VerticalBorder()
-        Column(Modifier.width(IntrinsicSize.Min)) {
+        Column(Modifier.weight(1f, true)) {
             StatementText(
                 "", modifier = Modifier
                     .onSizeChanged { maxHeight = max(maxHeight, (it.height.toFloat() / density).dp) }
@@ -86,11 +86,11 @@ class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementLis
             )
             HorizontalBorder()
             StackWithSeparator(elseBranch, {
-                it.show()
+                it.show(Modifier.fillMaxWidth())
             }
             ) { HorizontalBorder() }
         }
     }
 }
 
-open class Block(var condition: String, var statements: StatementList)
+open class Block(var condition: String, var statements: StatementList = arrayOf())

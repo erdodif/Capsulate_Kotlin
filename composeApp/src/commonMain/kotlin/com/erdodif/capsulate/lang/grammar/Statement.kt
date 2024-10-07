@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.lang.grammar
 
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.specification.Type
 
 interface Statement {
     fun evaluate(env: Env)
@@ -25,8 +26,18 @@ data class If(
     }
 }
 
-class Skip : Statement {
+data object Skip : Statement {
     override fun evaluate(env: Env) {}
+}
+
+data object Abort : Statement {
+    override fun evaluate(env: Env) { TODO("End run in error") }
+}
+
+data class Return(val value: Exp<*>): Statement{
+    override fun evaluate(env: Env) {
+        TODO("Produce value")
+    }
 }
 
 data class While(val condition: Exp<*>, val statements: ArrayList<Statement>) : Statement {
@@ -57,7 +68,12 @@ data class DoWhile(val condition: Exp<*>, val statements: ArrayList<Statement>) 
 
 data class Assign(val id: String, val value: Exp<*>) : Statement {
     override fun evaluate(env: Env) = env.set(id, value.evaluate(env))
+}
 
+data class Select(val id: String, val set: Type): Statement{
+    override fun evaluate(env: Env) {
+        TODO("Implement 'Zsák objektum'")
+    }
 }
 
 data class ParallelAssign(val assigns: ArrayList<Pair<String, Exp<*>>>) : Statement {
@@ -76,7 +92,7 @@ data class LineError(val content: String)
 
 data class Parallel(val blocks: ArrayList<ArrayList<Statement>>) : Statement {
     override fun evaluate(env: Env) {
-
+        TODO("Will need an event loop for that")
     }
 }
 

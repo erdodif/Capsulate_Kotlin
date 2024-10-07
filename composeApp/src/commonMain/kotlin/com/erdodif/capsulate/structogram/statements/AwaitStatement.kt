@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -12,7 +13,10 @@ class AwaitStatement(
     var condition: String
 ) : Statement() {
     @Composable
-    override fun show(modifier: Modifier) = StatementText(
-        condition, modifier = modifier.fillMaxWidth().awaitIndicator().padding(Theme.commandPadding)
-    )
+    override fun show(modifier: Modifier) = Row(modifier) {
+        StatementText(
+            condition,
+            modifier = Modifier.fillMaxWidth().awaitIndicator().padding(Theme.commandPadding)
+        )
+    }
 }

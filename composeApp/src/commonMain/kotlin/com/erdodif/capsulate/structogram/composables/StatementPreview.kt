@@ -39,7 +39,9 @@ import com.erdodif.capsulate.lang.grammar.tokenizeProgram
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Statement
 import io.github.aakira.napier.Napier
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
+@Preview
 @Composable
 fun StatementPreview() = LazyColumn(
     Modifier.fillMaxSize(),

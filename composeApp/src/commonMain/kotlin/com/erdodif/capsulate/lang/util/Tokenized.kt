@@ -12,6 +12,7 @@ import com.erdodif.capsulate.lang.grammar.reservedChars
 import com.erdodif.capsulate.lang.grammar.satisfy
 import com.erdodif.capsulate.lang.grammar.some
 import com.erdodif.capsulate.lang.grammar.string
+import com.erdodif.capsulate.lang.grammar.stringCaseLess
 import com.erdodif.capsulate.lang.grammar.whiteSpace
 import com.erdodif.capsulate.lang.grammar.whiteSpaceChars
 
@@ -37,7 +38,7 @@ val freeWord: Parser<String> = some(freeChar) / { it.asString() }
 
 inline fun _char(char: Char): Parser<Char> = tok(char(char))
 
-inline fun _keyword(string: String): Parser<String> = tok(string(string))
+inline fun _keyword(string: String): Parser<String> = tok(stringCaseLess(string))
 
 val _anyKeyword: Parser<String> = asum(*keywords.map { _keyword(it) }.toTypedArray())
 

@@ -1,20 +1,27 @@
 package com.erdodif.capsulate.pages
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,10 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.composables.CodeEditor
+import com.erdodif.capsulate.composables.StatementDrawer
 import com.erdodif.capsulate.lang.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.ParserState
@@ -110,36 +119,55 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
 data object EditorPage : Ui<EditorScreen.State> {
     @Composable
     override fun Content(state: EditorScreen.State, modifier: Modifier) {
+        val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         Scaffold(
             modifier,
+            contentWindowInsets = WindowInsets.statusBars,
             bottomBar = {
                 BottomAppBar {
-                    Button(
-                        { state.eventHandler(EditorScreen.Event.ToggleCode) },
-                        Modifier.padding(5.dp, 1.dp)
-                    ) {
-                        Text("Code")
-                    }
-                    Button(
-                        { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
-                        Modifier.padding(5.dp, 1.dp)
-                    ) {
-                        Text("Struk")
-                    }
-                    Button(
-                        { state.eventHandler(EditorScreen.Event.Close) },
-                        Modifier.padding(5.dp, 1.dp)
-                    ) {
-                        Text("Close")
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Row(
+                            Modifier.padding(15.dp, 0.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Code")
+                            Switch(
+                                state.showCode,
+                                { state.eventHandler(EditorScreen.Event.ToggleCode) },
+                                Modifier.padding(5.dp, 1.dp)
+                            )
+                        }
+                        Row(
+                            Modifier.padding(15.dp, 0.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Struk")
+                            Switch(
+                                state.showStructogram,
+                                { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
+                                Modifier.padding(5.dp, 1.dp)
+                            )
+                        }
+                        Button(
+                            { state.eventHandler(EditorScreen.Event.Close) },
+                            Modifier.padding(5.dp, 1.dp)
+                        ) {
+                            Text("Close")
+                        }
                     }
                 }
             }
-        ) {
-            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        ) { innerPadding ->
+            Column(
+                (if (keyboardUp) Modifier.imePadding() else Modifier.padding(innerPadding)).fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
                 if (state.showCode)
                     CodeEditor(
                         state.code,
-                        Modifier.weight(1f, false).fillMaxWidth().defaultMinSize(30.dp, 64.dp)
+                        Modifier.weight(3f, false).fillMaxWidth().defaultMinSize(30.dp, 64.dp)
                     ) { state.eventHandler(EditorScreen.Event.TextInput(it)) }
                 if (state.showCode && state.showStructogram)
                     Spacer(
@@ -147,18 +175,34 @@ data object EditorPage : Ui<EditorScreen.State> {
                             .background(MaterialTheme.colorScheme.surface).height(3.dp)
                     )
                 if (state.showStructogram)
-                    if (state.structogram != null) {
-                        state.structogram.content(
-                            Modifier.heightIn(
-                                10.dp,
-                                if (state.showCode) 300.dp else Dp.Unspecified
-                            ).verticalScroll(
-                                rememberScrollState()
+                    Column(
+                        Modifier.fillMaxWidth().weight(2f, false)
+                            .heightIn(10.dp, if (state.showCode) 1200.dp else Dp.Unspecified),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (state.structogram != null) {
+                            state.structogram.content(
+                                Modifier.verticalScroll(
+                                    rememberScrollState()
+                                )
                             )
-                        )
-                    } else {
-                        Text("Error", Modifier.fillMaxWidth())
+                        } else {
+                            Text("Error", Modifier.fillMaxWidth())
+                        }
+                        if (!keyboardUp) {
+                            StatementDrawer(
+                                Modifier.heightIn(100.dp, 400.dp)
+                                    .padding(20.dp)
+                                    .background(MaterialTheme.colorScheme.tertiaryContainer)
+                            )
+                        }
                     }
+                if (keyboardUp) {
+                    Row(Modifier.fillMaxWidth()) {
+                        Button({}) { Text("\\escape") }
+                    }
+                }
             }
         }
     }

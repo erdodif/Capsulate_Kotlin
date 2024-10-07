@@ -27,7 +27,7 @@ private fun Condition(text: String) =
 
 class LoopStatement(
     var condition: String,
-    var statements: StatementList,
+    var statements: StatementList = arrayOf(),
     var inOrder: Boolean = true
 ) : Statement() {
     @Composable

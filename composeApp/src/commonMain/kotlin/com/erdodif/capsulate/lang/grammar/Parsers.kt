@@ -45,6 +45,31 @@ inline fun char(char: Char): Parser<Char> = {
 
 /**
  * Matches the given [string]
+ *
+ * Case insensitive
+ */
+inline fun stringCaseLess(string: String): Parser<String> = {
+    val start = position
+    if (position + string.length > input.length) {
+        fail("EOF reached")
+    } else {
+        var i = 0
+        while (i < string.length && string[i].lowercaseChar() == input[position + i].lowercaseChar()) {
+            i++
+        }
+        position += i
+        if (i < string.length) {
+            fail("Expected '${string[i]}' in word \"${string}\"(index: $i), but found '${input[position]}'")
+        } else {
+            pass(start, string)
+        }
+    }
+}
+
+/**
+ * Matches the given [string]
+ *
+ * Case sensitive
  */
 inline fun string(string: String): Parser<String> = {
     val start = position

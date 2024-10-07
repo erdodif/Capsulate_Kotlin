@@ -40,12 +40,12 @@ open class IfStatement(
             horizontalArrangement = Arrangement.Start,
             modifier = Modifier.height(IntrinsicSize.Min).background(MaterialTheme.colorScheme.primary).fillMaxWidth()
         ) {
-            Column(Modifier.fillMaxHeight().width(IntrinsicSize.Max).background(
+            Column(Modifier.fillMaxHeight().weight(1f,true).background(
                 MaterialTheme.colorScheme.primary)) {
                 StackWithSeparator(trueBranch, { it.show(Modifier.fillMaxWidth()) }) { HorizontalBorder() }
             }
             VerticalBorder()
-            Column(Modifier.fillMaxHeight().width(IntrinsicSize.Min).background(
+            Column(Modifier.fillMaxHeight().weight(1f,true).background(
                 MaterialTheme.colorScheme.primary)) {
                 StackWithSeparator(falseBranch, { it.show(Modifier.fillMaxWidth()) }) { HorizontalBorder() }
             }

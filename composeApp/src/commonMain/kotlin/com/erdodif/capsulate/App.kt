@@ -27,7 +27,7 @@ import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.screen.Screen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-val defaultScreenError: @Composable (Screen, Modifier) -> Unit= { screen, modifier ->
+val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modifier ->
     Column(modifier, verticalArrangement = Arrangement.Center) {
         Text(
             "Asked screen unreachable ($screen)",

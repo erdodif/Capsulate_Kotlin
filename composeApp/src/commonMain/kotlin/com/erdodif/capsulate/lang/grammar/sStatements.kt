@@ -19,6 +19,7 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
+import com.erdodif.capsulate.specification.Type
 
 fun <T> delimit(parser: Parser<T>): Parser<T> =
     left(parser, many(_lineEnd))
@@ -31,7 +32,18 @@ fun <T> newLined(parser: Parser<T>): Parser<T> =
 
 val ParserState.statement: Parser<Statement>
     get() = asum(
-        sParallel, sSkip, sAssign, sParallelAssign, sIf, sWhile, sDoWhile, sExpression,
+        sParallel,
+        sSkip,
+        sAbort,
+        sWait,
+        sReturn,
+        sAssign,
+        sSelect,
+        sParallelAssign,
+        sIf,
+        sWhile,
+        sDoWhile,
+        sExpression,
     )
 
 val blockOrParallel: Parser<ArrayList<Statement>> = {
@@ -66,7 +78,11 @@ val program: Parser<ArrayList<Statement>> =
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
 
-val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
+val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip }
+val sAbort: Parser<Statement> = delimit(_keyword("abort") / { Abort })
+
+val sWait: Parser<Statement> = delimit(right(_keyword("wait"), pExp) / { Wait(it) })
+val sReturn: Parser<Statement> = delimit(right(_keyword("return"), pExp) / { Return(it) })
 
 val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
@@ -101,6 +117,11 @@ val sParallelAssign: Parser<Statement> =
 
 val sAssign: Parser<Statement> = delimit(_nonKeyword + right(_keyword(":="), pExp)) / {
     Assign(it.first, it.second)
+}
+
+val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specification part
+val sSelect: Parser<Statement> = delimit(_nonKeyword + right(_keyword(":∈"), pType)) / {
+    Select(it.first, it.second)
 }
 
 val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
