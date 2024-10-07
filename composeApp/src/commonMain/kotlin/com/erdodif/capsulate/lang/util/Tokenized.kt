@@ -4,6 +4,7 @@ import com.erdodif.capsulate.lang.grammar.char
 import com.erdodif.capsulate.lang.grammar.int
 import com.erdodif.capsulate.lang.grammar.keywords
 import com.erdodif.capsulate.lang.grammar.left
+import com.erdodif.capsulate.lang.grammar.lineBreak
 import com.erdodif.capsulate.lang.grammar.lineEnd
 import com.erdodif.capsulate.lang.grammar.many
 import com.erdodif.capsulate.lang.grammar.natural
@@ -14,7 +15,7 @@ import com.erdodif.capsulate.lang.grammar.string
 import com.erdodif.capsulate.lang.grammar.whiteSpace
 import com.erdodif.capsulate.lang.grammar.whiteSpaceChars
 
-
+val pLineBreak: Parser<Char> = asum(*lineBreak.map {char(it)}.toTypedArray())
 val pLineEnd: Parser<Char> = asum(*lineEnd.map { char(it) }.toTypedArray())
 
 /**

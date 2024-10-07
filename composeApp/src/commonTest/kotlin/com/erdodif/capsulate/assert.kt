@@ -32,15 +32,18 @@ inline fun <T> assertPassAt(value: ParserResult<T>, at: MatchPos) {
 
 inline fun <T> assertFail(value: ParserResult<T>) {
     if (value is Pass) {
-        if (value.value is Exp<*> ) {
+        if (value.value is Exp<*>) {
             throw AssertionError(
                 "Expected Fail, but Passed with value: ${
                     (value.value as Exp<*>).toString(value.state)
                 }\nState=${value.state}"
             )
         } else {
-            throw AssertionError("Expected Fail, but Passed with value: ${value.value
-                }\nState=${value.state}")
+            throw AssertionError(
+                "Expected Fail, but Passed with value: ${
+                    value.value
+                }\nState=${value.state}"
+            )
         }
     }
 }
@@ -68,12 +71,25 @@ inline fun <T> assertValue(expected: T, result: ParserResult<T>) {
     )
 }
 
-inline fun<T> assertTrue(expected: (Pass<T>) -> Boolean, result: ParserResult<T>){
+inline fun <T> assertTrue(expected: (Pass<T>) -> Boolean, result: ParserResult<T>) {
     assertPass(result)
-    assertTrue(expected(result as Pass), "Expected calculation to pass, it didn't on value: ${result.value}")
+    assertTrue(
+        expected(result as Pass),
+        "Expected calculation to pass, it didn't on value: ${result.value}"
+    )
 }
 
-inline fun<T> assertFalse(expected: (Pass<T>) -> Boolean, result: ParserResult<T>){
+inline fun <T> assertFalse(expected: (Pass<T>) -> Boolean, result: ParserResult<T>) {
     assertPass(result)
-    assertTrue(!expected(result as Pass),"Expected calculation to fail, it did pass on value: ${result.value}")
+    assertTrue(
+        !expected(result as Pass),
+        "Expected calculation to fail, it did pass on value: ${result.value}"
+    )
 }
+
+infix fun <T> Parser<T>.pass(text: String) = assertPass(ParserState(text).parse(this))
+
+infix fun <T> Parser<T>.fail(text: String) = assertFail(ParserState(text).parse(this))
+
+infix fun <T> Parser<T>.value(value: Pair<String, T>) =
+    assertValue(value.second, ParserState(value.first).parse(this))

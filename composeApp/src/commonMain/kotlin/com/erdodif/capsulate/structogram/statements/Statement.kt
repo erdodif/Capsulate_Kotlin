@@ -6,6 +6,7 @@ import com.erdodif.capsulate.lang.grammar.Assign
 import com.erdodif.capsulate.lang.grammar.DoWhile
 import com.erdodif.capsulate.lang.grammar.Expression
 import com.erdodif.capsulate.lang.grammar.If
+import com.erdodif.capsulate.lang.grammar.Parallel
 import com.erdodif.capsulate.lang.grammar.ParallelAssign
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.grammar.Skip
@@ -47,6 +48,12 @@ abstract class Statement {
                 statement.statements.map { fromTokenized(state, it) }.toTypedArray(),
                 false
             )
+
+            is Parallel -> ParallelStatement(*statement.blocks.map{ block ->
+                   block.map { statement ->
+                       fromTokenized(state, statement)
+                   }.toTypedArray()
+            }.toTypedArray())
 
             is Expression -> Command("EXP: ${statement.expression.toString(state)}")
             else -> Command("UNSUPPORTED $statement")

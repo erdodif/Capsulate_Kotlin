@@ -2,6 +2,7 @@ package com.erdodif.capsulate.lang.grammar
 
 const val whiteSpaceChars = " \t"
 
+const val lineBreak = "\n\r"
 const val lineEnd = "\n\r;"
 
 const val reservedChars = "()[]{}|&,.:?=+-*/\"\'"
