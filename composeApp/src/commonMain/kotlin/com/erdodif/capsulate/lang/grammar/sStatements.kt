@@ -8,6 +8,7 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util._anyKeyword
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
+import com.erdodif.capsulate.lang.util._lineBreak
 import com.erdodif.capsulate.lang.util._lineEnd
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
@@ -20,19 +21,39 @@ import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
 
-/**
- * Allows tokenized line ends to jump to next statement
- */
 fun <T> delimit(parser: Parser<T>): Parser<T> =
     left(parser, many(_lineEnd))
 
+/**
+ * Allows tokenized line ends to jump to next statement
+ */
+fun <T> newLined(parser: Parser<T>): Parser<T> =
+    left(parser, many(_lineBreak))
+
 val ParserState.statement: Parser<Statement>
     get() = asum(
-        sSkip, sParallel, sAssign, sParallelAssign, sIf, sWhile, sDoWhile, sExpression,
+        sParallel, sSkip, sAssign, sParallelAssign, sIf, sWhile, sDoWhile, sExpression,
     )
 
+val statementBlock: Parser<ArrayList<Statement>> = {
+    orEither(
+        orEither(
+            statement / { arrayListOf(it) },
+            (newLined(_char('{')) + newLined(_char('}'))) / { arrayListOf() }
+        ),
+        middle(newLined(_char('{')), many(delimit(statement)), newLined(_char('}')))
+    )()
+}
+
 val program: Parser<ArrayList<Statement>> =
-    { right(many(_lineEnd), many(left(delimit(statement), many(_lineEnd))))() }
+    {
+        right(
+            many(_lineEnd),
+            orEither(
+                delimited(statement, some(_lineBreak)),
+                newLined(statement) / { arrayListOf(it) }
+            ))()
+    }
 
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
@@ -41,30 +62,17 @@ val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
 
 val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
-val sIf: Parser<Statement> = (middle(_keyword("if"), pExp, many(_char('\n'))) +
-        middle(_char('{'), program, delimit(_char('}') + many(_char('\n')))) + right(
-    _keyword("else") + many(_char('\n')), middle(_char('{'), program, delimit(_char('}')))
-)) / { If(it.first.first, it.first.second, it.second) }
+val sIf: Parser<Statement> = (right(_keyword("if"), delimit(pExp) + statementBlock) +
+        right(delimit(_keyword("else")), statementBlock)) /
+        { If(it.first.first, it.first.second, it.second) }
 
 val sWhile: Parser<Statement> =
-    (middle(_keyword("while"), pExp, many(_char('\n'))) + middle(
-        _char('{'),
-        program,
-        delimit(_char('}'))
-    )) / {
-        While(
-            it.first,
-            it.second
-        )
-    }
+    (middle(_keyword("while"), pExp, many(_char('\n'))) + statementBlock) /
+            { While(it.first, it.second) }
 
 val sDoWhile: Parser<Statement> = right(
     _keyword("do") + many(_char('\n')),
-    middle(
-        _char('{'),
-        program,
-        right(_char('}'), many(_char('\n')))
-    ) + delimit(right(_keyword("while"), pExp))
+    statementBlock + delimit(right(_keyword("while"), pExp))
 ) / {
     DoWhile(it.second, it.first)
 }
@@ -94,20 +102,16 @@ val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
     )()
 }
 
-val sParallel: Parser<Statement> =
-    delimited(
+val sParallel: Parser<Statement> = {
+    (delimited1(
         middle(
-            right(_char('{'), many(whiteSpace)),
-            program,
-            _char('}') + many(tok(pLineBreak))
-        ), _char('|')+ many(tok(pLineBreak))
-    )[{
-        if (it.value.size < 2)
-            fail("You need at least two blocks for parallel block, got ${it.value.size}")
-        else
-            pass(it.match.start, Parallel(it.value))
-    }]
-
+            newLined(_char('{')),
+            many(delimit(statement)),
+            newLined(_char('}'))
+        ),
+        _char('|') + many(_lineBreak)
+    ) / {Parallel(it) as Statement})()
+}
 class ParseException(reason: String) : Exception(reason)
 
 fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =

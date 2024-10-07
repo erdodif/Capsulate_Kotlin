@@ -57,3 +57,4 @@ val _natural: Parser<UInt> = tok(natural)
 val _integer: Parser<Int> = tok(int)
 
 val _lineEnd: Parser<Char> = tok(pLineEnd)
+val _lineBreak: Parser<Char> = tok(pLineBreak)
