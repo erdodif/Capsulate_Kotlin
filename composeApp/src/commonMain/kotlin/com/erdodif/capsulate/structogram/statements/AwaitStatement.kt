@@ -1,10 +1,13 @@
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import com.erdodif.capsulate.lang.grammar.Wait
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
@@ -18,10 +21,10 @@ class AwaitStatement(
     constructor(statement: Wait, state:ParserState): this(statement.condition.toString(state), statement)
 
     @Composable
-    override fun show(modifier: Modifier) = Row(modifier) {
+    override fun Content(modifier: Modifier, draggable: Boolean) = Row(modifier) {
         StatementText(
             condition,
-            modifier = Modifier.fillMaxWidth().awaitIndicator().padding(Theme.commandPadding)
+            modifier = Modifier.clip(RectangleShape).fillMaxSize().awaitIndicator().padding(Theme.commandPadding)
         )
     }
 }

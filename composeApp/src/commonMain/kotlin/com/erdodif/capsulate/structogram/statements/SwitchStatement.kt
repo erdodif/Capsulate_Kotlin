@@ -7,13 +7,14 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,7 @@ open class SwitchStatement(
 // TODO: Needs to be a Layout, because the measurement phase can fix the one frame lag on resize
 
     @Composable
-    override fun show(modifier: Modifier) = Row(modifier.height(IntrinsicSize.Min)) {
+    override fun Content(modifier: Modifier, draggable: Boolean) = Row(modifier.height(IntrinsicSize.Min)) {
         var maxHeight by remember { mutableStateOf(0.dp) }
         StackWithSeparator(blocks, {
             Column(Modifier.weight(1f, true)) {
@@ -46,7 +47,7 @@ open class SwitchStatement(
                 )
                 HorizontalBorder()
                 StackWithSeparator(it.statements, {
-                    it.show(Modifier.fillMaxWidth())
+                    it.Show(Modifier.fillMaxWidth(),draggable)
                 }
                 ) { HorizontalBorder() }
             }
@@ -54,50 +55,55 @@ open class SwitchStatement(
     }
 }
 
-class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementList, statement: com.erdodif.capsulate.lang.grammar.Statement) :
+class SwitchStatementWithElse(
+    blocks: Array<Block>,
+    var elseBranch: StatementList,
+    statement: com.erdodif.capsulate.lang.grammar.Statement
+) :
     SwitchStatement(blocks, statement) {
     @Composable
-    override fun show(modifier: Modifier) = Row(modifier.height(IntrinsicSize.Min)) {
-        var maxHeight by remember { mutableStateOf(0.dp) }
-        val density = LocalDensity.current.density
-        StackWithSeparator(blocks, {
+    override fun Content(modifier: Modifier, draggable: Boolean) =
+        Row(modifier.clip(RectangleShape).fillMaxWidth().height(IntrinsicSize.Min)) {
+            var maxHeight by remember { mutableStateOf(0.dp) }
+            val density = LocalDensity.current.density
+            StackWithSeparator(blocks, {
+                Column(Modifier.weight(1f, true)) {
+                    StatementText(
+                        it.condition, modifier = Modifier
+                            .onSizeChanged {
+                                maxHeight = max(maxHeight, (it.height.toFloat() / density).dp)
+                            }
+                            .caseIndicator()
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = maxHeight)
+                            .padding(Theme.casePadding)
+                    )
+                    HorizontalBorder()
+                    StackWithSeparator(it.statements, {
+                        it.Show(Modifier.fillMaxWidth(),draggable)
+                    }
+                    ) { HorizontalBorder() }
+                }
+            }) { VerticalBorder() }
+            VerticalBorder()
             Column(Modifier.weight(1f, true)) {
                 StatementText(
-                    it.condition, modifier = Modifier
+                    "", modifier = Modifier
                         .onSizeChanged {
                             maxHeight = max(maxHeight, (it.height.toFloat() / density).dp)
                         }
-                        .caseIndicator()
+                        .elseIndicator()
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = maxHeight)
-                        .padding(Theme.casePadding)
+                        .padding(Theme.elsePadding)
                 )
                 HorizontalBorder()
-                StackWithSeparator(it.statements, {
-                    it.show(Modifier.fillMaxWidth())
+                StackWithSeparator(elseBranch, {
+                    it.Show(Modifier.fillMaxWidth(),draggable)
                 }
                 ) { HorizontalBorder() }
             }
-        }) { VerticalBorder() }
-        VerticalBorder()
-        Column(Modifier.weight(1f, true)) {
-            StatementText(
-                "", modifier = Modifier
-                    .onSizeChanged {
-                        maxHeight = max(maxHeight, (it.height.toFloat() / density).dp)
-                    }
-                    .elseIndicator()
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = maxHeight)
-                    .padding(Theme.elsePadding)
-            )
-            HorizontalBorder()
-            StackWithSeparator(elseBranch, {
-                it.show(Modifier.fillMaxWidth())
-            }
-            ) { HorizontalBorder() }
         }
-    }
 }
 
 open class Block(var condition: String, var statements: StatementList = arrayOf())

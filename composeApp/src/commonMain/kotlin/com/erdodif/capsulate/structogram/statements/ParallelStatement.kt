@@ -40,15 +40,15 @@ class ParallelStatement(
     )
 
     @Composable
-    override fun show(modifier: Modifier) =
-        Row(modifier.background(MaterialTheme.colorScheme.primary).height(IntrinsicSize.Min)) {
+    override fun Content(modifier: Modifier, draggable: Boolean) =
+        Row(modifier.background(MaterialTheme.colorScheme.primary).height(IntrinsicSize.Min).fillMaxWidth()) {
             StackWithSeparator(
                 blocks,
                 {
                     Column(Modifier.weight(1f, true)) {
                         StackWithSeparator(
                             it,
-                            { statement -> statement.show(Modifier.fillMaxWidth()) }) {
+                            { statement -> statement.Content(Modifier.fillMaxWidth(),draggable) }) {
                             HorizontalBorder()
                         }
                     }

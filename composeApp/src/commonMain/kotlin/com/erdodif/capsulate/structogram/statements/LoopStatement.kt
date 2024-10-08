@@ -25,7 +25,10 @@ import com.erdodif.capsulate.structogram.composables.VerticalBorder
 
 @Composable
 private fun Condition(text: String) =
-    StatementText(text, modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(Theme.commandPadding))
+    StatementText(
+        text,
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(Theme.commandPadding)
+    )
 
 
 class LoopStatement(
@@ -34,14 +37,14 @@ class LoopStatement(
     var inOrder: Boolean = true,
     statement: com.erdodif.capsulate.lang.grammar.Statement
 ) : Statement(statement) {
-    constructor(statement:While, state: ParserState):this (
+    constructor(statement: While, state: ParserState) : this(
         statement.condition.toString(state),
         statement.statements.map { fromStatement(state, it) }.toTypedArray(),
         true,
         statement
     )
 
-    constructor(statement:DoWhile, state: ParserState):this (
+    constructor(statement: DoWhile, state: ParserState) : this(
         statement.condition.toString(state),
         statement.statements.map { fromStatement(state, it) }.toTypedArray(),
         false,
@@ -49,8 +52,11 @@ class LoopStatement(
     )
 
     @Composable
-    override fun show(modifier: Modifier) =
-        Column(modifier.height(IntrinsicSize.Min).background(MaterialTheme.colorScheme.primary).fillMaxWidth()) {
+    override fun Content(modifier: Modifier, draggable: Boolean) =
+        Column(
+            modifier.fillMaxWidth().height(IntrinsicSize.Min)
+                .background(MaterialTheme.colorScheme.primary)
+        ) {
             if (inOrder) Condition(condition)
             Row(Modifier.weight(1f).fillMaxWidth()) {
                 Spacer(Modifier.width(32.dp).fillMaxHeight())
@@ -60,9 +66,7 @@ class LoopStatement(
                     StackWithSeparator(
                         statements,
                         {
-                            it.show(
-                                Modifier.fillMaxWidth()
-                            )
+                            it.Show(Modifier.fillMaxWidth(), draggable)
                         }) { HorizontalBorder() }
                     if (!inOrder) HorizontalBorder()
                 }

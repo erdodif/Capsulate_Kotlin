@@ -9,11 +9,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import com.erdodif.capsulate.lang.grammar.If
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -38,7 +39,7 @@ open class IfStatement(
     )
 
     @Composable
-    override fun show(modifier: Modifier) = Column(modifier.width(intrinsicSize = IntrinsicSize.Min)) {
+    override fun Content(modifier: Modifier, draggable: Boolean) = Column(modifier.clip(RectangleShape).fillMaxWidth()) {
         StatementText(
             condition,
             modifier = Modifier.fillMaxWidth().caseIndicator().elseIndicator()
@@ -52,12 +53,14 @@ open class IfStatement(
         ) {
             Column(Modifier.fillMaxHeight().weight(1f,true).background(
                 MaterialTheme.colorScheme.primary)) {
-                StackWithSeparator(trueBranch, { it.show(Modifier.fillMaxWidth()) }) { HorizontalBorder() }
+                StackWithSeparator(trueBranch, {
+                    it.Show(Modifier.fillMaxWidth(), draggable)
+                }) { HorizontalBorder() }
             }
             VerticalBorder()
             Column(Modifier.fillMaxHeight().weight(1f,true).background(
                 MaterialTheme.colorScheme.primary)) {
-                StackWithSeparator(falseBranch, { it.show(Modifier.fillMaxWidth()) }) { HorizontalBorder() }
+                StackWithSeparator(falseBranch, { it.Show(Modifier.fillMaxWidth(),draggable) }) { HorizontalBorder() }
             }
         }
     }

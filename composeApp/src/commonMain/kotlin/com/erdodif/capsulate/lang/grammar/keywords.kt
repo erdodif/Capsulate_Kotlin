@@ -18,6 +18,7 @@ val keywords = arrayOf(
     "while",
     "skip",
     "abort",
-    "wait"
+    "wait",
+    "return"
 )
 

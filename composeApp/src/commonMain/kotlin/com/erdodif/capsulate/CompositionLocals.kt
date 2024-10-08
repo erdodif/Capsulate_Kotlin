@@ -9,4 +9,5 @@ import com.mohamedrejeb.compose.dnd.DragAndDropState
 val LocalDraggingStatement: CompositionLocal<DragAndDropState<Statement>> =
     compositionLocalOf { DragAndDropState() }
 
-val LocalDragTargetState = compositionLocalOf { DragState()}
+val LocalDragTargetState = compositionLocalOf { DragState() }
+

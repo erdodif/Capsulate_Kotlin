@@ -3,6 +3,7 @@ package com.erdodif.capsulate.pages
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -60,6 +61,7 @@ object EditorScreen : Screen {
         val structogram: Structogram?,
         val showCode: Boolean,
         val showStructogram: Boolean,
+        val dragStatements: Boolean,
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
@@ -68,6 +70,7 @@ object EditorScreen : Screen {
         data object Close : Event()
         data object ToggleCode : Event()
         data object ToggleStructogram : Event()
+        data object ToggleStatementDrag : Event()
     }
 }
 
@@ -79,7 +82,8 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
         var showCode by remember { mutableStateOf(true) }
         var showStructogram by remember { mutableStateOf(true) }
         var structogram: Structogram? by remember { mutableStateOf(null) }
-        return EditorScreen.State(actualText, structogram, showCode, showStructogram) { event ->
+        var dragStatements by remember { mutableStateOf(false) }
+        return EditorScreen.State(actualText, structogram, showCode, showStructogram, dragStatements) { event ->
             when (event) {
                 is EditorScreen.Event.TextInput -> {
                     actualText = event.code
@@ -100,6 +104,7 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode
                 is EditorScreen.Event.ToggleStructogram -> showStructogram = !showStructogram
                 is EditorScreen.Event.Close -> navigator.pop()
+                is EditorScreen.Event.ToggleStatementDrag -> dragStatements = !dragStatements
             }
         }
     }
@@ -133,7 +138,7 @@ data object EditorPage : Ui<EditorScreen.State> {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
-                                Modifier.padding(15.dp, 0.dp),
+                                Modifier.padding(5.dp, 0.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text("Code") // STOPSHIP: Locale
@@ -144,7 +149,7 @@ data object EditorPage : Ui<EditorScreen.State> {
                                 )
                             }
                             Row(
-                                Modifier.padding(15.dp, 0.dp),
+                                Modifier.padding(5.dp, 0.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text("Struk") // STOPSHIP: Locale
@@ -154,11 +159,23 @@ data object EditorPage : Ui<EditorScreen.State> {
                                     Modifier.padding(5.dp, 1.dp)
                                 )
                             }
+                            Row(
+                                Modifier.padding(5.dp, 0.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Drag") // STOPSHIP: Locale
+                                Switch(
+                                    state.dragStatements,
+                                    { state.eventHandler(EditorScreen.Event.ToggleStatementDrag) },
+                                    Modifier.padding(5.dp, 1.dp)
+                                )
+                            }
                             Button(
                                 { state.eventHandler(EditorScreen.Event.Close) },
-                                Modifier.padding(5.dp, 1.dp)
+                                Modifier.padding(5.dp, 1.dp),
+                                contentPadding =  PaddingValues(2.dp)
                             ) {
-                                Text("Close") // STOPSHIP: Locale
+                                Text("X") // STOPSHIP: Locale
                             }
                         }
                     }
@@ -191,12 +208,13 @@ data object EditorPage : Ui<EditorScreen.State> {
                                 state.structogram.content(
                                     Modifier.verticalScroll(
                                         rememberScrollState()
-                                    )
+                                    ),
+                                    state.dragStatements
                                 )
                             } else {
                                 Text("Error", Modifier.fillMaxWidth())
                             }
-                            if (!keyboardUp) {
+                            if (!keyboardUp && state.dragStatements) {
                                 StatementDrawer(
                                     Modifier.heightIn(100.dp, 400.dp)
                                         .padding(20.dp)
