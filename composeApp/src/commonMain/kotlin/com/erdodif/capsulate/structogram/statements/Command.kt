@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
 
-class Command (var text: String)  : Statement() {
+class Command (var text: String, statement: com.erdodif.capsulate.lang.grammar.Statement)  : Statement(statement) {
     @Composable
     override fun show(modifier: Modifier) = Row(modifier){
         StatementText(text, false, Modifier.fillMaxWidth().padding(Theme.commandPadding))

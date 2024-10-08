@@ -20,3 +20,5 @@ expect annotation class KIgnoredOnParcel()
 
 @Composable
 expect fun locateSetting()
+
+expect val onMobile: Boolean

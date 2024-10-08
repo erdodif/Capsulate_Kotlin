@@ -17,7 +17,7 @@ import com.erdodif.capsulate.lang.grammar.While
 
 typealias StatementList = Array<Statement>
 
-abstract class Statement {
+abstract class Statement(val statement: com.erdodif.capsulate.lang.grammar.Statement) {
     @Composable
     abstract fun show(modifier: Modifier)
 
@@ -25,44 +25,26 @@ abstract class Statement {
     fun show() = show(Modifier)
 
     companion object { // TODO, should one statement implement it's representation
-        fun fromTokenized(
+        fun fromStatement(
             state: ParserState,
             statement: com.erdodif.capsulate.lang.grammar.Statement
         ): Statement = when (statement) {
-            is If -> IfStatement(
-                statement.condition.toString(state),
-                statement.statementsTrue.map { fromTokenized(state, it) }.toTypedArray(),
-                statement.statementsFalse.map { fromTokenized(state, it) }.toTypedArray()
-            )
+            is If -> IfStatement(statement, state)
+            is Wait -> AwaitStatement(statement, state)
+            is While -> LoopStatement(statement, state)
+            is DoWhile -> LoopStatement(statement,state)
+            is Parallel -> ParallelStatement(statement, state)
+            is Expression -> Command("EXP: ${statement.expression.toString(state)}", statement)
 
-            is Skip -> Command("SKIP")
-            is Abort -> Command("ABORT")
-            is Wait -> AwaitStatement(statement.condition.toString(state))
-            is Return -> Command("RETURN ${statement.value.toString(state)}")
-            is Assign -> Command(statement.id + ":=" + statement.value.toString(state))
+            is Skip -> Command("SKIP", statement)
+            is Abort -> Command("ABORT", statement)
+            is Return -> Command("RETURN ${statement.value.toString(state)}", statement)
+            is Assign -> Command(statement.id + ":=" + statement.value.toString(state), statement)
             is ParallelAssign -> Command(statement.assigns.map { it.first }.toString() + ":=" +
-                    statement.assigns.map { it.second.toString(state) }.toString()
+                    statement.assigns.map { it.second.toString(state) }.toString(), statement
             )
 
-            is While -> LoopStatement(
-                statement.condition.toString(state),
-                statement.statements.map { fromTokenized(state, it) }.toTypedArray()
-            )
-
-            is DoWhile -> LoopStatement(
-                statement.condition.toString(state),
-                statement.statements.map { fromTokenized(state, it) }.toTypedArray(),
-                false
-            )
-
-            is Parallel -> ParallelStatement(*statement.blocks.map{ block ->
-                   block.map { statement ->
-                       fromTokenized(state, statement)
-                   }.toTypedArray()
-            }.toTypedArray())
-
-            is Expression -> Command("EXP: ${statement.expression.toString(state)}")
-            else -> Command("UNSUPPORTED $statement")
+            else -> Command("UNSUPPORTED $statement", statement)
         }
     }
 }

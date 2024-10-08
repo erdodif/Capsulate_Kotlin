@@ -16,3 +16,4 @@ actual annotation class KIgnoredOnParcel actual constructor()
 
 @Composable
 actual fun locateSetting() {}
+actual val onMobile: Boolean = false

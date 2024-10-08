@@ -26,7 +26,10 @@ import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
 import com.erdodif.capsulate.structogram.composables.elseIndicator
 
-open class SwitchStatement(var blocks: Array<Block>) : Statement() {
+open class SwitchStatement(
+    var blocks: Array<Block>,
+    statement: com.erdodif.capsulate.lang.grammar.Statement
+) : Statement(statement) {
 // TODO: Needs to be a Layout, because the measurement phase can fix the one frame lag on resize
 
     @Composable
@@ -51,8 +54,8 @@ open class SwitchStatement(var blocks: Array<Block>) : Statement() {
     }
 }
 
-class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementList) :
-    SwitchStatement(blocks) {
+class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementList, statement: com.erdodif.capsulate.lang.grammar.Statement) :
+    SwitchStatement(blocks, statement) {
     @Composable
     override fun show(modifier: Modifier) = Row(modifier.height(IntrinsicSize.Min)) {
         var maxHeight by remember { mutableStateOf(0.dp) }
@@ -61,7 +64,9 @@ class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementLis
             Column(Modifier.weight(1f, true)) {
                 StatementText(
                     it.condition, modifier = Modifier
-                        .onSizeChanged { maxHeight = max(maxHeight, (it.height.toFloat() / density).dp) }
+                        .onSizeChanged {
+                            maxHeight = max(maxHeight, (it.height.toFloat() / density).dp)
+                        }
                         .caseIndicator()
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = maxHeight)
@@ -78,7 +83,9 @@ class SwitchStatementWithElse(blocks: Array<Block>, var elseBranch: StatementLis
         Column(Modifier.weight(1f, true)) {
             StatementText(
                 "", modifier = Modifier
-                    .onSizeChanged { maxHeight = max(maxHeight, (it.height.toFloat() / density).dp) }
+                    .onSizeChanged {
+                        maxHeight = max(maxHeight, (it.height.toFloat() / density).dp)
+                    }
                     .elseIndicator()
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = maxHeight)

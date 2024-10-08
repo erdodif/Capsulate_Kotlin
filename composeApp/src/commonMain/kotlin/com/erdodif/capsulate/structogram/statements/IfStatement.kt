@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.erdodif.capsulate.lang.grammar.If
+import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.StatementText
@@ -25,8 +27,16 @@ import com.erdodif.capsulate.structogram.composables.elseIndicator
 open class IfStatement(
     var condition: String,
     var trueBranch: StatementList = arrayOf(),
-    var falseBranch: StatementList = arrayOf()
-) : Statement() {
+    var falseBranch: StatementList = arrayOf(),
+    statement: com.erdodif.capsulate.lang.grammar.Statement
+) : Statement(statement) {
+    constructor(statement: If,state: ParserState) : this (
+        statement.condition.toString(state),
+        statement.statementsTrue.map { fromStatement(state, it) }.toTypedArray(),
+        statement.statementsFalse.map { fromStatement(state, it) }.toTypedArray(),
+        statement
+    )
+
     @Composable
     override fun show(modifier: Modifier) = Column(modifier.width(intrinsicSize = IntrinsicSize.Min)) {
         StatementText(

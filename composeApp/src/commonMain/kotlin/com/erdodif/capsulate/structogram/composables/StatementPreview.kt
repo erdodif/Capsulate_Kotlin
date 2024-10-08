@@ -35,7 +35,6 @@ import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.grammar.halfProgram
 import com.erdodif.capsulate.lang.grammar.parseProgram
-import com.erdodif.capsulate.lang.grammar.tokenizeProgram
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Statement
 import io.github.aakira.napier.Napier
@@ -75,7 +74,7 @@ fun StatementPreview() = LazyColumn(
                 Structogram.fromStatements(*(result as Pass<List<Either<Statement, LineError>>>).value.filterNot { it is Right<*, *> }
                     .map {
                         it as Left<*, *>
-                        Statement.fromTokenized(
+                        Statement.fromStatement(
                             ParserState(code),
                             it.value as com.erdodif.capsulate.lang.grammar.Statement
                         )

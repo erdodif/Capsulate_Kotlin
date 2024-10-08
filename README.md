@@ -5,7 +5,7 @@ Kotlin Multiplatform project to create, edit and lint ELTE special code blocks
 ## Platform
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),/home/erdodif
+[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform)
 [Kotlin/Wasm](https://kotl.in/wasm/)…
 
 ### Gradle tasks
@@ -18,10 +18,8 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 
 ### TODOs
 
-- scopes can't have `{` and  `}` in one line with a single statement
-  - so far it has to be delimited by either `;` or `\n`
-  - exp encapsulation within `()`
-  - statement encapsulation within `{}`
+- Finish SwitchStatement
+  - Parse & fromTokenized() 
 - Finish class definitions
   - representation & `show()` functions
 - Drag & Drop 

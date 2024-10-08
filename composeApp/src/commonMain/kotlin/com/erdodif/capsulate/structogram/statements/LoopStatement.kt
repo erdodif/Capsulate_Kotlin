@@ -14,6 +14,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.lang.grammar.DoWhile
+import com.erdodif.capsulate.lang.grammar.While
+import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.StatementText
@@ -28,8 +31,23 @@ private fun Condition(text: String) =
 class LoopStatement(
     var condition: String,
     var statements: StatementList = arrayOf(),
-    var inOrder: Boolean = true
-) : Statement() {
+    var inOrder: Boolean = true,
+    statement: com.erdodif.capsulate.lang.grammar.Statement
+) : Statement(statement) {
+    constructor(statement:While, state: ParserState):this (
+        statement.condition.toString(state),
+        statement.statements.map { fromStatement(state, it) }.toTypedArray(),
+        true,
+        statement
+    )
+
+    constructor(statement:DoWhile, state: ParserState):this (
+        statement.condition.toString(state),
+        statement.statements.map { fromStatement(state, it) }.toTypedArray(),
+        false,
+        statement
+    )
+
     @Composable
     override fun show(modifier: Modifier) =
         Column(modifier.height(IntrinsicSize.Min).background(MaterialTheme.colorScheme.primary).fillMaxWidth()) {

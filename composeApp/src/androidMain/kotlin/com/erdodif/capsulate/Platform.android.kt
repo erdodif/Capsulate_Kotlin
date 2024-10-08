@@ -43,3 +43,5 @@ actual fun locateSetting() {
     val intent = Intent(Intent.ACTION_SHOW_APP_INFO)
     context.startActivity(intent)
 }
+
+actual val onMobile: Boolean = true
