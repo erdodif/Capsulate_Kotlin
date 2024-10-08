@@ -55,6 +55,7 @@ val blockOrParallel: Parser<ArrayList<Statement>> = {
         )
     )()
 }
+
 val statementBlock: Parser<ArrayList<Statement>> = {
     orEither(
         orEither(

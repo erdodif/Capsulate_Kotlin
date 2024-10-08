@@ -12,6 +12,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.globalDragState
+import com.erdodif.capsulate.lang.grammar.Expression
+import com.erdodif.capsulate.lang.grammar.Statement
+import com.erdodif.capsulate.lang.grammar.StrLit
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.AwaitStatement
 import com.erdodif.capsulate.structogram.statements.Block
@@ -20,6 +25,9 @@ import com.erdodif.capsulate.structogram.statements.IfStatement
 import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.SwitchStatementWithElse
+import com.mohamedrejeb.compose.dnd.DragAndDropContainer
+import com.mohamedrejeb.compose.dnd.drag.DraggableItem
+import com.mohamedrejeb.compose.dnd.rememberDragAndDropState
 
 @Composable
 fun StatementDrawer(modifier: Modifier = Modifier) {
@@ -41,11 +49,24 @@ fun StatementDrawer(modifier: Modifier = Modifier) {
             )
         )
     }
-    LazyColumn(modifier.padding(5.dp,10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    LazyColumn(modifier.padding(25.dp, 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         items(statements) { statement ->
-            statement.show(
-                Modifier.padding(0.dp,10.dp).border(Theme.borderWidth, Theme.borderColor).fillMaxWidth()
-            )
+            val state = globalDragState.current
+            DraggableItem(Modifier, key = statement, state = state,
+                data = Expression(
+                    StrLit("TODO", MatchPos(0, 0))
+                ),
+                dragAfterLongPress = true,
+                draggableContent = {
+                    statement.show(
+                        Modifier.border(Theme.borderWidth, Theme.borderColor).fillMaxWidth()
+                    )
+                }) {
+                statement.show(
+                    Modifier.padding(0.dp, 10.dp).border(Theme.borderWidth, Theme.borderColor)
+                        .fillMaxWidth()
+                )
+            }
         }
     }
 }

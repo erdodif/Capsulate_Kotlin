@@ -59,6 +59,7 @@ kotlin {
             implementation(libs.circuit.foundation)
             implementation(libs.circuit.overlay)
             implementation(libs.kotlinx.serialization.json)
+            implementation("com.mohamedrejeb.dnd:compose-dnd:0.2.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
