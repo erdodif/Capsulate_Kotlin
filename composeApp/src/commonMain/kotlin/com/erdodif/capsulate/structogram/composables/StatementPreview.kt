@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.composables.CodeEditor
+import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.lang.grammar.Exp
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail

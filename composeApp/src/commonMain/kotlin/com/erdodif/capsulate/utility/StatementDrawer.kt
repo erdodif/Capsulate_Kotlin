@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.composables
+package com.erdodif.capsulate.utility
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
@@ -7,9 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.grammar.Statement
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -60,16 +58,14 @@ private val statements = listOf(
 )
 
 @Composable
-fun StatementDrawer(modifier: Modifier = Modifier, hideOnPreview: Boolean = false) {
-    val density = LocalDensity.current.density
+fun StatementDrawer(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier.padding(25.dp, 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        userScrollEnabled = LocalDraggingStatement.current.draggedItem == null
     ) {
         items(statements) { statement ->
-            statement.Draggable(
-                Modifier.padding(0.dp, 10.dp).border(Theme.borderWidth, Theme.borderColor)
+            statement.Show(
+                Modifier.padding(0.dp, 10.dp).border(Theme.borderWidth, Theme.borderColor),true
             )
         }
     }

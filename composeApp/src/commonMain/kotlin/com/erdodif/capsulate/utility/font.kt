@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.composables
+package com.erdodif.capsulate.utility
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily

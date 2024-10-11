@@ -36,8 +36,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.composables.CodeEditor
-import com.erdodif.capsulate.composables.StatementDrawer
+import com.erdodif.capsulate.utility.CodeEditor
+import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.lang.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.ParserState

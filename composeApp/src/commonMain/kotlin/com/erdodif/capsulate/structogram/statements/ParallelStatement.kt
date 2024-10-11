@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpSize
 import com.erdodif.capsulate.lang.grammar.Parallel
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -40,22 +48,41 @@ class ParallelStatement(
     )
 
     @Composable
-    override fun Content(modifier: Modifier, draggable: Boolean) =
-        Row(modifier.background(MaterialTheme.colorScheme.primary).height(IntrinsicSize.Min).fillMaxWidth()) {
+    override fun Show(modifier: Modifier, draggable: Boolean) {
+        var size by remember { mutableStateOf(DpSize.Zero) }
+        val density = LocalDensity.current
+        Row(
+            modifier.background(MaterialTheme.colorScheme.primary).height(IntrinsicSize.Min)
+                .fillMaxWidth().onGloballyPositioned {
+                    with(density) {
+                        size = DpSize(it.size.width.toDp(), it.size.height.toDp())
+                    }
+                }
+        ) {
             StackWithSeparator(
                 blocks,
                 {
                     Column(Modifier.weight(1f, true)) {
                         StackWithSeparator(
                             it,
-                            { statement -> statement.Content(Modifier.fillMaxWidth(),draggable) }) {
+                            { statement ->
+                                statement.Show(
+                                    Modifier.fillMaxWidth(),
+                                    draggable
+                                )
+                            }) {
                             HorizontalBorder()
                         }
                     }
                 }) {
-                VerticalBorder()
-                Spacer(Modifier.width(Theme.borderWidth))
-                VerticalBorder()
+                DraggableArea(Modifier.width(Theme.borderWidth * 5), draggable, size) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        VerticalBorder()
+                        Spacer(Modifier.width(Theme.borderWidth * 2))
+                        VerticalBorder()
+                    }
+                }
             }
         }
+    }
 }

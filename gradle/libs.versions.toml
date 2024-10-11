@@ -14,20 +14,27 @@ androidx-material3 = "1.2.1"
 androidx-test-junit = "1.2.1"
 circuitFoundation = "0.24.0"
 compose-plugin = "1.6.11"
+composeDnd = "0.3.0"
 filekitCore = "0.8.2"
 junit = "4.13.2"
+kmpfileFilekit = "0.6.0"
 kotlin = "2.0.10"
 kotlinx-coroutines = "1.8.1"
 kotlinxIoCore = "0.5.4"
 kotlinxSerializationJson = "1.7.3"
 napier = "2.7.1"
+okio = "3.9.1"
 permissions = "0.18.0"
 
 [libraries]
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
+compose-dnd = { module = "com.mohamedrejeb.dnd:compose-dnd", version.ref = "composeDnd" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
+kmpfile = { module = "dev.zwander:kmpfile", version.ref = "kmpfileFilekit" }
+kmpfile-filekit = { module = "dev.zwander:kmpfile-filekit", version.ref = "kmpfileFilekit" }
+kmpfile-okio = { module = "dev.zwander:kmpfile-okio", version.ref = "kmpfileFilekit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -45,6 +52,7 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIoCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 permissions = { module = "dev.icerock.moko:permissions", version.ref = "permissions" }
 permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "permissions" }
 permissions-test = { module = "dev.icerock.moko:permissions-test", version.ref = "permissions" }
