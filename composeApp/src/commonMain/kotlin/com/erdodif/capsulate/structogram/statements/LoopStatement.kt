@@ -1,12 +1,13 @@
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -62,22 +64,26 @@ class LoopStatement(
 
     @Composable
     override fun Show(modifier: Modifier, draggable: Boolean) {
-        var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
+        var size by remember { mutableStateOf(DpSize.Zero) }
+        var dragging by remember { mutableStateOf(false) }
         Column(
-            modifier.fillMaxWidth().height(IntrinsicSize.Min)
+            modifier.dim(dragging).fillMaxWidth().height(IntrinsicSize.Min)
                 .background(MaterialTheme.colorScheme.primary).onDpSize(density) { size = it }
         ) {
             if (inOrder) { // TODO: This does not work
-                DraggableArea(Modifier, draggable, size)
-                { dragging -> Condition(condition, Modifier.dim(dragging)) }
+                DraggableArea(Modifier.fillMaxWidth(), draggable, size)
+                {
+                    dragging = it
+                    Condition(condition, Modifier.fillMaxWidth())
+                }
             }
             Row(Modifier.weight(1f, true)) {
-                DraggableArea(Modifier, draggable, size) {
-                    Spacer(
-                        Modifier.width(32.dp).fillMaxHeight()
-                    )
+                if(!inOrder) DraggableArea(Modifier.fillMaxHeight(), draggable, size) {
+                    dragging = it
+                    Spacer(Modifier.width(32.dp).fillMaxHeight())
                 }
+                else Spacer(Modifier.width(32.dp).fillMaxHeight())
                 VerticalBorder()
                 Column(Modifier.fillMaxWidth()) {
                     if (inOrder) HorizontalBorder()
@@ -90,8 +96,10 @@ class LoopStatement(
                 }
             }
             if (!inOrder) {
-                DraggableArea(Modifier, draggable, size)
-                { dragging -> Condition(condition, Modifier.dim(dragging)) }
+                DraggableArea(Modifier.fillMaxWidth(), draggable, size)
+                {
+                    Condition(condition, Modifier)
+                }
             }
         }
     }

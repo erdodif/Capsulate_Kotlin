@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,66 +27,33 @@ import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
+import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
 
-open class SwitchStatement(
-    var blocks: Array<Block>,
+class SwitchStatement(
+    val blocks: Array<Block>,
     statement: com.erdodif.capsulate.lang.grammar.Statement
 ) : Statement(statement) {
-// TODO: Needs to be a Layout, because the measurement phase can fix the one frame lag on resize
-// also, merge the two functions please
-
     @Composable
     override fun Show(modifier: Modifier, draggable: Boolean) {
-        var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
-        Row(modifier.height(IntrinsicSize.Min).onDpSize(density) { size = it }) {
-            var maxHeight by remember { mutableStateOf(0.dp) }
-            StackWithSeparator(blocks, {
-                Column(Modifier.weight(1f, true)) {
-                    DraggableArea(Modifier, draggable, size) { dragging ->
-                        Row(Modifier.dim(dragging)) {
-                            StatementText(
-                                it.condition,
-                                modifier = Modifier.caseIndicator().fillMaxWidth().padding(
-                                    Theme.casePadding
-                                ).onSizeChanged {
-                                    maxHeight = max(maxHeight, it.height.dp)
-                                }
-                            )
-                        }
-                    }
-                    HorizontalBorder()
-                    StackWithSeparator(it.statements, {
-                        it.Show(Modifier.fillMaxWidth(), draggable)
-                    }
-                    ) { HorizontalBorder() }
-                }
-            }) { VerticalBorder() }
+        var size by remember { mutableStateOf(DpSize.Zero) }
+        var dragging by remember { mutableStateOf(false) }
+        val blocks by remember {
+            derivedStateOf { blocks.takeWhile { it.condition != "else" }.toTypedArray() }
         }
-    }
-}
-
-class SwitchStatementWithElse(
-    blocks: Array<Block>,
-    var elseBranch: StatementList,
-    statement: com.erdodif.capsulate.lang.grammar.Statement
-) :
-    SwitchStatement(blocks, statement) {
-    @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) {
-        var size by remember { mutableStateOf(DpSize.Zero) }
-        val density = LocalDensity.current
+        val elseBranch by remember { derivedStateOf { this.blocks.firstOrNull { it.condition == "else" } } }
         Row(
-            modifier.clip(RectangleShape).fillMaxWidth().height(IntrinsicSize.Min)
+            modifier.dim(dragging).clip(RectangleShape).fillMaxWidth().height(IntrinsicSize.Min)
                 .onDpSize(density) { size = it }) {
             var maxHeight by remember { mutableStateOf(0.dp) }
             StackWithSeparator(blocks, {
                 Column(Modifier.weight(1f, true)) {
-                    DraggableArea(Modifier, draggable, size) { dragging ->
-                        Row(Modifier.dim(dragging)) {
+                    DraggableArea(Modifier, draggable, size) { drag ->
+                        dragging = drag
+                        Row(Modifier) {
                             StatementText(
                                 it.condition, modifier = Modifier
                                     .onSizeChanged {
@@ -104,32 +72,47 @@ class SwitchStatementWithElse(
                     HorizontalBorder()
                     StackWithSeparator(it.statements, {
                         it.Show(Modifier.fillMaxWidth(), draggable)
+                    }, {
+                        commandPlaceHolder(Modifier.fillMaxWidth())
                     }
                     ) { HorizontalBorder() }
                 }
+            }, {
+                DraggableArea(
+                    Modifier.fillMaxWidth().defaultMinSize(40.dp, 25.dp),
+                    draggable,
+                    size
+                ) {}
             }) { VerticalBorder() }
-            VerticalBorder()
-            Column(Modifier.weight(1f, true)) {
-                DraggableArea(Modifier, draggable, size) { dragging ->
-                    Row(Modifier.dim(dragging)) {
-                        StatementText(
-                            "", modifier = Modifier
-                                .onSizeChanged {
-                                    maxHeight =
-                                        max(maxHeight, (it.height.toFloat() / density.density).dp)
-                                }
-                                .elseIndicator()
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = maxHeight)
-                                .padding(Theme.elsePadding)
-                        )
+            if (elseBranch != null) {
+                VerticalBorder()
+                Column(Modifier.weight(1f, true)) {
+                    DraggableArea(Modifier, draggable, size) { dragging ->
+                        Row(Modifier.dim(dragging)) {
+                            StatementText(
+                                "", modifier = Modifier
+                                    .onSizeChanged {
+                                        maxHeight =
+                                            max(
+                                                maxHeight,
+                                                (it.height.toFloat() / density.density).dp
+                                            )
+                                    }
+                                    .elseIndicator()
+                                    .fillMaxWidth()
+                                    .defaultMinSize(minHeight = maxHeight)
+                                    .padding(Theme.elsePadding)
+                            )
+                        }
                     }
+                    HorizontalBorder()
+                    StackWithSeparator(elseBranch!!.statements, {
+                        it.Show(Modifier.fillMaxWidth(), draggable)
+                    }, {
+                        commandPlaceHolder(Modifier.fillMaxWidth())
+                    }
+                    ) { HorizontalBorder() }
                 }
-                HorizontalBorder()
-                StackWithSeparator(elseBranch, {
-                    it.Show(Modifier.fillMaxWidth(), draggable)
-                }
-                ) { HorizontalBorder() }
             }
         }
     }

@@ -31,6 +31,7 @@ import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
 import com.erdodif.capsulate.structogram.composables.elseIndicator
+import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
 
 open class IfStatement(
@@ -48,12 +49,14 @@ open class IfStatement(
 
     @Composable
     override fun Show(modifier: Modifier, draggable: Boolean) {
-        var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
+        var size by remember { mutableStateOf(DpSize.Zero) }
+        var dragging by remember { mutableStateOf(false) }
         Column(
-            modifier.onDpSize(density) { size = it }.clip(RectangleShape).fillMaxWidth()
+            modifier.dim(dragging).onDpSize(density) { size = it }.clip(RectangleShape).fillMaxWidth()
         ) {
             DraggableArea(Modifier, draggable, size) {
+                dragging = it
                 StatementText(
                     condition,
                     modifier = Modifier.fillMaxWidth().caseIndicator().elseIndicator()

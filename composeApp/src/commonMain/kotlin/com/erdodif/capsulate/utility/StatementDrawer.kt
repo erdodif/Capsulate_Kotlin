@@ -17,42 +17,33 @@ import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.structogram.statements.IfStatement
 import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
-import com.erdodif.capsulate.structogram.statements.SwitchStatementWithElse
+import com.erdodif.capsulate.structogram.statements.SwitchStatement
 
-val tmpStatement = object : Statement {
+private val tmpStatement = object : Statement {
     override fun evaluate(env: Env) {
         TODO("Won't be implemented")
     }
 }
 
 private val statements = listOf(
-    Command("a", tmpStatement),
+    Command("statement", tmpStatement),
     IfStatement(
-        "a", arrayOf(Command("1", tmpStatement)), arrayOf(
-            Command(
-                "2",
-                tmpStatement
-            )
-        ), tmpStatement
+        "if", statement = tmpStatement
     ),
-    SwitchStatementWithElse(
+    SwitchStatement(
         arrayOf(
-            Block("a", arrayOf(Command("1", tmpStatement))),
-            Block("b", arrayOf(Command("2", tmpStatement)))
-        ), arrayOf(Command("3", tmpStatement)),
+            Block("switch"),
+            Block("case"),
+            Block("else")
+        ),
         tmpStatement
     ),
-    LoopStatement("d", arrayOf(Command("1", tmpStatement)), true, tmpStatement),
-    LoopStatement("d", arrayOf(Command("1", tmpStatement)), false, tmpStatement),
-    AwaitStatement("g", tmpStatement),
+    LoopStatement("while", arrayOf(), true, tmpStatement),
+    LoopStatement("do while", arrayOf(), false, tmpStatement),
+    AwaitStatement("await", tmpStatement),
     ParallelStatement(
         arrayListOf(
-            arrayListOf(Command("a", tmpStatement)), arrayListOf(
-                Command(
-                    "b",
-                    tmpStatement
-                )
-            )
+            arrayListOf(), arrayListOf()
         ), tmpStatement
     )
 )

@@ -95,7 +95,7 @@ fun Modifier.awaitIndicator(): Modifier = this.drawBehind {
 }
 
 @Composable
-fun commandPlaceHolder() = StatementText("")
+fun commandPlaceHolder(modifier: Modifier = Modifier) = StatementText("", modifier = modifier)
 
 @Composable
 fun StatementText(

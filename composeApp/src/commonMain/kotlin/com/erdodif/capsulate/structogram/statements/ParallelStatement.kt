@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -18,13 +19,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.grammar.Parallel
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
+import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
+import com.erdodif.capsulate.utility.dim
 
 class ParallelStatement(
     statement: com.erdodif.capsulate.lang.grammar.Statement,
@@ -49,10 +54,12 @@ class ParallelStatement(
 
     @Composable
     override fun Show(modifier: Modifier, draggable: Boolean) {
-        var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
+        var size by remember { mutableStateOf(DpSize.Zero) }
+        var dragging by remember { mutableStateOf(false) }
         Row(
-            modifier.background(MaterialTheme.colorScheme.primary).height(IntrinsicSize.Min)
+            modifier.dim(dragging).background(MaterialTheme.colorScheme.primary)
+                .defaultMinSize(Dp.Unspecified, 30.dp).height(IntrinsicSize.Min)
                 .fillMaxWidth().onGloballyPositioned {
                     with(density) {
                         size = DpSize(it.size.width.toDp(), it.size.height.toDp())
@@ -70,12 +77,15 @@ class ParallelStatement(
                                     Modifier.fillMaxWidth(),
                                     draggable
                                 )
+                            }, {
+                                commandPlaceHolder()
                             }) {
                             HorizontalBorder()
                         }
                     }
                 }) {
-                DraggableArea(Modifier.width(Theme.borderWidth * 5), draggable, size) {
+                DraggableArea(Modifier.width(Theme.borderWidth * 4), draggable, size) {
+                    dragging = it
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                         VerticalBorder()
                         Spacer(Modifier.width(Theme.borderWidth * 2))
