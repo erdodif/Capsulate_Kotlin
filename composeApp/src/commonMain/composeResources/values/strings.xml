@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Capsulate</string>
+    <string name="app_name" translatable="false">Capsulate</string>
+    <string name="open_folder">Open Folder</string>
 </resources>

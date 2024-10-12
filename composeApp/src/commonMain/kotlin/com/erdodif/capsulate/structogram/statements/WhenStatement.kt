@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,7 +35,7 @@ import com.erdodif.capsulate.structogram.composables.elseIndicator
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
 
-class SwitchStatement(
+class WhenStatement(
     val blocks: Array<Block>,
     statement: com.erdodif.capsulate.lang.grammar.Statement
 ) : Statement(statement) {
@@ -138,4 +139,4 @@ class SwitchStatement(
     }
 }
 
-open class Block(var condition: String, var statements: StatementList = arrayOf())
+class Block(var condition: String, var statements: StatementList = arrayOf())

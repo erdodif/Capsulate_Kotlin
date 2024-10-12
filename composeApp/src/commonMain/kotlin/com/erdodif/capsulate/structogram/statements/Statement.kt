@@ -80,7 +80,7 @@ abstract class Statement(val statement: com.erdodif.capsulate.lang.grammar.State
             statement: com.erdodif.capsulate.lang.grammar.Statement
         ): Statement = when (statement) {
             is If -> IfStatement(statement, state)
-            is When -> SwitchStatement(statement, state)
+            is When -> WhenStatement(statement, state)
             is Wait -> AwaitStatement(statement, state)
             is While -> LoopStatement(statement, state)
             is DoWhile -> LoopStatement(statement, state)

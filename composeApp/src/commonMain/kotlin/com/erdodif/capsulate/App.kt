@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.lang.grammar.Statement
 import com.erdodif.capsulate.pages.EmptyPage
 import com.erdodif.capsulate.pages.EmptyScreen
 import com.erdodif.capsulate.pages.EmptyScreenPresenter
@@ -23,8 +19,6 @@ import com.erdodif.capsulate.pages.ProjectPage
 import com.erdodif.capsulate.pages.ProjectPresenter
 import com.erdodif.capsulate.pages.ProjectScreen
 import com.erdodif.capsulate.structogram.composables.Theme
-import com.mohamedrejeb.compose.dnd.DragAndDropContainer
-import com.mohamedrejeb.compose.dnd.DragAndDropState
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
@@ -65,7 +59,7 @@ fun App() {
     MaterialTheme(colorScheme = resolveColors()) {
         Theme.initialize()
         Column(
-            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primaryContainer),
+            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircuitCompositionLocals(circuit) {

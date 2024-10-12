@@ -17,7 +17,7 @@ import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.structogram.statements.IfStatement
 import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
-import com.erdodif.capsulate.structogram.statements.SwitchStatement
+import com.erdodif.capsulate.structogram.statements.WhenStatement
 
 private val tmpStatement = object : Statement {
     override fun evaluate(env: Env) {
@@ -30,7 +30,7 @@ private val statements = listOf(
     IfStatement(
         "if", statement = tmpStatement
     ),
-    SwitchStatement(
+    WhenStatement(
         arrayOf(
             Block("switch"),
             Block("case"),

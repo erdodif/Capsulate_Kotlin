@@ -22,6 +22,7 @@ kotlin = "2.0.10"
 kotlinx-coroutines = "1.8.1"
 kotlinxIoCore = "0.5.4"
 kotlinxSerializationJson = "1.7.3"
+materialKolor = "2.0.0"
 napier = "2.7.1"
 okio = "3.9.1"
 permissions = "0.18.0"
@@ -51,6 +52,7 @@ androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIoCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 permissions = { module = "dev.icerock.moko:permissions", version.ref = "permissions" }

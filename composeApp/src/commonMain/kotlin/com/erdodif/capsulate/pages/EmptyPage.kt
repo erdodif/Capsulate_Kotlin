@@ -21,6 +21,7 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.app_name
 import com.erdodif.capsulate.resources.ic_logo_foreground_monochrome_paddingless
+import com.erdodif.capsulate.resources.open_folder
 import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -67,16 +68,16 @@ class EmptyScreenPresenter(private val screen: EmptyScreen, private val navigato
 @Composable
 fun EmptyPage(state: EmptyScreen.State, modifier: Modifier) {
     Column(
-        modifier = modifier,
+        modifier = modifier.background(MaterialTheme.colorScheme.surface),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
-            "Logo", // STOPSHIP: Locale 
+            stringResource(Res.string.app_name),
             Modifier.size(160.dp).padding(10.dp),
             tint = MaterialTheme.colorScheme.onPrimaryContainer
-        ) // STOPSHIP: Locale
+        )
         Text(
             stringResource(Res.string.app_name),
             Modifier.padding(20.dp),
@@ -85,13 +86,13 @@ fun EmptyPage(state: EmptyScreen.State, modifier: Modifier) {
         )
         Column(
             Modifier.defaultMinSize(10.dp, 300.dp).fillMaxWidth().padding(40.dp,10.dp)
-                .background(MaterialTheme.colorScheme.inversePrimary, RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(10.dp))
                 .padding(30.dp)
         ) {
             Button(
                 { state.eventHandler(EmptyScreen.Event.ToProjectPage) },
                 Modifier.align(Alignment.CenterHorizontally)
-            ) { Text("Open Folder") } // STOPSHIP: Locale
+            ) { Text(stringResource(Res.string.open_folder)) }
         }
     }
 }

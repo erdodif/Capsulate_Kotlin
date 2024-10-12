@@ -37,23 +37,21 @@ open class ParserState(val input: String) {
 
     inline fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
 
-    override fun toString(): String {
-        val stringBuilder = StringBuilder()
-        stringBuilder.append("pos: $position, text:\"")
+    override fun toString(): String = buildString {
+        append("pos: $position, text:\"")
         if (position > 1) {
-            stringBuilder.append(input.substring(0..<position))
+            append(input.substring(0..<position))
         }
         if (position < input.length) {
-            stringBuilder.append(input[position])
-            stringBuilder.append("⃰")
+            append(input[position])
+            append("⃰")
             if (position < input.length - 1) {
-                stringBuilder.append(input.substring(position + 1))
+                append(input.substring(position + 1))
             }
-            stringBuilder.append('"')
+            append('"')
         } else {
-            stringBuilder.append("\"<")
+            append("\"<")
         }
-        return stringBuilder.toString()
     }
 
     operator fun get(start: Int, end: Int): String = input[start, end]

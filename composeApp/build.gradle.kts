@@ -60,6 +60,7 @@ kotlin {
             implementation(libs.circuit.overlay)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.compose.dnd)
+            implementation(libs.material.kolor)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
