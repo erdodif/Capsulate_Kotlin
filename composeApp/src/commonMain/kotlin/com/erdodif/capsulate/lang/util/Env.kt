@@ -8,7 +8,8 @@ import com.erdodif.capsulate.specification.Type
 class Parameter(val id: String, val type: Type, var value: Value)
 
 class Env(
-    private val values: MutableList<Parameter>
+    private val values: MutableList<Parameter>,
+    val deterministic: Boolean = false
 ) {
     /**
      * Determines whether the asked variable is defined in this context

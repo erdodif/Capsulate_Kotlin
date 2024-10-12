@@ -46,7 +46,7 @@ val reservedChar: Parser<Char> = asum(*reservedChars.map { char(it) }.toTypedArr
 val _reservedChar: Parser<Char> = tok(reservedChar)
 
 val _nonKeyword: Parser<String> = tok(freeWord)[{
-    if (keywords.contains(it.value)) {
+    if ( it.value in keywords) {
         fail("The word '${it.value}' is reserved!")
     } else {
         it

@@ -7,7 +7,7 @@ import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class Expression {
+class ExpressionTest {
 
     @Test
     fun boolLit_pass() {

@@ -385,7 +385,7 @@ val whiteSpace: Parser<Unit> =
  *
  * Expects at least one delimiter (as well as two parser match around)
  */
-inline fun <reified T> delimited1(
+inline fun <reified T> delimited2(
     crossinline parser: Parser<T>,
     crossinline delimiter: Parser<*>
 ): Parser<ArrayList<T>> = (some(left(parser, delimiter)) + parser) / {
@@ -404,7 +404,6 @@ inline fun <reified T> delimited(
     it.first.apply { add(it.second) }
 }
 
-// NEEDS TO BE CHECKED TODO
 /**
  * Right Chaining
  *
@@ -417,7 +416,6 @@ fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
         ) { pass(vMatch.match.start, vMatch.value) }
     }) * { a, _ -> a.second }
 
-// NEEDS TO BE CHECKED TODO
 /**
  * Left Chaining
  *
@@ -437,8 +435,6 @@ fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
         pass(valueFirst.match.start, acc)
     }]
 
-
-// NEEDS TO BE CHECKED TODO
 fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
     chainr1(parser, left({ pass(position, func) }, separator))
 

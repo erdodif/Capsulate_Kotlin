@@ -13,6 +13,7 @@ val keywords = arrayOf(
     "not",
     "if",
     "else",
+    "when",
     "do",
     "for",
     "while",

@@ -21,6 +21,7 @@ import com.erdodif.capsulate.lang.grammar.DoWhile
 import com.erdodif.capsulate.lang.grammar.If
 import com.erdodif.capsulate.lang.grammar.Parallel
 import com.erdodif.capsulate.lang.grammar.Wait
+import com.erdodif.capsulate.lang.grammar.When
 import com.erdodif.capsulate.lang.grammar.While
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.onMobile
@@ -79,6 +80,7 @@ abstract class Statement(val statement: com.erdodif.capsulate.lang.grammar.State
             statement: com.erdodif.capsulate.lang.grammar.Statement
         ): Statement = when (statement) {
             is If -> IfStatement(statement, state)
+            is When -> SwitchStatement(statement, state)
             is Wait -> AwaitStatement(statement, state)
             is While -> LoopStatement(statement, state)
             is DoWhile -> LoopStatement(statement, state)

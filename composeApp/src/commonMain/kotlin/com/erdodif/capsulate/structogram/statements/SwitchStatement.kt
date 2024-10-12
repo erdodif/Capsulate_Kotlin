@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import com.erdodif.capsulate.lang.grammar.When
+import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.StatementText
@@ -36,6 +38,24 @@ class SwitchStatement(
     val blocks: Array<Block>,
     statement: com.erdodif.capsulate.lang.grammar.Statement
 ) : Statement(statement) {
+    constructor(statement: When, state: ParserState) :
+            this(
+                statement.blocks.map { block ->
+                    Block(
+                        block.first.toString(state),
+                        block.second.map { fromStatement(state, it) }.toTypedArray()
+                    )
+                }.toList().also { blocks ->
+                    if (statement.elseBlock != null) blocks + Block(
+                        "else",
+                        statement.elseBlock.map {
+                            fromStatement(state, it)
+                        }.toTypedArray()
+                    )
+                }.toTypedArray(),
+                statement
+            )
+
     @Composable
     override fun Show(modifier: Modifier, draggable: Boolean) {
         val density = LocalDensity.current

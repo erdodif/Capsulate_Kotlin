@@ -36,14 +36,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.grammar.Expression
+import com.erdodif.capsulate.lang.grammar.Skip
+import com.erdodif.capsulate.lang.grammar.Variable
 import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.lang.grammar.halfProgram
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.structogram.Structogram
+import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.structogram.statements.Statement
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
 import com.slack.circuit.runtime.CircuitContext
@@ -89,16 +95,16 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
                     actualText = event.code
                     val result = ParserState(event.code).parse(halfProgram)
                     structogram =
-                        Structogram.fromStatements(*((result as Pass<*>).value as List<*>)
-                            .filterNot { it is Right<*, *> }
-                            .map {
+                        Structogram.fromStatements(*((result as? Pass<*>)?.value as List<*>?)
+                            ?.filterNot { it is Right<*, *> }
+                            ?.map {
                                 it as Left<*, *>
                                 Statement.fromStatement(
                                     ParserState(event.code),
                                     it.value as com.erdodif.capsulate.lang.grammar.Statement
                                 )
-                            }.toTypedArray()
-                        )
+                            }?.toTypedArray() ?: arrayOf(Command((result as Fail).reason, Skip)
+                        ))
                 }
 
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode

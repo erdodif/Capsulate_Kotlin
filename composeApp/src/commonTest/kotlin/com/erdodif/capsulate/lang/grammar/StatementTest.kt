@@ -11,6 +11,7 @@ class StatementTest {
     private val `while` = topLevel(sWhile)
     private val `do while` = topLevel(sDoWhile)
     private val `if` = topLevel(sIf)
+    private val `when` = topLevel(sWhen)
 
     @Test
     fun `comment pass`(){
@@ -85,27 +86,61 @@ class StatementTest {
 
     @Test
     fun `while pass`(){
-        `while` pass "while 0 {}"
+        `while` pass "while 0\n{\n}"
         `while` pass "while 0 {skip}"
     }
 
     @Test
     fun `do while pass`(){
         `do while` pass "do {} while true"
-        `do while` pass "do {skip\nskip;skip} while (e)"
+        `do while` pass "do\n{skip\nskip;skip}\nwhile (e)"
     }
 
 
     @Test
     fun `while fail`(){
-        `while` pass "while {} "
-        `while` pass "while 0 "
+        `while` fail "while {} "
+        `while` fail "while 0 "
     }
 
     @Test
     fun `do while fail`(){
-        `do while` pass "do {} while"
-        `do while` pass "do while (e)"
+        `do while` fail "do {} while"
+        `do while` fail "do while (e)"
     }
 
+    @Test
+    fun `when pass regular`() {
+        `when` pass "when{}"
+        `when` pass "when{a:a}"
+        `when` pass "when{a:{a}}"
+        `when` pass "when{a:{a},b:{b}} "
+        `when` pass "when{a:a,b:{b}} "
+        `when` pass "when{a:{a},b:b} "
+        `when` pass "when\n{\na:{a},\nb:{}} "
+    }
+
+    @Test
+    fun `when pass trailing coma`(){
+        `when` pass "when{a:{a},b:b,} "
+        `when` pass "when\n{\na:{a},\nb:{d},}\n "
+    }
+
+    @Test
+    fun `when pass with else`(){
+        `when` pass "when{a:{a}}else{b} "
+        `when` pass "when\n{\na:\n{a}}\nelse{d} "
+        `when` pass "when\n{\na:{a}\n}\nelse{\nd\n}\n "
+        `when` pass "when\n{\na:\n{a},}\nelse\n{d} "
+    }
+
+    @Test
+    fun `when fail`(){
+        `when` fail "when{a:{a},else:b} "
+        `when` fail "when{else:{b}}"
+        `when` fail "when{a:0}else:{b}"
+        `when` fail "when{,}"
+        `when` fail "when{a\n:{a}}"
+        `when` fail "when{a:{0},,}"
+    }
 }

@@ -37,7 +37,24 @@ open class ParserState(val input: String) {
 
     inline fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
 
-    override fun toString(): String = "position: $position, text:\n$input"
+    override fun toString(): String {
+        val stringBuilder = StringBuilder()
+        stringBuilder.append("pos: $position, text:\"")
+        if (position > 1) {
+            stringBuilder.append(input.substring(0..<position))
+        }
+        if (position < input.length) {
+            stringBuilder.append(input[position])
+            stringBuilder.append("⃰")
+            if (position < input.length - 1) {
+                stringBuilder.append(input.substring(position + 1))
+            }
+            stringBuilder.append('"')
+        } else {
+            stringBuilder.append("\"<")
+        }
+        return stringBuilder.toString()
+    }
 
     operator fun get(start: Int, end: Int): String = input[start, end]
     operator fun get(match: MatchPos): String = input.get(match.start, match.end)
@@ -69,10 +86,16 @@ sealed class ParserResult<T>(open val state: ParserState) {
         }
 }
 
-data class Pass<T>(val value: T, override val state: ParserState, val match: MatchPos) : ParserResult<T>(state)
+data class Pass<T>(val value: T, override val state: ParserState, val match: MatchPos) :
+    ParserResult<T>(state) {
+    override fun toString(): String = "Pass(value: $value, matched:${state[match]}, state: $state)"
+}
+
 data class Fail<T>(val reason: String, override val state: ParserState) : ParserResult<T>(state) {
     @Suppress("UNCHECKED_CAST")
     fun <R> to(): Fail<R> = this as Fail<R>
+
+    override fun toString(): String = "Fail(reason: $reason, state: ($state))"
 }
 
 /**
@@ -153,6 +176,7 @@ inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {
     for (factory in parsers) {
         val tmpResult = factory()
         if (tmpResult is Fail<T>) {
+            result = fail("${tmpResult.reason};\n${(result as Fail).reason}")
             position = pos
         } else {
             result = tmpResult

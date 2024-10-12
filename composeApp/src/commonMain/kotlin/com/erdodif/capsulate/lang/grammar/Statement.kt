@@ -26,15 +26,51 @@ data class If(
     }
 }
 
+data class When(
+    val blocks: ArrayList<Pair<Exp<*>, ArrayList<Statement>>>,
+    val elseBlock: ArrayList<Statement>? = null
+) : Statement {
+    override fun evaluate(env: Env) { // TODO: allow non-determinism
+        if (env.deterministic){
+            var run = false
+            for (block in blocks){
+                val result = block.first.evaluate(env)
+                if (result is VBool){
+                    if(result.value){
+                        run = true
+                        env.runProgram(block.second)
+                    }
+                }
+                else{
+                    throw RuntimeException("Condition must be a logical expression")
+                }
+            }
+            if(!run){
+                if(elseBlock != null){
+                    env.runProgram(elseBlock)
+                }
+                else{
+                    Abort.evaluate(env)
+                }
+            }
+        }
+        else{
+            TODO("Switch statement does not implement non-deterministic evaluation just yet")
+        }
+    }
+}
+
 data object Skip : Statement {
     override fun evaluate(env: Env) {}
 }
 
 data object Abort : Statement {
-    override fun evaluate(env: Env) { TODO("End run in error") }
+    override fun evaluate(env: Env) {
+        TODO("End run in error")
+    }
 }
 
-data class Return(val value: Exp<*>): Statement{
+data class Return(val value: Exp<*>) : Statement {
     override fun evaluate(env: Env) {
         TODO("Produce value")
     }
@@ -70,7 +106,7 @@ data class Assign(val id: String, val value: Exp<*>) : Statement {
     override fun evaluate(env: Env) = env.set(id, value.evaluate(env))
 }
 
-data class Select(val id: String, val set: Type): Statement{
+data class Select(val id: String, val set: Type) : Statement {
     override fun evaluate(env: Env) {
         TODO("Implement 'Zsák objektum'")
     }

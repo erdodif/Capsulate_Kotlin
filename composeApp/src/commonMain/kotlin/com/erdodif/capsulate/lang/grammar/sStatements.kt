@@ -30,9 +30,8 @@ fun <T> delimit(parser: Parser<T>): Parser<T> =
 fun <T> newLined(parser: Parser<T>): Parser<T> =
     left(parser, many(_lineBreak))
 
-val ParserState.statement: Parser<Statement>
-    get() = asum(
-        sParallel,
+val nonParallel: Parser<Statement> = {
+    asum(
         sSkip,
         sAbort,
         sWait,
@@ -41,30 +40,27 @@ val ParserState.statement: Parser<Statement>
         sSelect,
         sParallelAssign,
         sIf,
+        sWhen,
         sWhile,
         sDoWhile,
-        sExpression,
-    )
+        sExpression
+    )()
+}
+
+val statement: Parser<Statement> = { orEither(sParallel, nonParallel)() }
 
 val blockOrParallel: Parser<ArrayList<Statement>> = {
     orEither(
-        sParallel / { arrayListOf(it) },
+        newLined(sParallel) / { arrayListOf(it) },
         orEither(
             (newLined(_char('{')) + newLined(_char('}'))) / { arrayListOf() },
-            middle(newLined(_char('{')), many(delimit(statement)), newLined(_char('}')))
+            middle(newLined(_char('{')), some(delimit(statement)), newLined(_char('}')))
         )
     )()
 }
 
-val statementBlock: Parser<ArrayList<Statement>> = {
-    orEither(
-        orEither(
-            statement / { arrayListOf(it) },
-            (newLined(_char('{')) + newLined(_char('}'))) / { arrayListOf() }
-        ),
-        middle(newLined(_char('{')), many(delimit(statement)), newLined(_char('}')))
-    )()
-}
+val statementOrBlock: Parser<ArrayList<Statement>> =
+    orEither(blockOrParallel, nonParallel / { arrayListOf(it) })
 
 val program: Parser<ArrayList<Statement>> =
     {
@@ -90,6 +86,17 @@ val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 val sIf: Parser<Statement> = (right(_keyword("if"), delimit(pExp) + blockOrParallel) +
         right(delimit(_keyword("else")), blockOrParallel)) /
         { If(it.first.first, it.first.second, it.second) }
+
+val sWhen: Parser<Statement> = (middle(
+    newLined(_keyword("when")) + newLined(_char('{')),
+    many(left(
+        left(pExp, newLined(_char(':'))) + statementOrBlock,
+        newLined(_char(','))
+    ))+ optional(left(pExp, newLined(_char(':'))) + statementOrBlock),
+    newLined(_char('}'))
+) + optional(
+    right(newLined(_keyword("else")), statementOrBlock)
+)) / { if(it.first.second != null) it.first.first.add(it.first.second!!); When(it.first.first, it.second) }
 
 val sWhile: Parser<Statement> =
     (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) /
@@ -133,7 +140,7 @@ val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
 }
 
 val sParallel: Parser<Statement> = {
-    (delimited1(
+    (delimited2(
         middle(
             newLined(_char('{')),
             many(delimit(statement)),

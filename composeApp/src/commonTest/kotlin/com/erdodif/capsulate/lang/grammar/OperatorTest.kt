@@ -19,7 +19,7 @@ import com.erdodif.capsulate.lang.util.freeChar
 import com.erdodif.capsulate.lang.util.tok
 import kotlin.test.Test
 
-class Operator {
+class OperatorTest {
 
     private companion object {
         private data class TestValue(val char: Char) : Value {

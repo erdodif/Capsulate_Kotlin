@@ -21,7 +21,7 @@ class QuantityTest {
     fun optional_pass_char_empty() = assertValue(null, ParserState("").parse(optional(char('c'))))
 
     @Test
-    fun optional_pass_char() = assertValue('c', ParserState("c").parse(optional(char('c'))))
+    fun optional_pass_char() = assertValue('c', ParserState("cr").parse(optional(char('c'))))
 
     @Test
     fun optional_fail_reset() {
