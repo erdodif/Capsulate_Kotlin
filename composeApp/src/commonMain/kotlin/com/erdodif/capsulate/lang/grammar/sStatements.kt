@@ -104,8 +104,6 @@ val sWhen: Parser<Statement> = (middle(
     ),
     newLined(_char('}'))
 )) / {
-    println(it.first)
-    println(it.second)
     if (it.first.second != null) it.first.first.add(it.first.second!!); When(
     it.first.first,
     it.second

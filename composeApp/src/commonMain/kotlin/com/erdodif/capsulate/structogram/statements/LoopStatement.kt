@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -79,11 +80,7 @@ class LoopStatement(
                 }
             }
             Row(Modifier.weight(1f, true)) {
-                if(!inOrder) DraggableArea(Modifier.fillMaxHeight(), draggable, size) {
-                    dragging = it
-                    Spacer(Modifier.width(32.dp).fillMaxHeight())
-                }
-                else Spacer(Modifier.width(32.dp).fillMaxHeight())
+                Spacer(Modifier.width(32.dp).fillMaxHeight())
                 VerticalBorder()
                 Column(Modifier.fillMaxWidth()) {
                     if (inOrder) HorizontalBorder()
@@ -98,7 +95,7 @@ class LoopStatement(
             if (!inOrder) {
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)
                 {
-                    Condition(condition, Modifier)
+                    Condition(condition, Modifier.fillMaxWidth())
                 }
             }
         }

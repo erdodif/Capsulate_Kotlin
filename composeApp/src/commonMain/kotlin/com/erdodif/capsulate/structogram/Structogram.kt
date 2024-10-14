@@ -30,11 +30,14 @@ class Structogram {
 
     @Composable
     fun content(modifier: Modifier = Modifier, draggable: Boolean = false) =
-        Column(modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor).padding(Theme.borderWidth, 0.dp)) {
+        Column(
+            modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)
+                .padding(Theme.borderWidth, 0.dp)
+        ) {
             Spacer(Modifier.height(Theme.borderWidth))
             StackWithSeparator(
                 statements,
-                { it.Show(Modifier.fillMaxWidth(),draggable) }) { HorizontalBorder() }
+                { it.Show(Modifier.fillMaxWidth(), draggable) }) { HorizontalBorder() }
         }
 
     companion object {

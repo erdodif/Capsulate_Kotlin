@@ -121,13 +121,11 @@ fun StatementText(
 
 @Composable
 fun HorizontalBorder() = Spacer(
-    Modifier.height(Theme.borderWidth).background(Theme.borderColor)
-        .fillMaxWidth()
+    Modifier.fillMaxWidth().height(Theme.borderWidth).background(Theme.borderColor)
 )
 
 @Composable
 fun VerticalBorder() = Spacer(
-    Modifier.width(Theme.borderWidth).background(Theme.borderColor)
-        .fillMaxHeight()
+    Modifier.fillMaxHeight().width(Theme.borderWidth).background(Theme.borderColor)
 )
 

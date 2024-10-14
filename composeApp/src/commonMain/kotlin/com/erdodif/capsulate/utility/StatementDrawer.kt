@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.grammar.Statement
+import com.erdodif.capsulate.lang.grammar.While
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.AwaitStatement

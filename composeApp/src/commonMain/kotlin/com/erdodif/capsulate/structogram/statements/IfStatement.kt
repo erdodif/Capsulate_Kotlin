@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,8 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.lang.grammar.If
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -30,6 +33,7 @@ import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
+import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
@@ -51,9 +55,11 @@ open class IfStatement(
     override fun Show(modifier: Modifier, draggable: Boolean) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
+        var conditionHeight by remember { mutableStateOf(0.dp) }
         var dragging by remember { mutableStateOf(false) }
         Column(
-            modifier.dim(dragging).onDpSize(density) { size = it }.clip(RectangleShape).fillMaxWidth()
+            modifier.dim(dragging).onDpSize(density) { size = it }.clip(RectangleShape)
+                .fillMaxWidth().defaultMinSize(Dp.Unspecified, max(conditionHeight + 10.dp, 50.dp))
         ) {
             DraggableArea(Modifier, draggable, size) {
                 dragging = it
@@ -67,23 +73,33 @@ open class IfStatement(
             Row(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.height(IntrinsicSize.Min)
+                modifier = Modifier.weight(1f, true)
                     .background(MaterialTheme.colorScheme.primary).fillMaxWidth()
+                    .onDpSize(density){conditionHeight = it.height}
             ) {
                 Column(
-                    Modifier.fillMaxHeight().weight(1f, true).background(
-                        MaterialTheme.colorScheme.primary
-                    )
+                    Modifier.defaultMinSize(Dp.Unspecified, 25.dp).fillMaxHeight().weight(1f, true)
+                        .background(
+                            MaterialTheme.colorScheme.primary
+                        )
                 ) {
-                    StackWithSeparator(trueBranch, {
-                        it.Show(Modifier.fillMaxWidth(), draggable)
-                    }) { HorizontalBorder() }
+                    StackWithSeparator(
+                        trueBranch,
+                        {
+                            it.Show(Modifier.fillMaxWidth(), draggable)
+                        },
+                        {
+                            commandPlaceHolder(
+                                Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 25.dp)
+                            )
+                        }) { HorizontalBorder() }
                 }
                 VerticalBorder()
                 Column(
-                    Modifier.fillMaxHeight().weight(1f, true).background(
-                        MaterialTheme.colorScheme.primary
-                    )
+                    Modifier.defaultMinSize(Dp.Unspecified, 25.dp).fillMaxHeight().weight(1f, true)
+                        .background(
+                            MaterialTheme.colorScheme.primary
+                        )
                 ) {
                     StackWithSeparator(
                         falseBranch,
@@ -91,6 +107,11 @@ open class IfStatement(
                             it.Show(
                                 Modifier.fillMaxWidth(),
                                 draggable
+                            )
+                        },
+                        {
+                            commandPlaceHolder(
+                                Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 25.dp)
                             )
                         }) { HorizontalBorder() }
                 }

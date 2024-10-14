@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -71,7 +73,7 @@ class WhenStatement(
                 .onDpSize(density) { size = it }) {
             var maxHeight by remember { mutableStateOf(0.dp) }
             StackWithSeparator(blocks, {
-                Column(Modifier.weight(1f, true).height(IntrinsicSize.Min)) {
+                Column(Modifier.weight(1f, true)) {
                     DraggableArea(Modifier, draggable, size) { drag ->
                         dragging = drag
                         Row(Modifier.height(IntrinsicSize.Min)) {
@@ -91,12 +93,14 @@ class WhenStatement(
                         }
                     }
                     HorizontalBorder()
-                    StackWithSeparator(it.statements, {
-                        it.Show(Modifier.fillMaxWidth().weight(1f, true), draggable)
-                    }, {
-                        commandPlaceHolder(Modifier.fillMaxWidth().weight(1f, true))
+                    Column(Modifier.fillMaxSize()){
+                        StackWithSeparator(it.statements, {
+                            it.Show(Modifier.fillMaxSize(), draggable)
+                        }, {
+                            commandPlaceHolder(Modifier.fillMaxSize())
+                        }
+                        ) { HorizontalBorder() }
                     }
-                    ) { HorizontalBorder() }
                 }
             }, {
                 DraggableArea(

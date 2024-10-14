@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
@@ -47,7 +49,9 @@ abstract class Statement(val statement: com.erdodif.capsulate.lang.grammar.State
     ) = if (draggable) {
         val state = LocalDraggingStatement.current
         DraggableItem(
-            modifier, key = this@Statement, state = state,
+            if (draggable) modifier else modifier.pointerHoverIcon(
+                PointerIcon.Hand, true
+            ), key = this@Statement, state = state,
             data = this@Statement,
             dragAfterLongPress = onMobile,
             draggableContent = {

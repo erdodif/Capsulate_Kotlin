@@ -1,6 +1,6 @@
 package com.erdodif.capsulate.structogram.statements
 
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -43,24 +43,21 @@ class Command(var text: String, statement: com.erdodif.capsulate.lang.grammar.St
     override fun Show(modifier: Modifier, draggable: Boolean) {
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
-        if(draggable)
-        DraggableArea(Modifier, draggable, size) { dragging ->
-            Row(modifier.onDpSize(density) { size = it }.dim(dragging)) {
+        if (draggable)
+            DraggableArea(Modifier, draggable, size) { dragging ->
                 StatementText(
                     text,
                     false,
-                    Modifier.fillMaxWidth().padding(Theme.commandPadding)
+                    Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
+                        .padding(Theme.commandPadding)
                 )
             }
-        }
-        else{
-            Row(modifier.onDpSize(density) { size = it }) {
-                StatementText(
-                    text,
-                    false,
-                    Modifier.fillMaxWidth().padding(Theme.commandPadding)
-                )
-            }
+        else {
+            StatementText(
+                text,
+                false,
+                modifier.fillMaxWidth().padding(Theme.commandPadding)
+            )
         }
     }
 }
