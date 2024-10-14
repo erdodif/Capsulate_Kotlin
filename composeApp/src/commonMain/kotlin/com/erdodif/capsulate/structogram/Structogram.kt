@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -29,7 +30,7 @@ class Structogram {
     }
 
     @Composable
-    fun content(modifier: Modifier = Modifier, draggable: Boolean = false) =
+    fun content(modifier: Modifier = Modifier, draggable: Boolean = false) = key(this, draggable){
         Column(
             modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)
                 .padding(Theme.borderWidth, 0.dp)
@@ -39,6 +40,7 @@ class Structogram {
                 statements,
                 { it.Show(Modifier.fillMaxWidth(), draggable) }) { HorizontalBorder() }
         }
+    }
 
     companion object {
         fun fromStatements(vararg statements: Statement): Structogram {

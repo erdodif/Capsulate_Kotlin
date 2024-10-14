@@ -25,6 +25,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.StatementDragProvider
+import com.erdodif.capsulate.StatementDragState
 import com.erdodif.capsulate.lang.grammar.Expression
 import com.erdodif.capsulate.lang.grammar.Skip
 import com.erdodif.capsulate.lang.grammar.Variable
@@ -89,7 +93,13 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
         var showStructogram by remember { mutableStateOf(true) }
         var structogram: Structogram? by remember { mutableStateOf(null) }
         var dragStatements by remember { mutableStateOf(false) }
-        return EditorScreen.State(actualText, structogram, showCode, showStructogram, dragStatements) { event ->
+        return EditorScreen.State(
+            actualText,
+            structogram,
+            showCode,
+            showStructogram,
+            dragStatements
+        ) { event ->
             when (event) {
                 is EditorScreen.Event.TextInput -> {
                     actualText = event.code
@@ -103,8 +113,10 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
                                     ParserState(event.code),
                                     it.value as com.erdodif.capsulate.lang.grammar.Statement
                                 )
-                            }?.toTypedArray() ?: arrayOf(Command((result as Fail).reason, Skip)
-                        ))
+                            }?.toTypedArray() ?: arrayOf(
+                            Command((result as Fail).reason, Skip)
+                        )
+                        )
                 }
 
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode
@@ -133,104 +145,110 @@ data object EditorPage : Ui<EditorScreen.State> {
     @Composable
     override fun Content(state: EditorScreen.State, modifier: Modifier) {
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-        DragAndDropContainer(LocalDraggingStatement.current) {
-            Scaffold(
-                modifier,
-                contentWindowInsets = WindowInsets.statusBars,
-                bottomBar = {
-                    BottomAppBar {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+        StatementDragProvider{
+            DragAndDropContainer(LocalDraggingStatement.current.state) {
+                Scaffold(
+                    modifier,
+                    contentWindowInsets = WindowInsets.statusBars,
+                    bottomBar = {
+                        BottomAppBar {
                             Row(
-                                Modifier.padding(5.dp, 0.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Code") // STOPSHIP: Locale
-                                Switch(
-                                    state.showCode,
-                                    { state.eventHandler(EditorScreen.Event.ToggleCode) },
-                                    Modifier.padding(5.dp, 1.dp)
-                                )
-                            }
-                            Row(
-                                Modifier.padding(5.dp, 0.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Struk") // STOPSHIP: Locale
-                                Switch(
-                                    state.showStructogram,
-                                    { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
-                                    Modifier.padding(5.dp, 1.dp)
-                                )
-                            }
-                            Row(
-                                Modifier.padding(5.dp, 0.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Drag") // STOPSHIP: Locale
-                                Switch(
-                                    state.dragStatements,
-                                    { state.eventHandler(EditorScreen.Event.ToggleStatementDrag) },
-                                    Modifier.padding(5.dp, 1.dp)
-                                )
-                            }
-                            Button(
-                                { state.eventHandler(EditorScreen.Event.Close) },
-                                Modifier.padding(5.dp, 1.dp),
-                                contentPadding =  PaddingValues(2.dp)
-                            ) {
-                                Text("X") // STOPSHIP: Locale
+                                Row(
+                                    Modifier.padding(5.dp, 0.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Code") // STOPSHIP: Locale
+                                    Switch(
+                                        state.showCode,
+                                        { state.eventHandler(EditorScreen.Event.ToggleCode) },
+                                        Modifier.padding(5.dp, 1.dp)
+                                    )
+                                }
+                                Row(
+                                    Modifier.padding(5.dp, 0.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Struk") // STOPSHIP: Locale
+                                    Switch(
+                                        state.showStructogram,
+                                        { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
+                                        Modifier.padding(5.dp, 1.dp)
+                                    )
+                                }
+                                Row(
+                                    Modifier.padding(5.dp, 0.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Drag") // STOPSHIP: Locale
+                                    Switch(
+                                        state.dragStatements,
+                                        { state.eventHandler(EditorScreen.Event.ToggleStatementDrag) },
+                                        Modifier.padding(5.dp, 1.dp)
+                                    )
+                                }
+                                Button(
+                                    { state.eventHandler(EditorScreen.Event.Close) },
+                                    Modifier.padding(5.dp, 1.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text("X") // STOPSHIP: Locale
+                                }
                             }
                         }
                     }
-                }
-            ) { innerPadding ->
-                Column(
-                    (if (keyboardUp) Modifier.imePadding() else Modifier.padding(innerPadding)).fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (state.showCode)
-                        CodeEditor(
-                            state.code,
-                            Modifier.weight(3f, false).fillMaxWidth().defaultMinSize(30.dp, 64.dp)
-                        ) { state.eventHandler(EditorScreen.Event.TextInput(it)) }
-                    if (state.showCode && state.showStructogram)
-                        Spacer(
-                            Modifier.fillMaxWidth().padding(3.dp, 2.dp)
-                                .background(MaterialTheme.colorScheme.surface).height(3.dp)
-                        )
-                    if (state.showStructogram)
-                        Column(
-                            Modifier.fillMaxWidth().weight(2f, false)
-                                .heightIn(10.dp, if (state.showCode) 1200.dp else Dp.Unspecified),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            if (state.structogram != null) {
-                                state.structogram.content(
-                                    Modifier.verticalScroll(
-                                        rememberScrollState()
+                ) { innerPadding ->
+                    Column(
+                        (if (keyboardUp) Modifier.imePadding() else Modifier.padding(innerPadding)).fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (state.showCode)
+                            CodeEditor(
+                                state.code,
+                                Modifier.weight(3f, false).fillMaxWidth()
+                                    .defaultMinSize(30.dp, 64.dp)
+                            ) { state.eventHandler(EditorScreen.Event.TextInput(it)) }
+                        if (state.showCode && state.showStructogram)
+                            Spacer(
+                                Modifier.fillMaxWidth().padding(3.dp, 2.dp)
+                                    .background(MaterialTheme.colorScheme.surface).height(3.dp)
+                            )
+                        if (state.showStructogram)
+                            Column(
+                                Modifier.fillMaxWidth().weight(2f, false)
+                                    .heightIn(
+                                        10.dp,
+                                        if (state.showCode) 1200.dp else Dp.Unspecified
                                     ),
-                                    state.dragStatements
-                                )
-                            } else {
-                                Text("Error", Modifier.fillMaxWidth())
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (state.structogram != null) {
+                                    state.structogram.content(
+                                        Modifier.verticalScroll(
+                                            rememberScrollState()
+                                        ),
+                                        state.dragStatements
+                                    )
+                                } else {
+                                    Text("Error", Modifier.fillMaxWidth())
+                                }
+                                if (!keyboardUp && state.dragStatements) {
+                                    StatementDrawer(
+                                        Modifier.heightIn(100.dp, 400.dp)
+                                            .padding(20.dp)
+                                            .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                    )
+                                }
                             }
-                            if (!keyboardUp && state.dragStatements) {
-                                StatementDrawer(
-                                    Modifier.heightIn(100.dp, 400.dp)
-                                        .padding(20.dp)
-                                        .background(MaterialTheme.colorScheme.tertiaryContainer)
-                                )
+                        if (keyboardUp) {
+                            Row(Modifier.fillMaxWidth()) {
+                                Button({}) { Text("\\escape") }
                             }
-                        }
-                    if (keyboardUp) {
-                        Row(Modifier.fillMaxWidth()) {
-                            Button({}) { Text("\\escape") }
                         }
                     }
                 }

@@ -1,16 +1,20 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.grammar.Abort
 import com.erdodif.capsulate.lang.grammar.Assign
 import com.erdodif.capsulate.lang.grammar.Expression
@@ -40,7 +44,7 @@ class Command(var text: String, statement: com.erdodif.capsulate.lang.grammar.St
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) {
+    override fun Show(modifier: Modifier, draggable: Boolean) = key(this){
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
         if (draggable)
@@ -51,6 +55,7 @@ class Command(var text: String, statement: com.erdodif.capsulate.lang.grammar.St
                     Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
                         .padding(Theme.commandPadding)
                 )
+                DropTarget(LocalDraggingStatement.current)
             }
         else {
             StatementText(
