@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.erdodif.capsulate.lang.grammar.Parallel
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -86,7 +88,7 @@ class ParallelStatement(
                 }) {
                 DraggableArea(Modifier.width(Theme.borderWidth * 4), draggable, size) {
                     dragging = it
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Row(Modifier.width(Theme.borderWidth * 4), horizontalArrangement = Arrangement.Center) {
                         VerticalBorder()
                         Spacer(Modifier.width(Theme.borderWidth * 2))
                         VerticalBorder()

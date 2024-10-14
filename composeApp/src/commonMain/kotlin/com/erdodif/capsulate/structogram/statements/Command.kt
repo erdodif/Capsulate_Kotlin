@@ -43,8 +43,18 @@ class Command(var text: String, statement: com.erdodif.capsulate.lang.grammar.St
     override fun Show(modifier: Modifier, draggable: Boolean) {
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
+        if(draggable)
         DraggableArea(Modifier, draggable, size) { dragging ->
             Row(modifier.onDpSize(density) { size = it }.dim(dragging)) {
+                StatementText(
+                    text,
+                    false,
+                    Modifier.fillMaxWidth().padding(Theme.commandPadding)
+                )
+            }
+        }
+        else{
+            Row(modifier.onDpSize(density) { size = it }) {
                 StatementText(
                     text,
                     false,

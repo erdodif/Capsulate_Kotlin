@@ -39,8 +39,8 @@ val nonParallel: Parser<Statement> = {
         sAssign,
         sSelect,
         sParallelAssign,
-        sIf,
         sWhen,
+        sIf,
         sWhile,
         sDoWhile,
         sExpression
@@ -89,14 +89,28 @@ val sIf: Parser<Statement> = (right(_keyword("if"), delimit(pExp) + blockOrParal
 
 val sWhen: Parser<Statement> = (middle(
     newLined(_keyword("when")) + newLined(_char('{')),
-    many(left(
-        left(pExp, newLined(_char(':'))) + statementOrBlock,
-        newLined(_char(','))
-    ))+ optional(left(pExp, newLined(_char(':'))) + statementOrBlock),
+    (many(
+        left(
+            left(pExp, newLined(_char(':'))) + statementOrBlock,
+            newLined(_char(','))
+        )
+    ) + optional(left(pExp, newLined(_char(':'))) + statementOrBlock))
+            + optional(
+        middle(
+            newLined(_keyword("else") + _char(':')),
+            statementOrBlock,
+            optional(newLined(_char(',')))
+        )
+    ),
     newLined(_char('}'))
-) + optional(
-    right(newLined(_keyword("else")), statementOrBlock)
-)) / { if(it.first.second != null) it.first.first.add(it.first.second!!); When(it.first.first, it.second) }
+)) / {
+    println(it.first)
+    println(it.second)
+    if (it.first.second != null) it.first.first.add(it.first.second!!); When(
+    it.first.first,
+    it.second
+)
+}
 
 val sWhile: Parser<Statement> =
     (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) /

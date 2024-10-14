@@ -46,13 +46,13 @@ class WhenStatement(
                         block.first.toString(state),
                         block.second.map { fromStatement(state, it) }.toTypedArray()
                     )
-                }.toList().also { blocks ->
-                    if (statement.elseBlock != null) blocks + Block(
+                }.toMutableList().also { blocks ->
+                    if (statement.elseBlock != null) blocks.add(Block(
                         "else",
                         statement.elseBlock.map {
                             fromStatement(state, it)
                         }.toTypedArray()
-                    )
+                    ))
                 }.toTypedArray(),
                 statement
             )
@@ -71,10 +71,10 @@ class WhenStatement(
                 .onDpSize(density) { size = it }) {
             var maxHeight by remember { mutableStateOf(0.dp) }
             StackWithSeparator(blocks, {
-                Column(Modifier.weight(1f, true)) {
+                Column(Modifier.weight(1f, true).height(IntrinsicSize.Min)) {
                     DraggableArea(Modifier, draggable, size) { drag ->
                         dragging = drag
-                        Row(Modifier) {
+                        Row(Modifier.height(IntrinsicSize.Min)) {
                             StatementText(
                                 it.condition, modifier = Modifier
                                     .onSizeChanged {
@@ -92,9 +92,9 @@ class WhenStatement(
                     }
                     HorizontalBorder()
                     StackWithSeparator(it.statements, {
-                        it.Show(Modifier.fillMaxWidth(), draggable)
+                        it.Show(Modifier.fillMaxWidth().weight(1f, true), draggable)
                     }, {
-                        commandPlaceHolder(Modifier.fillMaxWidth())
+                        commandPlaceHolder(Modifier.fillMaxWidth().weight(1f, true))
                     }
                     ) { HorizontalBorder() }
                 }
@@ -128,9 +128,9 @@ class WhenStatement(
                     }
                     HorizontalBorder()
                     StackWithSeparator(elseBranch!!.statements, {
-                        it.Show(Modifier.fillMaxWidth(), draggable)
+                        it.Show(Modifier.fillMaxWidth().weight(1f, true), draggable)
                     }, {
-                        commandPlaceHolder(Modifier.fillMaxWidth())
+                        commandPlaceHolder(Modifier.fillMaxWidth().weight(1f,true))
                     }
                     ) { HorizontalBorder() }
                 }
