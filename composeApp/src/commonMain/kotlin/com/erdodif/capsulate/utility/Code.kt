@@ -23,12 +23,14 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.UrlAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
@@ -167,24 +169,50 @@ fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
 @OptIn(ExperimentalTextApi::class)
 @Composable
 fun CodeEditor(
-    code: String = "",
+    code: TextFieldValue = TextFieldValue(""),
     modifier: Modifier = Modifier,
-    onValueChange: (String) -> Unit
+    input: Boolean,
+    onInputChanged: (Boolean) -> Unit,
+    onValueChange: (TextFieldValue) -> Unit
 ) {
-    val tokenStream= tokenizeProgram(code)
+    val tokenStream = tokenizeProgram(code.text)
+    val text = code.text
     defaultCodeHighLight.apply {
         val textStyle = TextStyle(fontFamily = fonts, fontSize = 18.sp)
-        val lineBreaks = lineBreakPositions(code)
+        val lineBreaks = lineBreakPositions(code.text)
         var lineCountContent by remember { mutableStateOf("") }
         val coroutineScope = rememberCoroutineScope()
-        val str = AnnotatedString.Builder(code.length).apply {
-            withStyle(SpanStyle()) { append(code) }
+        val str = AnnotatedString.Builder(text.length).apply {
+            withStyle(SpanStyle()) { append(text) }
             pushUrlAnnotation(UrlAnnotation("http://google.com"))
         }.toAnnotatedString()
         val scrollState = rememberScrollState(0)
-        val transform by remember(code, tokenStream){ derivedStateOf{ visualTransformation(code, tokenStream) }}
-        BasicTextField(
-            value = str.text, onValueChange = onValueChange,
+        val transform by remember(code, tokenStream) {
+            derivedStateOf {
+                visualTransformation(
+                    text,
+                    tokenStream
+                )
+            }
+        }
+        if (input) {
+            UnicodeInputField(
+                {
+                    onValueChange(code.copy(buildString {
+                        append(code.text.substring(0, code.selection.start))
+                        append(it)
+                        append(code.text.substring(code.selection.start,code.text.length))
+                    },  TextRange(code.selection.start +1)))
+                    onInputChanged(false)
+                },
+                { onInputChanged(false) }
+            )
+        }
+        BasicTextField( //Prepare for BasicTextField2
+            value = code,
+            onValueChange = {
+                onValueChange(it)
+            },
             textStyle = textStyle,
             modifier = modifier.background(Color(44, 44, 44)),
             cursorBrush = SolidColor(Color.Cyan),

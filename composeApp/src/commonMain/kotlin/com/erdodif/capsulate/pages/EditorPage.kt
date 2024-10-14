@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
@@ -67,7 +69,7 @@ import com.slack.circuit.runtime.ui.Ui
 @KParcelize
 object EditorScreen : Screen {
     data class State(
-        val code: String,
+        val code: TextFieldValue,
         val structogram: Structogram?,
         val showCode: Boolean,
         val showStructogram: Boolean,
@@ -76,7 +78,7 @@ object EditorScreen : Screen {
     ) : CircuitUiState
 
     sealed class Event : CircuitUiEvent {
-        data class TextInput(val code: String) : Event()
+        data class TextInput(val code: TextFieldValue) : Event()
         data object Close : Event()
         data object ToggleCode : Event()
         data object ToggleStructogram : Event()
@@ -88,13 +90,13 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
     Presenter<EditorScreen.State> {
     @Composable
     override fun present(): EditorScreen.State {
-        var actualText by remember { mutableStateOf(initialText) }
+        var inputValue by remember { mutableStateOf(TextFieldValue(initialText, TextRange.Zero)) }
         var showCode by remember { mutableStateOf(true) }
         var showStructogram by remember { mutableStateOf(true) }
         var structogram: Structogram? by remember { mutableStateOf(null) }
         var dragStatements by remember { mutableStateOf(false) }
         return EditorScreen.State(
-            actualText,
+            inputValue,
             structogram,
             showCode,
             showStructogram,
@@ -102,15 +104,16 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
         ) { event ->
             when (event) {
                 is EditorScreen.Event.TextInput -> {
-                    actualText = event.code
-                    val result = ParserState(event.code).parse(halfProgram)
+                    inputValue = event.code
+                    val parserState = ParserState(event.code.text)
+                    val result = parserState.parse(halfProgram)
                     structogram =
                         Structogram.fromStatements(*((result as? Pass<*>)?.value as List<*>?)
                             ?.filterNot { it is Right<*, *> }
                             ?.map {
                                 it as Left<*, *>
                                 Statement.fromStatement(
-                                    ParserState(event.code),
+                                    parserState,
                                     it.value as com.erdodif.capsulate.lang.grammar.Statement
                                 )
                             }?.toTypedArray() ?: arrayOf(
@@ -145,6 +148,7 @@ data object EditorPage : Ui<EditorScreen.State> {
     @Composable
     override fun Content(state: EditorScreen.State, modifier: Modifier) {
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        var input by remember { mutableStateOf(false) }
         StatementDragProvider{
             DragAndDropContainer(LocalDraggingStatement.current.state) {
                 Scaffold(
@@ -210,7 +214,9 @@ data object EditorPage : Ui<EditorScreen.State> {
                             CodeEditor(
                                 state.code,
                                 Modifier.weight(3f, false).fillMaxWidth()
-                                    .defaultMinSize(30.dp, 64.dp)
+                                    .defaultMinSize(30.dp, 64.dp),
+                                input,
+                                {input = it}
                             ) { state.eventHandler(EditorScreen.Event.TextInput(it)) }
                         if (state.showCode && state.showStructogram)
                             Spacer(
@@ -247,7 +253,7 @@ data object EditorPage : Ui<EditorScreen.State> {
                             }
                         if (keyboardUp) {
                             Row(Modifier.fillMaxWidth()) {
-                                Button({}) { Text("\\escape") }
+                                Button({input = true /*TODO, should be state*/}) { Text("\\escape") }
                             }
                         }
                     }
