@@ -12,20 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.pages.screen.EmptyPage
 import com.erdodif.capsulate.pages.screen.EmptyScreen
 import com.erdodif.capsulate.pages.screen.EmptyScreenPresenter
-import com.erdodif.capsulate.pages.screen.ProjectPage
 import com.erdodif.capsulate.pages.screen.ProjectPresenter
 import com.erdodif.capsulate.pages.screen.ProjectScreen
+import com.erdodif.capsulate.pages.ui.emptyPage
+import com.erdodif.capsulate.pages.ui.projectPage
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.foundation.rememberCircuitNavigator
-import com.slack.circuit.overlay.LocalOverlayHost
-import com.slack.circuit.overlay.OverlayScope
 import com.slack.circuit.runtime.screen.Screen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -52,10 +50,12 @@ fun App() {
     }
     val circuit = Circuit.Builder()
         .addPresenterFactory(EmptyScreenPresenter.Factory)
-        .addUi<EmptyScreen, EmptyScreen.State> { state, modifier -> EmptyPage(state, modifier) }
+        .addUi<EmptyScreen, EmptyScreen.State> { state, modifier ->
+            emptyPage().Content(state, modifier)
+        }
         .addPresenterFactory(ProjectPresenter.Factory)
         .addUi<ProjectScreen, ProjectScreen.State> { state, modifier ->
-            ProjectPage.Content(state, modifier)
+            projectPage().Content(state, modifier)
         }
         .build()
     MaterialTheme(colorScheme = resolveColors()) {
