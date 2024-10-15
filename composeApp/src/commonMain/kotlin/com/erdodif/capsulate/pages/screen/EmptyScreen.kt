@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.pages
+package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +40,7 @@ data object EmptyScreen : Screen {
     }
 }
 
-class EmptyScreenPresenter(private val screen: EmptyScreen,private val navigator: Navigator) :
+class EmptyScreenPresenter(private val screen: EmptyScreen, private val navigator: Navigator) :
     Presenter<EmptyScreen.State> {
 
     @Composable

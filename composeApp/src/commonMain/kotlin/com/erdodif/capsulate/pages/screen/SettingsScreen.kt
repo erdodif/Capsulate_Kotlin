@@ -1,7 +1,7 @@
-package com.erdodif.capsulate.pages
+package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
-import com.slack.circuit.foundation.circuit
+import com.erdodif.capsulate.KParcelize
 import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -9,6 +9,7 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 
+@KParcelize
 data object SettingsScreen : Screen {
     class State(val eventHandler: (Event) -> Unit) : CircuitUiState
 

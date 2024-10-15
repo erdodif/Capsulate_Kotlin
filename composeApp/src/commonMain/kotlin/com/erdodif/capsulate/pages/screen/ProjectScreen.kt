@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.pages
+package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.defaultScreenError
+import com.erdodif.capsulate.pages.ui.EditorPage
 import com.erdodif.capsulate.project.Project
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
