@@ -33,7 +33,7 @@ val escapes = mapOf(
     Pair("def=", "≝"),
     Pair("m=", "≞"),
     Pair("?=", "≟"),
-//Inequalityandsimilarsymbols.
+    //Inequality and similar symbols.
     Pair("leq", "<≪⋘≤≦≲≶≺≼≾⊂⊆⋐⊏⊑⊰⊲⊴⋖⋚⋜⋞＜"),
     Pair("leqn", "≮≰≨≴⋦≸⊀⋨⊄⊈⊊⋢⋤⋪⋬⋠"),
     Pair("geq", ">≫⋙≥≧≳≷≻≽≿⊃⊇⋑⊐⊒⊱⊳⊵⋗⋛⋝⋟＞"),
@@ -65,10 +65,11 @@ val escapes = mapOf(
     Pair("squb=", "⊑"),
     Pair("squp=", "⊒"),
     Pair("squb=n", "⋢"),
-    Pair("squp=n", "⋣"),//Setmembershipetc.,
+    Pair("squp=n", "⋣"),
     Pair("member", "∈∉∊∋∌∍⋲⋳⋴⋵⋶⋷⋸⋹⋺⋻⋼⋽⋾⋿"),
     Pair("inn", "∉"),
-    Pair("nin", "∌"),//Intersections,unionsetc.,
+    Pair("nin", "∌"),
+    //Intersections, unions etc.
     Pair("intersection", "∩⋂∧⋀⋏⨇⊓⨅⋒∏⊼⨉"),
     Pair("union", "∪⋃∨⋁⋎⨈⊔⨆⋓∐⨿⊽⊻⊍⨃⊎⨄⊌∑⅀"),
     Pair("and", "∧"),
@@ -86,7 +87,8 @@ val escapes = mapOf(
     Pair("glb", "⊓"),
     Pair("lub", "⊔"),
     Pair("Glb", "⨅"),
-    Pair("Lub", "⨆"),//Entailmentetc.,
+    Pair("Lub", "⨆"),
+    //Entailment etc.
     Pair("entails", "⊢⊣⊤⊥⊦⊧⊨⊩⊪⊫⊬⊭⊮⊯"),
     Pair("|-", "⊢"),
     Pair("|-n", "⊬"),
@@ -97,18 +99,21 @@ val escapes = mapOf(
     Pair("||-n", "⊮"),
     Pair("||=", "⊫"),
     Pair("||=n", "⊯"),
-    Pair("|||-", "⊪"),//Divisibility,parallelity.,
+    Pair("|||-", "⊪"),
+    //Divisibility, parallelity.
     Pair("|", "∣"),
     Pair("|n", "∤"),
     Pair("||", "∥"),
-    Pair("||n", "∦"),//Somesymbolsfromlogicandsettheory.,
+    Pair("||n", "∦"),
+    //Some symbols from logic and set theory.
     Pair("all", "∀"),
     Pair("ex", "∃"),
     Pair("exn", "∄"),
     Pair("0", "∅"),
     Pair("C", "∁"),
     Pair("uin", "⟒"),
-    Pair("din", "⫙"),//Corners,ceilingsandfloors.,
+    Pair("din", "⫙"),
+    //Corners, ceilings and floors.
     Pair("c", "⌜⌝⌞⌟⌈⌉⌊⌋"),
     Pair("cu", "⌜⌝⌈⌉"),
     Pair("cl", "⌞⌟⌊⌋"),
@@ -119,7 +124,8 @@ val escapes = mapOf(
     Pair("cll", "⌞"),
     Pair("clL", "⌊"),
     Pair("clr", "⌟"),
-    Pair("clR", "⌋"),//Variousoperators/symbols.,
+    Pair("clR", "⌋"),
+    //Various operators/symbols.
     Pair("qed", "∎"),
     Pair("x", "×"),
     Pair("o", "∘"),
@@ -146,7 +152,7 @@ val escapes = mapOf(
     Pair("z;", "⨟⨾"),
     Pair("z:", "⦂"),
     Pair("at", "@﹫＠"),
-//Circledoperators.,
+    //Circled operators.
     Pair("o+", "⊕"),
     Pair("o--", "⊖"),
     Pair("ox", "⊗"),
@@ -159,7 +165,8 @@ val escapes = mapOf(
     Pair("O+", "⨁"),
     Pair("Ox", "⨂"),
     Pair("O.", "⨀"),
-    Pair("O*", "⍟"),//Boxedoperators.,
+    Pair("O*", "⍟"),
+    //Boxed operators.
     Pair("b+", "⊞"),
     Pair("b-", "⊟"),
     Pair("bx", "⊠"),
@@ -168,7 +175,8 @@ val escapes = mapOf(
     Pair("b\\", "⧅"),
     Pair("b*", "⧆"),
     Pair("bo", "⧇"),
-    Pair("bsq", "⧈"),//APLboxedoperators.,
+    Pair("bsq", "⧈"),
+    //APL boxed operators.
     Pair("box=", "⌸"),
     Pair("box?", "⍰"),
     Pair("box'", "⍞"),
@@ -193,11 +201,13 @@ val escapes = mapOf(
     Pair("boxwedge", "⍓"),
     Pair("boxvee", "⍌"),
     Pair("boxdelta", "⍍"),
-    Pair("boxnabla", "⍔"), //Various symbols.,
+    Pair("boxnabla", "⍔"),
+    //Various symbols.
     Pair("integral", "∫∬∭∮∯∰∱∲∳"),
     Pair("angle", "∟∡∢⊾⊿"),
     Pair("join", "⋈⋉⋊⋋⋌⨝⟕⟖⟗"),
-    Pair("esh", "ʃ"),//Arrows.,
+    Pair("esh", "ʃ"),
+    //Arrows.
     Pair("l", "←⇐⇚⭅⇇⇆↤⇦↞↼↽⇠⇺↜⇽⟵⟸↚⇍⇷↹↢↩↫⇋⇜⇤⟻⟽⤆↶↺⟲"),
     Pair("r", "→⇒⇛⭆⇉⇄↦⇨↠⇀⇁⇢⇻↝⇾⟶⟹↛⇏⇸⇶↴↣↪↬⇌⇝⇥⟼⟾⤇↷↻⟳⇰⇴⟴⟿➵➸➙➔➛➜➝➞➟➠➡➢➣➤➧➨➩➪➫➬➭➮➯➱➲➳➺➻➼➽➾⊸"),
     Pair("u", "↑⇑⤊⟰⇈⇅↥⇧↟↿↾⇡⇞↰↱➦⇪⇫⇬⇭⇮⇯"),
@@ -279,53 +289,55 @@ val escapes = mapOf(
     Pair("r-o", "⊸"),
     Pair("-o", "⊸"),
     Pair("l-o", "⟜"),
-    Pair("dz", "↯"),//Ellipsis.,
+    Pair("dz", "↯"),
+    //Ellipsis.
     Pair("...", "⋯⋮⋰⋱"),
-
-//Box-drawingcharacters.,
+    //Box-drawing characters.
     Pair("---", "─│┌┐└┘├┤┬┼┴╴╵╶╷╭╮╯╰╱╲╳"),
     Pair("--=", "═║╔╗╚╝╠╣╦╬╩╒╕╘╛╞╡╤╪╧╓╖╙╜╟╢╥╫╨"),
     Pair("--_", "━┃┏┓┗┛┣┫┳╋┻╸╹╺╻┍┯┑┕┷┙┝┿┥┎┰┒┖┸┚┠╂┨┞╀┦┟╁┧┢╈┪┡╇┩┮┭┶┵┾┽┲┱┺┹╊╉╆╅╄╃╿╽╼╾"),
     Pair("--.", "╌╎┄┆┈┊╍╏┅┇┉┋"),
-
-//Triangles.
-//Big/small,black/white.,
+    //Triangles.
+    //Big/small, black/white.
     Pair("t", "◂◃◄◅▸▹►▻▴▵▾▿◢◿◣◺◤◸◥◹"),
     Pair("T", "◀◁▶▷▲△▼▽◬◭◮"),
     Pair("tb", "◂▸▴▾◄►◢◣◤◥"),
     Pair("tw", "◃▹▵▿◅▻◿◺◸◹"),
     Pair("Tb", "◀▶▲▼"),
     Pair("Tw", "◁▷△▽"),
-
-//Squares.,
+    //Squares.
     Pair("sq", "■□◼◻◾◽▣▢▤▥▦▧▨▩◧◨◩◪◫◰◱◲◳"),
     Pair("sqb", "■◼◾"),
     Pair("sqw", "□◻◽"),
     Pair("sq.", "▣"),
-    Pair("sqo", "▢"),//Rectangles.,
+    Pair("sqo", "▢"),
+    //Rectangles.
     Pair("re", "▬▭▮▯"),
     Pair("reb", "▬▮"),
     Pair("rew", "▭▯"),
-
-//Parallelograms.,
+    //Parallelograms.
     Pair("pa", "▰▱"),
     Pair("pab", "▰"),
-    Pair("paw", "▱"),//Diamonds.,
+    Pair("paw", "▱"),
+    //Diamonds.
     Pair("di", "◆◇◈"),
     Pair("dib", "◆"),
     Pair("diw", "◇"),
-    Pair("di.", "◈"),//Circles.,
+    Pair("di.", "◈"),
+    //Circles.
     Pair("ci", "●○◎◌◯◍◐◑◒◓◔◕◖◗◠◡◴◵◶◷⚆⚇⚈⚉"),
     Pair("cib", "●"),
     Pair("ciw", "○"),
     Pair("ci.", "◎"),
     Pair("ci..", "◌"),
-    Pair("ciO", "◯"),//Stars.,
+    Pair("ciO", "◯"),
+    //Stars.
     Pair("st", "⋆✦✧✶✴✹★☆✪✫✯✰✵✷✸"),
     Pair("st4", "✦✧"),
     Pair("st6", "✶"),
     Pair("st8", "✴"),
-    Pair("st12", "✹"),//Blackboardboldletters.,
+    Pair("st12", "✹"),
+    //Blackboard bold letters.
     Pair("bA", "𝔸"),
     Pair("bB", "𝔹"),
     Pair("bC", "ℂ"),
@@ -382,7 +394,8 @@ val escapes = mapOf(
     Pair("by", "𝕪"),
     Pair("bz", "𝕫"),
     Pair("bGg", "ℽ"),
-    Pair("bGp", "ℼ"),//Blackboardboldnumbers.,
+    Pair("bGp", "ℼ"),
+    //Blackboard bold numbers.
     Pair("b0", "𝟘"),
     Pair("b1", "𝟙"),
     Pair("b2", "𝟚"),
@@ -392,7 +405,8 @@ val escapes = mapOf(
     Pair("b6", "𝟞"),
     Pair("b7", "𝟟"),
     Pair("b8", "𝟠"),
-    Pair("b9", "𝟡"),//Mathematicalboldletters.,
+    Pair("b9", "𝟡"),
+    //Mathematical bold letters.
     Pair("BA", "𝐀"),
     Pair("BB", "𝐁"),
     Pair("BC", "𝐂"),
@@ -444,7 +458,8 @@ val escapes = mapOf(
     Pair("Bw", "𝐰"),
     Pair("Bx", "𝐱"),
     Pair("By", "𝐲"),
-    Pair("Bz", "𝐳"),//MathematicalboldGreekletters.,
+    Pair("Bz", "𝐳"),
+    //Mathematical bold Greek letters.
     Pair("BGA", "𝚨"),
     Pair("BGB", "𝚩"),
     Pair("BGC", "𝚾"),
@@ -492,7 +507,8 @@ val escapes = mapOf(
     Pair("BGth", "𝛉"),
     Pair("BGu", "𝛖"),
     Pair("BGx", "𝛏"),
-    Pair("BGz", "𝛇"),//Mathematicalbolddigits.,
+    Pair("BGz", "𝛇"),
+    //Mathematical bold digits.
     Pair("B0", "𝟎"),
     Pair("B1", "𝟏"),
     Pair("B2", "𝟐"),
@@ -502,7 +518,8 @@ val escapes = mapOf(
     Pair("B6", "𝟔"),
     Pair("B7", "𝟕"),
     Pair("B8", "𝟖"),
-    Pair("B9", "𝟗"),//Fullwidthletters.,
+    Pair("B9", "𝟗"),
+    //Full width letters.
     Pair("FA", "Ａ"),
     Pair("FB", "Ｂ"),
     Pair("FC", "Ｃ"),
@@ -554,7 +571,8 @@ val escapes = mapOf(
     Pair("Fw", "ｗ"),
     Pair("Fx", "ｘ"),
     Pair("Fy", "ｙ"),
-    Pair("Fz", "ｚ"),//Fullwidthdigits.,
+    Pair("Fz", "ｚ"),
+    //Full width digits.
     Pair("F0", "０"),
     Pair("F1", "１"),
     Pair("F2", "２"),
@@ -564,7 +582,8 @@ val escapes = mapOf(
     Pair("F6", "６"),
     Pair("F7", "７"),
     Pair("F8", "８"),
-    Pair("F9", "９"),//Fullwidthsymbols.,
+    Pair("F9", "９"),
+    //Full width symbols.
     Pair("F!", "！"),
     Pair("F#", "＃"),
     Pair("F$", "＄"),
@@ -596,7 +615,8 @@ val escapes = mapOf(
     Pair("F~", "～"),
     Pair("F((", "｟"),
     Pair("F)", "｠"),
-    Pair("Fneg", "￢"),//Parentheses.,
+    Pair("Fneg", "￢"),
+    //Parentheses.
     Pair("(", "([{⁅⁽₍〈⎴⟅⟦⟨⟪⦃〈《「『【〔〖〚︵︷︹︻︽︿﹁﹃﹙﹛﹝（［｛｢❪❬❰❲❴⟮⦅⦗⧼⸨❮⦇⦉"),
     Pair(")", ")]}⁆⁾₎〉⎵⟆⟧⟩⟫⦄〉》」』】〕〗〛︶︸︺︼︾﹀﹂﹄﹚﹜﹞）］｝｣❫❭❱❳❵⟯⦆⦘⧽⸩❯⦈⦊"),
     Pair("[[", "⟦"),
@@ -617,24 +637,23 @@ val escapes = mapOf(
     Pair("|)", "⦈"),
     Pair("((", "⦅｟"),
     Pair(")", "⦆｠"),
-
-//Primes.,
+    //Primes.
     Pair("'", "′″‴⁗＇"),
     Pair("`", "‵‶‷｀"),
-
-//Fractions.,
+    //Fractions.
     Pair("frac", "¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅟"),
-
-//Bullets.,
+    //Bullets.
     Pair("bu", "•◦‣⁌⁍"),
     Pair("bub", "•"),
     Pair("buw", "◦"),
-    Pair("but", "‣"),//Musicalsymbols.,
+    Pair("but", "‣"),
+    //Musical symbols.
     Pair("note", "♩♪♫♬"),
     Pair("b", "♭"),
     Pair("#", "♯"),
     Pair("bb", "𝄫"),
-    Pair("##", "𝄪"),//Otherpunctuationandsymbols.,
+    Pair("##", "𝄪"),
+    //Other punctuation and symbols.
     Pair("\\", "\\"),
     Pair("en", "–"),
     Pair("em", "—"),
@@ -655,7 +674,8 @@ val escapes = mapOf(
     Pair("/", "／＼"),
     Pair("@", "＠"),
     Pair("__", "＿"),
-    Pair("crossmark", "✗"),//Somecombiningcharacters.
+    Pair("crossmark", "✗"),
+    //Some combining characters.
     Pair("^--", "̅̿"),
     Pair("_--", "̲̳"),
     Pair("^~", "̃͌"),
@@ -667,8 +687,7 @@ val escapes = mapOf(
     Pair("_^", "̭̯̪"),
     Pair("^v", "̌̆"),
     Pair("_v", "̬̮̺"),
-
-//Shorterformsofmanygreeklettersplusƛ.,
+    //Shorter forms of many greek letters plus ƛ.
     Pair("Ga", "α"),
     Pair("GA", "Α"),
     Pair("Gb", "β"),
@@ -974,7 +993,7 @@ val escapes = mapOf(
     Pair("Mfx", "𝔵"),
     Pair("Mfy", "𝔶"),
     Pair("Mfz", "𝔷"),
-// Sub/Super)scripts.
+    // Sub/Super-scripts.
     Pair("_a", "ₐ"),
     Pair("_b", "b"),
     Pair("_c", "c"),
@@ -1067,7 +1086,8 @@ val escapes = mapOf(
     Pair("^Gi", "ᶥ"),
     Pair("^Gf", "ᵠ"),
     Pair("^Gc", "ᵡ"),
-    Pair("^GF", "ᶲ"),//SomeISO8859-1characters.,
+    Pair("^GF", "ᶲ"),
+    //Some ISO8859-1 characters.
     Pair("", " "),
     Pair("!", "¡"),
     Pair("cent", "¢"),
@@ -1075,7 +1095,8 @@ val escapes = mapOf(
     Pair("degree", "°"),
     Pair("?", "¿"),
     Pair("^a_", "ª"),
-    Pair("^o_", "º"),//Circled,parenthesisedetc.numbersandletters.,
+    Pair("^o_", "º"),
+    //Circled, parenthesised etc. numbers and letters.
     Pair("(0)", "⓪🄀⓿🄋🄌"),
     Pair("(1)", "⑴①⒈❶➀➊"),
     Pair("(2)", "⑵②⒉❷➁➋"),
