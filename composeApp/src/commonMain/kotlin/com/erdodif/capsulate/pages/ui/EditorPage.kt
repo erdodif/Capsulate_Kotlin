@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,14 +31,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragProvider
 import com.erdodif.capsulate.pages.screen.EditorScreen
 import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.StatementDrawer
-import com.erdodif.capsulate.utility.UnicodeInputField
+import com.erdodif.capsulate.utility.UnicodeOverlay
+import com.erdodif.capsulate.utility.max
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
+import com.slack.circuit.overlay.ContentWithOverlays
+import com.slack.circuit.overlay.OverlayEffect
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
 
@@ -45,6 +52,7 @@ data object EditorPage : Ui<EditorScreen.State> {
     @Composable
     override fun Content(state: EditorScreen.State, modifier: Modifier) {
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val imePaddingValues = WindowInsets.ime.asPaddingValues()
         StatementDragProvider {
             DragAndDropContainer(LocalDraggingStatement.current.state) {
                 Scaffold(
@@ -52,54 +60,30 @@ data object EditorPage : Ui<EditorScreen.State> {
                     contentWindowInsets = WindowInsets.statusBars,
                     bottomBar = { bottomBar().Content(state, Modifier) }
                 ) { innerPadding ->
-                    Column(
-                        (if (keyboardUp) Modifier.imePadding() else Modifier.padding(innerPadding)).fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
+                    ContentWithOverlays(
+                        (Modifier.padding(max(innerPadding,imePaddingValues))).fillMaxSize()
                     ) {
-                        codeEdit().Content(
-                            state, Modifier.weight(3f, false).fillMaxWidth()
-                                .defaultMinSize(30.dp, 64.dp)
-                        )
-                        if (state.showCode && state.showStructogram)
-                            Spacer(
-                                Modifier.fillMaxWidth().padding(3.dp, 2.dp)
-                                    .background(MaterialTheme.colorScheme.surface).height(3.dp)
+                        Column(
+                            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            codeEdit().Content(
+                                state, Modifier.weight(3f, false).fillMaxWidth()
+                                    .defaultMinSize(30.dp, 64.dp)
                             )
-                        if (state.showStructogram)
-                            Column(
-                                Modifier.fillMaxWidth().weight(2f, false)
-                                    .heightIn(
-                                        10.dp,
-                                        if (state.showCode) 1200.dp else Dp.Unspecified
-                                    ),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                if (state.structogram != null) {
-                                    state.structogram.content(
-                                        Modifier.verticalScroll(
-                                            rememberScrollState()
-                                        ),
-                                        state.dragStatements
-                                    )
-                                } else {
-                                    Text("Error", Modifier.fillMaxWidth())
+                            if (state.showCode && state.showStructogram)
+                                Spacer(
+                                    Modifier.fillMaxWidth().padding(3.dp, 2.dp)
+                                        .background(MaterialTheme.colorScheme.surface).height(3.dp)
+                                )
+                            structogram().Content(state, Modifier.weight(2f, false))
+                            if (keyboardUp && !state.input) {
+                                Row(Modifier.fillMaxWidth()) {
+                                    Button({
+                                        state.eventHandler(EditorScreen.Event.OpenUnicodeInput)
+                                    }) { Text("\\escape") }
                                 }
-                                if (!keyboardUp && state.dragStatements) {
-                                    StatementDrawer(
-                                        Modifier.heightIn(100.dp, 400.dp)
-                                            .padding(20.dp)
-                                            .background(MaterialTheme.colorScheme.tertiaryContainer)
-                                    )
-                                }
-                            }
-                        if (keyboardUp) {
-                            Row(Modifier.fillMaxWidth()) {
-                                Button({
-                                    state.eventHandler(EditorScreen.Event.OpenUnicodeInput)
-                                }) { Text("\\escape") }
                             }
                         }
                     }
@@ -109,29 +93,65 @@ data object EditorPage : Ui<EditorScreen.State> {
     }
 }
 
-
-internal fun codeEdit(): Ui<EditorScreen.State> = ui { state, modifier ->
-    if (state.showCode)
-        CodeEditor(
-            state.code,
-            modifier,
+internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
+    val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    if (state.showStructogram)
+        Column(
+            modifier.fillMaxWidth()
+                .heightIn(
+                    10.dp,
+                    if (state.showCode) 1200.dp else Dp.Unspecified
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            state.eventHandler(EditorScreen.Event.TextInput(it))
+            if (state.structogram != null) {
+                state.structogram.content(
+                    Modifier.verticalScroll(
+                        rememberScrollState()
+                    ),
+                    state.dragStatements
+                )
+            } else {
+                Text("Error", Modifier.fillMaxWidth())
+            }
+            if (!keyboardUp && state.dragStatements) {
+                StatementDrawer(
+                    Modifier.heightIn(100.dp, 400.dp)
+                        .padding(20.dp)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                )
+            }
         }
-    if (state.input)
-        UnicodeInputField(
-            {
-                val code = state.code
-                state.eventHandler(EditorScreen.Event.TextInput(code.copy(buildString {
-                    append(code.text.substring(0, code.selection.start))
-                    append(it)
-                    append(code.text.substring(code.selection.start, code.text.length))
-                }, TextRange(code.selection.start + 1))))
-                state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
-            },
-            { state.eventHandler(EditorScreen.Event.CloseUnicodeInput) }
-        )
 }
+
+internal fun codeEdit(): Ui<EditorScreen.State> =
+    ui { state, modifier ->
+        if (state.showCode)
+            CodeEditor(
+                state.code,
+                modifier,
+                {state.eventHandler(EditorScreen.Event.OpenUnicodeInput)}
+            ) {
+                state.eventHandler(EditorScreen.Event.TextInput(it))
+            }
+        if (state.input)
+            OverlayEffect(state) {
+                val result = show(UnicodeOverlay(false))
+                if (result == 0.toChar()) {
+                    state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
+                    return@OverlayEffect
+                } else {
+                    val code = state.code
+                    state.eventHandler(EditorScreen.Event.TextInput(code.copy(buildString {
+                        append(code.text.substring(0, code.selection.start))
+                        append(result)
+                        append(code.text.substring(code.selection.start, code.text.length))
+                    }, TextRange(code.selection.start + 1))))
+                    state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
+                }
+            }
+    }
 
 internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
     BottomAppBar {

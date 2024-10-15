@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.erdodif.capsulate.lang.grammar.tokenizeProgram
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
 fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
     if (it == '\n') return@mapIndexed pos
@@ -38,6 +38,7 @@ fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
 fun CodeEditor(
     code: TextFieldValue = TextFieldValue(""),
     modifier: Modifier = Modifier,
+    onBackSlashEntered: () -> Unit,
     onValueChange: (TextFieldValue) -> Unit
 ) {
     val tokenStream = tokenizeProgram(code.text)
@@ -56,7 +57,15 @@ fun CodeEditor(
         BasicTextField( //Prepare for BasicTextField2
             value = code,
             onValueChange = {
-                onValueChange(it)
+                if (it.text.length >= max(
+                        it.selection.start,
+                        1
+                    ) && it.selection.start > 0 && it.text[it.selection.start - 1] == '\\'
+                ) {
+                    onBackSlashEntered()
+                } else {
+                    onValueChange(it)
+                }
             },
             textStyle = textStyle,
             modifier = modifier.background(Color(44, 44, 44)),

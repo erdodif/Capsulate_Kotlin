@@ -24,6 +24,8 @@ import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.foundation.rememberCircuitNavigator
+import com.slack.circuit.overlay.LocalOverlayHost
+import com.slack.circuit.overlay.OverlayScope
 import com.slack.circuit.runtime.screen.Screen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 

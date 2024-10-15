@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -38,11 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -50,25 +53,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import com.erdodif.capsulate.onMobile
+import com.erdodif.capsulate.resources.Res
+import com.erdodif.capsulate.resources.jet_brains_mono_bold
+import com.erdodif.capsulate.resources.jet_brains_mono_italic
 import com.slack.circuit.overlay.Overlay
-import kotlin.math.max
+import com.slack.circuit.overlay.OverlayNavigator
+import org.jetbrains.compose.resources.Font
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun UnicodeInputField(onAccept: (Char) -> Unit, onCancel: () -> Unit = {}) {
-    val focusRequester = remember { FocusRequester() }
-    //Do Overlay, Dialog has serious limitations considering imePadding
-    Dialog(onDismissRequest = onCancel) {
-        var value by remember { mutableStateOf(TextFieldValue("\\", TextRange(1))) }
-        val match = escapes[value.text.substring(1)]
-        Column(Modifier.imePadding(), horizontalAlignment = Alignment.Start) {
+class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
+
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    override fun Content(navigator: OverlayNavigator<Char>) {
+        val modifier = if (useImePadding) Modifier.imePadding() else Modifier
+        val focusRequester = remember { FocusRequester() }
+        var value by remember { mutableStateOf(TextFieldValue("\\ ", TextRange(1))) }
+        var index by remember { mutableStateOf(0) }
+        val match = escapes[value.text.substring(1, value.text.length - 1)]
+        val prefixes = getFromPrefix(value.text.substring(1, value.text.length - 1))
+        val borderColor = when {
+            match != null -> MaterialTheme.colorScheme.primary
+            prefixes.isNotEmpty() -> MaterialTheme.colorScheme.tertiary
+            else -> MaterialTheme.colorScheme.error
+        }
+        RoundedCornerShape(5.dp)
+        Column(
+            modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f)),
+            horizontalAlignment = Alignment.Start
+        ) {
             Row(
                 Modifier.fillMaxWidth().weight(if (match != null) 1f else 3f),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.Top
             ) {
-                IconButton(onCancel) {
+                IconButton({ navigator.finish(0.toChar()) }) {
                     Icon(Icons.Filled.Close, "Close")
                 }
             }
@@ -78,85 +97,120 @@ fun UnicodeInputField(onAccept: (Char) -> Unit, onCancel: () -> Unit = {}) {
                         .verticalScroll(rememberScrollState(0), true),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    match.forEach { char ->
+                    match.forEachIndexed { i, char ->
                         Text(
                             char.toString(),
                             fontSize = 24.sp,
                             modifier = Modifier.padding(2.dp)
-                                .clickable { onAccept(char) }
+                                .clickable { navigator.finish(char) }
                                 .width(40.dp)
                                 .padding(1.dp)
                                 .background(
-                                    MaterialTheme.colorScheme.primaryContainer,
+                                    if (i == index) MaterialTheme.colorScheme.tertiaryContainer else
+                                        MaterialTheme.colorScheme.primaryContainer,
                                     RoundedCornerShape(5.dp)
                                 ),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = if (i == index) MaterialTheme.colorScheme.onTertiaryContainer else
+                                MaterialTheme.colorScheme.onPrimaryContainer,
                             textAlign = TextAlign.Center)
                     }
                 }
             }
-            Row(
-                Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+            Column(
+                Modifier.weight(1f)
             ) {
-                Spacer(Modifier.height(5.dp))
-                BasicTextField(
-                    value,
-                    {
-                        if (it.text.isEmpty()) {
-                            onCancel()
-                            return@BasicTextField
-                        }
-                        value = if (it.selection.start == 0) {
-                            it.copy(it.text, selection = TextRange(1, max(it.selection.end, 1)))
-                        } else {
-                            it
-                        }
-                    },
-                    Modifier.weight(4f).defaultMinSize(150.dp, Dp.Unspecified)
-                        .padding(10.dp)
-                        .border(
-                            2.dp,
-                            if (match != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                            RoundedCornerShape(5.dp)
+                LazyRow(
+                    Modifier.fillMaxWidth().padding(10.dp)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    items(prefixes) {
+                        Text(
+                            "\\$it ",
+                            fontFamily = FontFamily(Font(Res.font.jet_brains_mono_italic)),
+                            modifier = Modifier.padding(5.dp, 2.dp).clickable {
+                                index = 0
+                                value = value.copy("\\$it ", selection = TextRange(it.length + 1))
+                            },
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            style = TextStyle(fontFeatureSettings = "liga 0")
                         )
-                        .focusRequester(focusRequester)
-                        .background(Color.Transparent),
-                    singleLine = true,
-                    enabled = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        autoCorrect = false,
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.Send
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSend = { if (match != null) onAccept(match[0]) else onCancel() }
-                    ),
-                    textStyle = TextStyle(
-                        color = if (match != null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
-                        fontSize = 30.sp
-                    ),
-
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 40.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Spacer(Modifier.height(5.dp))
+                    BasicTextField(
+                        value,
+                        {
+                            if (it.text == " ") {
+                                navigator.finish(0.toChar())
+                                return@BasicTextField
+                            }
+                            if (it.text == value.text) {
+                                if (!onMobile &&
+                                    it.selection.collapsed &&
+                                    it.selection.start != value.selection.start &&
+                                    !match.isNullOrEmpty()
+                                ) {
+                                    index =
+                                        (index + it.selection.start - value.selection.start + match.length) % match.length
+                                }
+                            } else {
+                                index = 0
+                            }
+                            value = it.copy(it.text, selection = TextRange(it.text.length - 1))
+                        },
+                        Modifier.weight(4f).defaultMinSize(150.dp, 30.dp)
+                            .padding(10.dp)
+                            .border(2.dp, borderColor)
+                            .focusRequester(focusRequester)
+                            .background(Color.Transparent),
+                        singleLine = true,
+                        enabled = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            autoCorrect = false,
+                            keyboardType = KeyboardType.Ascii,
+                            imeAction = ImeAction.Send
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = {
+                                if (match != null) navigator.finish(match[index]) else navigator.finish(
+                                    0.toChar()
+                                )
+                            }
+                        ),
+                        textStyle = TextStyle(
+                            color = if (match != null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                            fontSize = 30.sp,
+                            fontFeatureSettings = "liga 0"
+                        ),
+                        cursorBrush = SolidColor(Color.Transparent)
                     )
-                if (match != null) {
-                    Text(
-                        match[0].toString(),
-                        fontSize = 40.sp,
-                        modifier = Modifier
-                            .clickable { onAccept(match[0]) }
-                            .weight(1f)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer)
-                } else {
-                    Spacer(
-                        Modifier.weight(1f).background(MaterialTheme.colorScheme.error)
-                            .height(30.dp)
-                    )
+                    if (match != null) {
+                        Text(
+                            match[index].toString(),
+                            fontSize = 40.sp,
+                            modifier = Modifier
+                                .clickable { navigator.finish(match[index]) }
+                                .weight(1f).height(50.dp)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontFamily = FontFamily(Font(Res.font.jet_brains_mono_bold)),
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        Spacer(
+                            Modifier.weight(1f).background(MaterialTheme.colorScheme.error)
+                                .height(50.dp)
+                        )
+                    }
                 }
             }
         }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
     }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
