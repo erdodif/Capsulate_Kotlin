@@ -40,7 +40,7 @@ data object EmptyScreen : Screen {
     }
 }
 
-class EmptyScreenPresenter(private val screen: EmptyScreen, private val navigator: Navigator) :
+class EmptyScreenPresenter(private val screen: EmptyScreen,private val navigator: Navigator) :
     Presenter<EmptyScreen.State> {
 
     @Composable
@@ -59,7 +59,7 @@ class EmptyScreenPresenter(private val screen: EmptyScreen, private val navigato
             context: CircuitContext
         ): Presenter<*>? {
             return if (screen is EmptyScreen) {
-                EmptyScreenPresenter(screen, navigator)
+                EmptyScreenPresenter(screen,navigator)
             } else null
         }
     }
@@ -85,7 +85,7 @@ fun EmptyPage(state: EmptyScreen.State, modifier: Modifier) {
             fontSize = 24.sp
         )
         Column(
-            Modifier.defaultMinSize(10.dp, 300.dp).fillMaxWidth().padding(40.dp,10.dp)
+            Modifier.defaultMinSize(10.dp, 300.dp).fillMaxWidth().padding(40.dp, 10.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(10.dp))
                 .padding(30.dp)
         ) {

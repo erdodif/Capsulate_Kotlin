@@ -86,7 +86,7 @@ object EditorScreen : Screen {
     }
 }
 
-class EditorPresenter(val navigator: Navigator, val initialText: String) :
+class EditorPresenter(val screen: EditorScreen,val navigator: Navigator, val initialText: String) :
     Presenter<EditorScreen.State> {
     @Composable
     override fun present(): EditorScreen.State {
@@ -137,7 +137,7 @@ class EditorPresenter(val navigator: Navigator, val initialText: String) :
             context: CircuitContext
         ): Presenter<*>? =
             when (screen) {
-                is EditorScreen -> EditorPresenter(navigator, initialText)
+                is EditorScreen -> EditorPresenter(screen,navigator, initialText)
                 else -> null
             }
     }

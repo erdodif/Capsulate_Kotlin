@@ -61,6 +61,8 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.compose.dnd)
             implementation(libs.material.kolor)
+            implementation(libs.multiplatform.settings.no.arg)
+            implementation(libs.multiplatform.settings.serialization)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
