@@ -4,11 +4,11 @@ import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPass
 import com.erdodif.capsulate.assertPassAt
 import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.grammar.EOF
+import com.erdodif.capsulate.lang.program.grammar.EOF
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.grammar.char
-import com.erdodif.capsulate.lang.grammar.topLevel
+import com.erdodif.capsulate.lang.program.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.topLevel
 import kotlin.test.Test
 
 class TopLevelTest {

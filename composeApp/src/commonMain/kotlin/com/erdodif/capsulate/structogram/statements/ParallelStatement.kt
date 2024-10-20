@@ -22,9 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.erdodif.capsulate.lang.grammar.Parallel
+import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
@@ -34,12 +32,12 @@ import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.utility.dim
 
 class ParallelStatement(
-    statement: com.erdodif.capsulate.lang.grammar.Statement,
+    statement: com.erdodif.capsulate.lang.program.grammar.Statement,
     private vararg var blocks: StatementList
 ) : Statement(statement) {
     constructor(
         blocks: ArrayList<ArrayList<Statement>>,
-        statement: com.erdodif.capsulate.lang.grammar.Statement
+        statement: com.erdodif.capsulate.lang.program.grammar.Statement
     ) : this(
         statement,
         *blocks.map { it.toTypedArray() }.toTypedArray()

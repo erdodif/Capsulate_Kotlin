@@ -1,22 +1,21 @@
 package com.erdodif.capsulate.lang.util
 
-import com.erdodif.capsulate.lang.grammar.char
-import com.erdodif.capsulate.lang.grammar.int
-import com.erdodif.capsulate.lang.grammar.keywords
-import com.erdodif.capsulate.lang.grammar.left
-import com.erdodif.capsulate.lang.grammar.lineBreak
-import com.erdodif.capsulate.lang.grammar.lineEnd
-import com.erdodif.capsulate.lang.grammar.many
-import com.erdodif.capsulate.lang.grammar.natural
-import com.erdodif.capsulate.lang.grammar.reservedChars
-import com.erdodif.capsulate.lang.grammar.satisfy
-import com.erdodif.capsulate.lang.grammar.some
-import com.erdodif.capsulate.lang.grammar.string
-import com.erdodif.capsulate.lang.grammar.stringCaseLess
-import com.erdodif.capsulate.lang.grammar.whiteSpace
-import com.erdodif.capsulate.lang.grammar.whiteSpaceChars
+import com.erdodif.capsulate.lang.program.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.int
+import com.erdodif.capsulate.lang.program.grammar.keywords
+import com.erdodif.capsulate.lang.program.grammar.left
+import com.erdodif.capsulate.lang.program.grammar.lineBreak
+import com.erdodif.capsulate.lang.program.grammar.lineEnd
+import com.erdodif.capsulate.lang.program.grammar.many
+import com.erdodif.capsulate.lang.program.grammar.natural
+import com.erdodif.capsulate.lang.program.grammar.reservedChars
+import com.erdodif.capsulate.lang.program.grammar.satisfy
+import com.erdodif.capsulate.lang.program.grammar.some
+import com.erdodif.capsulate.lang.program.grammar.stringCaseLess
+import com.erdodif.capsulate.lang.program.grammar.whiteSpace
+import com.erdodif.capsulate.lang.program.grammar.whiteSpaceChars
 
-val pLineBreak: Parser<Char> = asum(*lineBreak.map {char(it)}.toTypedArray())
+val pLineBreak: Parser<Char> = asum(*lineBreak.map { char(it) }.toTypedArray())
 val pLineEnd: Parser<Char> = asum(*lineEnd.map { char(it) }.toTypedArray())
 
 /**

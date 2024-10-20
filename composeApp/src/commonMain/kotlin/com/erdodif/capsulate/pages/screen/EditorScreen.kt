@@ -8,8 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.grammar.Skip
-import com.erdodif.capsulate.lang.grammar.halfProgram
+import com.erdodif.capsulate.lang.program.grammar.Skip
+import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.ParserState
@@ -78,7 +78,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val in
                                 it as Left<*, *>
                                 Statement.fromStatement(
                                     parserState,
-                                    it.value as com.erdodif.capsulate.lang.grammar.Statement
+                                    it.value as com.erdodif.capsulate.lang.program.grammar.Statement
                                 )
                             }?.toTypedArray() ?: arrayOf(
                             Command((result as Fail).reason, Skip)

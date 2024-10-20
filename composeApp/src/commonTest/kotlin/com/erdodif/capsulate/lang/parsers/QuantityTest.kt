@@ -6,12 +6,12 @@ import com.erdodif.capsulate.assertValue
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
-import com.erdodif.capsulate.lang.grammar.between
-import com.erdodif.capsulate.lang.grammar.char
-import com.erdodif.capsulate.lang.grammar.exactly
-import com.erdodif.capsulate.lang.grammar.many
-import com.erdodif.capsulate.lang.grammar.optional
-import com.erdodif.capsulate.lang.grammar.some
+import com.erdodif.capsulate.lang.program.grammar.between
+import com.erdodif.capsulate.lang.program.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.exactly
+import com.erdodif.capsulate.lang.program.grammar.many
+import com.erdodif.capsulate.lang.program.grammar.optional
+import com.erdodif.capsulate.lang.program.grammar.some
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

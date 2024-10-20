@@ -25,7 +25,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.erdodif.capsulate.lang.grammar.tokenizeProgram
+import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import kotlinx.coroutines.launch
 import kotlin.math.max
 

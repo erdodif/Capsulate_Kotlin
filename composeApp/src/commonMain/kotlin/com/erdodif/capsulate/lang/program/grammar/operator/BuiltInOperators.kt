@@ -1,11 +1,11 @@
-package com.erdodif.capsulate.lang.grammar.operator
+package com.erdodif.capsulate.lang.program.grammar.operator
 
-import com.erdodif.capsulate.lang.grammar.VBool
-import com.erdodif.capsulate.lang.grammar.VNat
-import com.erdodif.capsulate.lang.grammar.VNum
-import com.erdodif.capsulate.lang.grammar.VWhole
+import com.erdodif.capsulate.lang.program.grammar.VBool
+import com.erdodif.capsulate.lang.program.grammar.VNat
+import com.erdodif.capsulate.lang.program.grammar.VNum
+import com.erdodif.capsulate.lang.program.grammar.VWhole
 import com.erdodif.capsulate.lang.util._char
-import com.erdodif.capsulate.lang.grammar.type
+import com.erdodif.capsulate.lang.program.grammar.type
 
 
 object Add : BinaryOperator(

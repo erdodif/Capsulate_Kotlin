@@ -5,7 +5,7 @@ import com.erdodif.capsulate.assertPassAt
 import com.erdodif.capsulate.assertValue
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.grammar.string
+import com.erdodif.capsulate.lang.program.grammar.string
 import kotlin.test.Test
 
 class StringTest {

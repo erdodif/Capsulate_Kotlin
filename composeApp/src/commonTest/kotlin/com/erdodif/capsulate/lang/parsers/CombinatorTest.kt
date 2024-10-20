@@ -10,10 +10,10 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
-import com.erdodif.capsulate.lang.grammar.and
-import com.erdodif.capsulate.lang.grammar.char
-import com.erdodif.capsulate.lang.grammar.not
-import com.erdodif.capsulate.lang.grammar.or
+import com.erdodif.capsulate.lang.program.grammar.and
+import com.erdodif.capsulate.lang.program.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.not
+import com.erdodif.capsulate.lang.program.grammar.or
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

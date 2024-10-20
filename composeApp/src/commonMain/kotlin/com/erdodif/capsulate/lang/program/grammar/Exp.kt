@@ -1,6 +1,6 @@
-package com.erdodif.capsulate.lang.grammar
+package com.erdodif.capsulate.lang.program.grammar
 
-import com.erdodif.capsulate.lang.grammar.operator.OperatorTable
+import com.erdodif.capsulate.lang.program.grammar.operator.OperatorTable
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos

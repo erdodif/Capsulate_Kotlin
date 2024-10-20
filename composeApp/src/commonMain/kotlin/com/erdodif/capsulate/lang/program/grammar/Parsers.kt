@@ -1,6 +1,6 @@
 @file:Suppress("UNUSED")
 
-package com.erdodif.capsulate.lang.grammar
+package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail

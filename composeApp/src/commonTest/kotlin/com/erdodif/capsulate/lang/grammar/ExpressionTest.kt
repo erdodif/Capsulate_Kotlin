@@ -2,6 +2,11 @@ package com.erdodif.capsulate.lang.grammar
 
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPass
+import com.erdodif.capsulate.lang.program.grammar.pBoolLit
+import com.erdodif.capsulate.lang.program.grammar.pIntLit
+import com.erdodif.capsulate.lang.program.grammar.pStrLit
+import com.erdodif.capsulate.lang.program.grammar.pVariable
+import com.erdodif.capsulate.lang.program.grammar.topLevel
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.Test

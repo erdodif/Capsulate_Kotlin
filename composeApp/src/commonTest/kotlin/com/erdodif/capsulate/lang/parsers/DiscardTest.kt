@@ -3,10 +3,10 @@ package com.erdodif.capsulate.lang.parsers
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertValue
 import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.grammar.char
-import com.erdodif.capsulate.lang.grammar.left
-import com.erdodif.capsulate.lang.grammar.middle
-import com.erdodif.capsulate.lang.grammar.right
+import com.erdodif.capsulate.lang.program.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.left
+import com.erdodif.capsulate.lang.program.grammar.middle
+import com.erdodif.capsulate.lang.program.grammar.right
 import kotlin.test.Test
 
 class DiscardTest {

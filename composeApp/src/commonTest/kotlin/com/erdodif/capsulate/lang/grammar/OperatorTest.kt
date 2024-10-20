@@ -2,13 +2,16 @@ package com.erdodif.capsulate.lang.grammar
 
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertTrue
-import com.erdodif.capsulate.lang.grammar.operator.Association
-import com.erdodif.capsulate.lang.grammar.operator.BinaryCalculation
-import com.erdodif.capsulate.lang.grammar.operator.BinaryOperator
-import com.erdodif.capsulate.lang.grammar.operator.Fixation
-import com.erdodif.capsulate.lang.grammar.operator.OperatorTable
-import com.erdodif.capsulate.lang.grammar.operator.UnaryCalculation
-import com.erdodif.capsulate.lang.grammar.operator.UnaryOperator
+import com.erdodif.capsulate.lang.program.grammar.Exp
+import com.erdodif.capsulate.lang.program.grammar.Value
+import com.erdodif.capsulate.lang.program.grammar.operator.Association
+import com.erdodif.capsulate.lang.program.grammar.operator.BinaryCalculation
+import com.erdodif.capsulate.lang.program.grammar.operator.BinaryOperator
+import com.erdodif.capsulate.lang.program.grammar.operator.Fixation
+import com.erdodif.capsulate.lang.program.grammar.operator.OperatorTable
+import com.erdodif.capsulate.lang.program.grammar.operator.UnaryCalculation
+import com.erdodif.capsulate.lang.program.grammar.operator.UnaryOperator
+import com.erdodif.capsulate.lang.program.grammar.topLevel
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState

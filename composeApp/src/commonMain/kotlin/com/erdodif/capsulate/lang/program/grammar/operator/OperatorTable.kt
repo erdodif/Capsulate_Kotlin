@@ -1,13 +1,13 @@
-package com.erdodif.capsulate.lang.grammar.operator
+package com.erdodif.capsulate.lang.program.grammar.operator
 
-import com.erdodif.capsulate.lang.grammar.Exp
-import com.erdodif.capsulate.lang.grammar.Value
-import com.erdodif.capsulate.lang.grammar.left
-import com.erdodif.capsulate.lang.grammar.leftAssoc
-import com.erdodif.capsulate.lang.grammar.nonAssoc
-import com.erdodif.capsulate.lang.grammar.orEither
-import com.erdodif.capsulate.lang.grammar.right
-import com.erdodif.capsulate.lang.grammar.rightAssoc
+import com.erdodif.capsulate.lang.program.grammar.Exp
+import com.erdodif.capsulate.lang.program.grammar.Value
+import com.erdodif.capsulate.lang.program.grammar.left
+import com.erdodif.capsulate.lang.program.grammar.leftAssoc
+import com.erdodif.capsulate.lang.program.grammar.nonAssoc
+import com.erdodif.capsulate.lang.program.grammar.orEither
+import com.erdodif.capsulate.lang.program.grammar.right
+import com.erdodif.capsulate.lang.program.grammar.rightAssoc
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Parser

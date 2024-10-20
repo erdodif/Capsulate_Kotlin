@@ -1,6 +1,5 @@
 package com.erdodif.capsulate.structogram.statements
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,7 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
-import com.erdodif.capsulate.lang.grammar.When
+import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
@@ -39,7 +37,7 @@ import com.erdodif.capsulate.utility.onDpSize
 
 class WhenStatement(
     val blocks: Array<Block>,
-    statement: com.erdodif.capsulate.lang.grammar.Statement
+    statement: com.erdodif.capsulate.lang.program.grammar.Statement
 ) : Statement(statement) {
     constructor(statement: When, state: ParserState) :
             this(

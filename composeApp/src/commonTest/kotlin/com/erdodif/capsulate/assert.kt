@@ -1,6 +1,6 @@
 package com.erdodif.capsulate
 
-import com.erdodif.capsulate.lang.grammar.Exp
+import com.erdodif.capsulate.lang.program.grammar.Exp
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser

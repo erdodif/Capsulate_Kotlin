@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.lang.grammar
+package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.specification.Type
 

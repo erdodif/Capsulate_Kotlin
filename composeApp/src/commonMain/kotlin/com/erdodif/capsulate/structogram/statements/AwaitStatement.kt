@@ -13,7 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
-import com.erdodif.capsulate.lang.grammar.Wait
+import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -23,7 +23,7 @@ import com.erdodif.capsulate.utility.onDpSize
 
 class AwaitStatement(
     var condition: String,
-    statement: com.erdodif.capsulate.lang.grammar.Statement
+    statement: com.erdodif.capsulate.lang.program.grammar.Statement
 ) : Statement(statement) {
     constructor(statement: Wait, state: ParserState) : this(
         statement.condition.toString(state),

@@ -1,6 +1,16 @@
 package com.erdodif.capsulate.lang.grammar
 
 import com.erdodif.capsulate.fail
+import com.erdodif.capsulate.lang.program.grammar.pComment
+import com.erdodif.capsulate.lang.program.grammar.pVariable
+import com.erdodif.capsulate.lang.program.grammar.plus
+import com.erdodif.capsulate.lang.program.grammar.sAssign
+import com.erdodif.capsulate.lang.program.grammar.sDoWhile
+import com.erdodif.capsulate.lang.program.grammar.sIf
+import com.erdodif.capsulate.lang.program.grammar.sParallelAssign
+import com.erdodif.capsulate.lang.program.grammar.sWhen
+import com.erdodif.capsulate.lang.program.grammar.sWhile
+import com.erdodif.capsulate.lang.program.grammar.topLevel
 import com.erdodif.capsulate.pass
 import kotlin.test.Test
 

@@ -1,10 +1,10 @@
 package com.erdodif.capsulate.lang.parsers
 
 import com.erdodif.capsulate.assertPass
-import com.erdodif.capsulate.lang.grammar.EOF
+import com.erdodif.capsulate.lang.program.grammar.EOF
 import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.grammar.and
-import com.erdodif.capsulate.lang.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.and
+import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.util.tok
 import kotlin.test.Test
 

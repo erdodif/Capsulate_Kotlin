@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,30 +29,24 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
-import com.erdodif.capsulate.lang.grammar.DoWhile
-import com.erdodif.capsulate.lang.grammar.If
-import com.erdodif.capsulate.lang.grammar.Parallel
-import com.erdodif.capsulate.lang.grammar.Wait
-import com.erdodif.capsulate.lang.grammar.When
-import com.erdodif.capsulate.lang.grammar.While
+import com.erdodif.capsulate.lang.program.grammar.DoWhile
+import com.erdodif.capsulate.lang.program.grammar.If
+import com.erdodif.capsulate.lang.program.grammar.Parallel
+import com.erdodif.capsulate.lang.program.grammar.Wait
+import com.erdodif.capsulate.lang.program.grammar.When
+import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.onMobile
 import com.erdodif.capsulate.structogram.composables.Theme
-import com.mohamedrejeb.compose.dnd.DragAndDropState
 import com.mohamedrejeb.compose.dnd.drag.DraggableItem
 import com.mohamedrejeb.compose.dnd.drop.dropTarget
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newCoroutineContext
-import kotlinx.coroutines.runBlocking
-import kotlin.coroutines.CoroutineContext
 
 typealias StatementList = Array<Statement>
 
-abstract class Statement(val statement: com.erdodif.capsulate.lang.grammar.Statement) {
+abstract class Statement(val statement: com.erdodif.capsulate.lang.program.grammar.Statement) {
 
     /**
      * Creates an area where the current statement can be dragged if enabled
@@ -131,7 +124,7 @@ abstract class Statement(val statement: com.erdodif.capsulate.lang.grammar.State
 
     companion object {
         fun fromStatement(
-            state: ParserState, statement: com.erdodif.capsulate.lang.grammar.Statement
+            state: ParserState, statement: com.erdodif.capsulate.lang.program.grammar.Statement
         ): Statement = when (statement) {
             is If -> IfStatement(statement, state)
             is When -> WhenStatement(statement, state)

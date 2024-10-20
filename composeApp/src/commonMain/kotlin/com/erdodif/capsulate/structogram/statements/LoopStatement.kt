@@ -1,14 +1,11 @@
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,12 +17,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.lang.grammar.DoWhile
-import com.erdodif.capsulate.lang.grammar.While
+import com.erdodif.capsulate.lang.program.grammar.DoWhile
+import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
@@ -47,7 +43,7 @@ class LoopStatement(
     var condition: String,
     var statements: StatementList = arrayOf(),
     var inOrder: Boolean = true,
-    statement: com.erdodif.capsulate.lang.grammar.Statement
+    statement: com.erdodif.capsulate.lang.program.grammar.Statement
 ) : Statement(statement) {
     constructor(statement: While, state: ParserState) : this(
         statement.condition.toString(state),
