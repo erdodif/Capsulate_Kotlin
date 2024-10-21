@@ -59,23 +59,17 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val in
         var dragStatements by remember { mutableStateOf(false) }
         var input by remember { mutableStateOf(false) }
         return EditorScreen.State(
-            inputValue,
-            structogram,
-            showCode,
-            input,
-            showStructogram,
-            dragStatements
+            inputValue, structogram, showCode, input, showStructogram, dragStatements
         ) { event ->
             when (event) {
                 is EditorScreen.Event.TextInput -> {
                     inputValue = event.code
                     val parserState = ParserState(event.code.text)
                     val result = parserState.parse(halfProgram)
-                    structogram =
-                        Structogram.fromStatements(*((result as? Pass<*>)?.value as List<*>?)
-                            ?.filterNot { it is Right<*, *> }
+                    structogram = Structogram.fromStatements(
+                        *((result as? Pass<*>)?.value as List<*>?)?.filterNot { it is Right<*> }
                             ?.map {
-                                it as Left<*, *>
+                                it as Left<*>
                                 Statement.fromStatement(
                                     parserState,
                                     it.value as com.erdodif.capsulate.lang.program.grammar.Statement
@@ -83,7 +77,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val in
                             }?.toTypedArray() ?: arrayOf(
                             Command((result as Fail).reason, Skip)
                         )
-                        )
+                    )
                 }
 
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode
@@ -98,14 +92,11 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val in
 
     data class Factory(val initialText: String) : Presenter.Factory {
         override fun create(
-            screen: Screen,
-            navigator: Navigator,
-            context: CircuitContext
-        ): Presenter<*>? =
-            when (screen) {
-                is EditorScreen -> EditorPresenter(screen, navigator, initialText)
-                else -> null
-            }
+            screen: Screen, navigator: Navigator, context: CircuitContext
+        ): Presenter<*>? = when (screen) {
+            is EditorScreen -> EditorPresenter(screen, navigator, initialText)
+            else -> null
+        }
     }
 
 }

@@ -24,10 +24,10 @@ fun List<Char>.asString(): String{
     return boby.toString()
 }
 
-inline fun <T> Either<T, T>.getEither(): T = if (this is Left<T, T>) {
+inline fun <T> Either<T, T>.getEither(): T = if (this is Left<T>) {
     this.value
 } else {
-    (this as Right<T, T>).value
+    (this as Right<T>).value
 }
 
 operator fun String.get(start:Int, end:Int): String = this.substring(start..<end)

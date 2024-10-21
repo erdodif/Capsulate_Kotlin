@@ -1,9 +1,9 @@
 package com.erdodif.capsulate.lang.util
 
-import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.Statement
+import com.erdodif.capsulate.lang.program.grammar.Type
+import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.type
-import com.erdodif.capsulate.specification.Type
 
 class Parameter(val id: String, val type: Type, var value: Value)
 
@@ -35,8 +35,7 @@ class Env(
         if (present(id)) {
             val pos = values.indexOfFirst { it.id == id }
             Left(Parameter(values[pos].id, values[pos].type, values[pos].value))
-        }
-        else Right(Unit)
+        } else Right(Unit)
 
     /**
      * Returns the variable's value

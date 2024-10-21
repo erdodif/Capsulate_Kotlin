@@ -4,9 +4,8 @@ import com.erdodif.capsulate.lang.program.grammar.VBool
 import com.erdodif.capsulate.lang.program.grammar.VNat
 import com.erdodif.capsulate.lang.program.grammar.VNum
 import com.erdodif.capsulate.lang.program.grammar.VWhole
-import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.program.grammar.type
-
+import com.erdodif.capsulate.lang.util._char
 
 object Add : BinaryOperator(
     14,

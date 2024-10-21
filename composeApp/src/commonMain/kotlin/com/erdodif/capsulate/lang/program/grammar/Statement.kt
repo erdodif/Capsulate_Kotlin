@@ -1,7 +1,6 @@
 package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.lang.util.Env
-import com.erdodif.capsulate.specification.Type
 
 interface Statement {
     fun evaluate(env: Env)
@@ -9,8 +8,8 @@ interface Statement {
 
 data class If(
     val condition: Exp<*>,
-    val statementsTrue: ArrayList<Statement>,
-    val statementsFalse: ArrayList<Statement>
+    val statementsTrue: ArrayList<out Statement>,
+    val statementsFalse: ArrayList<out Statement>
 ) : Statement {
     override fun evaluate(env: Env) {
         val result = condition.evaluate(env)
@@ -27,34 +26,31 @@ data class If(
 }
 
 data class When(
-    val blocks: ArrayList<Pair<Exp<*>, ArrayList<Statement>>>,
-    val elseBlock: ArrayList<Statement>? = null
+    val blocks: ArrayList<Pair<Exp<*>, ArrayList<out Statement>>>,
+    val elseBlock: ArrayList<out Statement>? = null
 ) : Statement {
     override fun evaluate(env: Env) { // TODO: allow non-determinism
-        if (env.deterministic){
+        if (env.deterministic) {
             var run = false
-            for (block in blocks){
+            for (block in blocks) {
                 val result = block.first.evaluate(env)
-                if (result is VBool){
-                    if(result.value){
+                if (result is VBool) {
+                    if (result.value) {
                         run = true
                         env.runProgram(block.second)
                     }
-                }
-                else{
+                } else {
                     throw RuntimeException("Condition must be a logical expression")
                 }
             }
-            if(!run){
-                if(elseBlock != null){
+            if (!run) {
+                if (elseBlock != null) {
                     env.runProgram(elseBlock)
-                }
-                else{
+                } else {
                     Abort.evaluate(env)
                 }
             }
-        }
-        else{
+        } else {
             TODO("Switch statement does not implement non-deterministic evaluation just yet")
         }
     }
@@ -76,7 +72,7 @@ data class Return(val value: Exp<*>) : Statement {
     }
 }
 
-data class While(val condition: Exp<*>, val statements: ArrayList<Statement>) : Statement {
+data class While(val condition: Exp<*>, val statements: ArrayList<out Statement>) : Statement {
     override fun evaluate(env: Env) {
         var result = condition.evaluate(env)
         while (result is VBool && result.value) {
@@ -89,7 +85,7 @@ data class While(val condition: Exp<*>, val statements: ArrayList<Statement>) : 
     }
 }
 
-data class DoWhile(val condition: Exp<*>, val statements: ArrayList<Statement>) : Statement {
+data class DoWhile(val condition: Exp<*>, val statements: ArrayList<out Statement>) : Statement {
     override fun evaluate(env: Env) {
         var result: Any?
         do {
@@ -106,7 +102,7 @@ data class Assign(val id: String, val value: Exp<*>) : Statement {
     override fun evaluate(env: Env) = env.set(id, value.evaluate(env))
 }
 
-data class Select(val id: String, val set: Type) : Statement {
+data class Select(val id: String, val set: Any? /*Specification: Type*/) : Statement {
     override fun evaluate(env: Env) {
         TODO("Implement 'Zsák objektum'")
     }
@@ -126,7 +122,7 @@ data class Expression(val expression: Exp<*>) : Statement {
 
 data class LineError(val content: String)
 
-data class Parallel(val blocks: ArrayList<ArrayList<Statement>>) : Statement {
+data class Parallel(val blocks: ArrayList<out ArrayList<out Statement>>) : Statement {
     override fun evaluate(env: Env) {
         TODO("Will need an event loop for that")
     }

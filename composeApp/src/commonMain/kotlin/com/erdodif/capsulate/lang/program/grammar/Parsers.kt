@@ -106,7 +106,7 @@ inline fun <T> optional(crossinline parser: Parser<T>): SuccessParser<T?> = {
  *
  * Will fail on no match, the last unsuccessful state gets reset
  */
-inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<T>> = {
+inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<out T>> = {
     val start = position
     val matches = ArrayList<T>()
     var match: ParserResult<T>
@@ -118,7 +118,7 @@ inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<T>>
     } while (match is Pass)
     position = pos
     if (matches.isEmpty()) {
-        (match as Fail<T>).to()
+        match as Fail
     } else {
         pass(start, matches)
     }
@@ -166,16 +166,16 @@ inline fun <T, R> or(
     crossinline parser1: Parser<T>, crossinline parser2: Parser<R>
 ): Parser<Either<T, R>> = {
     val pos = position
-    val result1 = parser1()
-    if (result1 is Pass) {
-        pass(pos, Left(result1.value))
-    } else {
-        position = pos
-        val result2 = parser2()
-        if (result2 is Pass) {
-            pass(pos, Right(result2.value))
-        } else {
-            fail("${(result1 as Fail).reason}; ${(result2 as Fail).reason}")
+    when (val result1 = parser1()) {
+        is Pass -> pass(pos, Left(result1.value))
+        else -> {
+            position = pos
+            when (val result2 = parser2()) {
+                is Pass -> pass(pos, Right(result2.value))
+                else -> {
+                    fail("${(result1 as Fail).reason}; ${(result2 as Fail).reason}")
+                }
+            }
         }
     }
 }
@@ -183,46 +183,36 @@ inline fun <T, R> or(
 /**
  * Tries to match the given parsers and merges the return type
  */
-inline fun <T> orEither(
-    crossinline parser1: Parser<T>, crossinline parser2: Parser<T>
-): Parser<T> = {
-    val result: ParserResult<Either<T, T>> = or(parser1, parser2)()
-    if (result is Pass) {
-        pass(result.match.start, result.value.getEither())
-    } else {
-        (result as Fail).to()
+inline fun <T> orEither(crossinline parser1: Parser<T>, crossinline parser2: Parser<T>): Parser<T> =
+    {
+        when (val result: ParserResult<Either<T, T>> = or(parser1, parser2)()) {
+            is Pass -> pass(result.match.start, result.value.getEither())
+            is Fail -> result
+        }
     }
-}
 
 /**
  * Matches both the given parsers in order
  */
 inline fun <T, R> and(
-    crossinline parser1: Parser<T>, crossinline parser2: ParserState.(Pass<T>) -> Parser<R>
+    crossinline parser1: Parser<T>, crossinline parser2: ParserState .(Pass<T>) -> Parser<R>
 ): Parser<Pair<T, R>> = {
-    val result1 = parser1()
-    if (result1 is Fail) {
-        result1.to()
-    } else {
-        result1 as Pass<T>
-        parser2(result1)[{ pass(result1.match.start, Pair(result1.value, it.value)) }]()
+    when (val result1 = parser1()) {
+        is Fail -> result1
+        is Pass -> parser2(result1)[{ pass(result1.match.start, Pair(result1.value, it.value)) }]()
     }
 }
 
 inline fun <T, R> and(
     crossinline parser1: Parser<T>, crossinline parser2: Parser<R>
 ): Parser<Pair<T, R>> = {
-    val res1 = parser1()
-    if (res1 is Fail<*>) {
-        res1.to()
-    } else {
-        res1 as Pass
-        val res2 = parser2()
-        if (res2 is Fail<*>) {
-            res2.to()
-        } else {
-            res2 as Pass
-            pass(res1.match.start, Pair(res1.value, res2.value))
+    when (val res1 = parser1()) {
+        is Fail -> res1
+        is Pass -> {
+            when (val res2 = parser2()) {
+                is Fail -> res2
+                is Pass -> pass(res1.match.start, Pair(res1.value, res2.value))
+            }
         }
     }
 }
@@ -230,20 +220,23 @@ inline fun <T, R> and(
 inline operator fun <T, R> Parser<T>.plus(crossinline other: Parser<R>): Parser<Pair<T, R>> =
     and(this, other)
 
-inline operator fun <T, R> Parser<T>.plus(crossinline other: ParserState.(Pass<T>) -> Parser<R>): Parser<Pair<T, R>> =
-    and(this, other)
+inline operator fun
+
+        <T, R> Parser<T>.plus(
+    crossinline other: ParserState .(Pass<T>) -> Parser<R>
+): Parser<Pair<T, R>> = and(this, other)
 
 /**
  * Matches both the parsers, discarding the second value
  */
 inline fun <T> left(crossinline parser1: Parser<T>, crossinline parser2: Parser<*>): Parser<T> = {
     val result1 = parser1()
-    if (result1 is Fail<*>) {
-        result1.to()
+    if (result1 is Fail) {
+        result1
     } else {
         val result2 = parser2()
-        if (result2 is Fail<*>) {
-            result2.to()
+        if (result2 is Fail) {
+            result2
         } else {
             result1 as Pass
             Pass(result1.value, this, MatchPos(result1.match.start, position))
@@ -254,15 +247,19 @@ inline fun <T> left(crossinline parser1: Parser<T>, crossinline parser2: Parser<
 /**
  * Matches both the parsers, discarding the first value
  */
-inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser<T>): Parser<T> = {
+inline fun <T> right(
+    crossinline parser1: Parser<*>, crossinline parser2: Parser<T>
+)
+
+        : Parser<T> = {
     val result1 = parser1()
-    if (result1 is Fail<*>) {
-        result1.to()
+    if (result1 is Fail) {
+        result1
     } else {
         result1 as Pass
         val result2 = parser2()
-        if (result2 is Fail<*>) {
-            result2.to()
+        if (result2 is Fail) {
+            result2
         } else {
             result2 as Pass
             pass(result1.match.start, result2.value)
@@ -275,7 +272,9 @@ inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser
  */
 inline fun <T> middle(
     crossinline left: Parser<*>, crossinline a: Parser<T>, crossinline right: Parser<*>
-): Parser<T> {
+)
+
+        : Parser<T> {
     return right(left, left(a, right))
 }
 
@@ -285,8 +284,12 @@ inline fun <T> middle(
  * Will fail if the [min] number isn't reached
  */
 inline fun <reified T> between(
-    min: Int, max: Int, crossinline parser: Parser<T>
-): Parser<Array<T>> = {
+    min
+
+    : Int, max: Int, crossinline parser: Parser<T>
+)
+
+        : Parser<Array<T>> = {
     val start = position
     require(min <= max)
     val matches = ArrayList<T>()
@@ -316,7 +319,9 @@ inline fun <reified T> between(
  *
  * Will fail if can't match [n] times
  */
-inline fun <reified T> exactly(n: Int, crossinline parser: Parser<T>): Parser<Array<T>> = {
+inline fun <reified T> exactly(
+    n: Int, crossinline parser: Parser<T>
+): Parser<Array<T>> = {
     val start = position
     val matches = arrayOfNulls<T>(n)
     var match: ParserResult<T>
@@ -349,10 +354,11 @@ val EOF: Parser<Unit> = {
 /**
  * Matches characters according the given predicate
  */
-inline fun satisfy(crossinline predicate: (Char) -> Boolean): Parser<Char> = anyChar[{
+inline fun satisfy(
+    crossinline predicate: (Char) -> Boolean
+): Parser<Char> = anyChar[{
     if (predicate(it.value)) it else Fail(
-        "Failed the given predicate on char ${it.value}",
-        it.state
+        "Failed the given predicate on char ${it.value}", it.state
     )
 }]
 
@@ -377,7 +383,7 @@ val int: Parser<Int> = and(optional(char('-')), natural) / { (sign, num) ->
  * Looks for simple whitespace characters
  */
 val whiteSpace: Parser<Unit> =
-    or(char(' '), char('\t'))[{ Pass(Unit, it.state, it.match) }, { it.to() }]
+    or(char(' '), char('\t'))[{ Pass(Unit, it.state, it.match) }]
 // asum(whiteSpaceChars.map{char(it)}.toTypedArray())[{ Pass(Unit, it.state, it.match) }, { it.to() }]
 
 /**
@@ -388,8 +394,10 @@ val whiteSpace: Parser<Unit> =
 inline fun <reified T> delimited2(
     crossinline parser: Parser<T>,
     crossinline delimiter: Parser<*>
-): Parser<ArrayList<T>> = (some(left(parser, delimiter)) + parser) / {
-    it.first.apply { this.add(it.second) }
+): Parser<ArrayList<out T>> = (some(left(parser, delimiter)) + parser) / {
+    val ret = it.first.toMutableList()
+    ret.add(it.second)
+    ret.toCollection(ArrayList())
 }
 
 /**
@@ -398,9 +406,10 @@ inline fun <reified T> delimited2(
  * Result cannot be empty
  */
 inline fun <reified T> delimited(
-    crossinline parser: Parser<T>,
-    crossinline delimiter: Parser<*>
-): Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
+    crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
+)
+
+        : Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
     it.first.apply { add(it.second) }
 }
 
@@ -409,51 +418,60 @@ inline fun <reified T> delimited(
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
-    (value + { vMatch ->
-        orEither(
-            (func + chainr1(value, func)) / { it.first(vMatch.value, it.second) }
-        ) { pass(vMatch.match.start, vMatch.value) }
-    }) * { a, _ -> a.second }
+fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = (value + { vMatch ->
+    orEither((func + chainr1(value, func)) / {
+        it.first(
+            vMatch.value,
+            it.second
+        )
+    }) { pass(vMatch.match.start, vMatch.value) }
+}) * { a, _ -> a.second }
 
 /**
  * Left Chaining
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainl1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> =
-    value[{ valueFirst ->
-        var pos = position
-        var res = (func + value)()
-        var acc = valueFirst.value
-        while (res is Pass) {
-            acc = res.value.first(acc, res.value.second)
-            pos = position
-            res = (func + value)()
-        }
-        position = pos
-        pass(valueFirst.match.start, acc)
-    }]
+fun
+
+        <T> chainl1(
+    value: Parser<T>, func: Parser<(T, T) -> T>
+): Parser<T> = value[{ valueFirst ->
+    var pos = position
+    var res = (func + value)()
+    var acc = valueFirst.value
+    while (res is Pass) {
+        acc = res.value.first(acc, res.value.second)
+        pos = position
+        res = (func + value)()
+    }
+    position = pos
+    pass(valueFirst.match.start, acc)
+}]
 
 fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
     chainr1(parser, left({ pass(position, func) }, separator))
 
-fun <T> leftAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
-    chainl1(parser, left({ pass(position, func) }, separator))
+fun
+
+        <T> leftAssoc(
+    func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>
+): Parser<T> = chainl1(parser, left({ pass(position, func) }, separator))
 
 inline fun <reified T> nonAssoc(
-    crossinline func: (T, T) -> T,
-    noinline parser: Parser<T>,
-    crossinline separator: Parser<*>
-): Parser<T> =
-    delimited(parser, separator)[{
-        when (it.value.size) {
-            0 -> Fail("No association found.", it.state)
-            1 -> Pass(it.value[0], it.state, it.match)
-            2 -> Pass(func(it.value[0], it.value[1]), it.state, it.match)
-            else -> Fail("Too many association found.", it.state)
-        }
-    }]
+    crossinline func: (T, T)
+
+    -> T, noinline parser: Parser<T>, crossinline separator: Parser<*>
+)
+
+        : Parser<T> = delimited(parser, separator)[{
+    when (it.value.size) {
+        0 -> Fail("No association found.", it.state)
+        1 -> Pass(it.value[0], it.state, it.match)
+        2 -> Pass(func(it.value[0], it.value[1]), it.state, it.match)
+        else -> Fail("Too many association found.", it.state)
+    }
+}]
 
 /**
  * Asserts the parser does match the whole input file

@@ -19,16 +19,13 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
-import com.erdodif.capsulate.specification.Type
 
-fun <T> delimit(parser: Parser<T>): Parser<T> =
-    left(parser, many(_lineEnd))
+fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 
 /**
  * Allows tokenized line ends to jump to next statement
  */
-fun <T> newLined(parser: Parser<T>): Parser<T> =
-    left(parser, many(_lineBreak))
+fun <T> newLined(parser: Parser<T>): Parser<T> = left(parser, many(_lineBreak))
 
 val nonParallel: Parser<Statement> = {
     asum(
@@ -49,28 +46,24 @@ val nonParallel: Parser<Statement> = {
 
 val statement: Parser<Statement> = { orEither(sParallel, nonParallel)() }
 
-val blockOrParallel: Parser<ArrayList<Statement>> = {
+val blockOrParallel: (ParserState) -> ParserResult<ArrayList<out Statement>> = { state ->
     orEither(
-        newLined(sParallel) / { arrayListOf(it) },
-        orEither(
+        newLined(sParallel) / { arrayListOf(it) }, orEither(
             (newLined(_char('{')) + newLined(_char('}'))) / { arrayListOf() },
             middle(newLined(_char('{')), some(delimit(statement)), newLined(_char('}')))
         )
-    )()
+    )(state)
 }
 
-val statementOrBlock: Parser<ArrayList<Statement>> =
+val statementOrBlock: Parser<ArrayList<out Statement>> =
     orEither(blockOrParallel, nonParallel / { arrayListOf(it) })
 
-val program: Parser<ArrayList<Statement>> =
-    {
-        right(
-            many(_lineEnd),
-            orEither(
-                delimited(statement, some(_lineBreak)),
-                newLined(statement) / { arrayListOf(it) }
-            ))()
-    }
+val program: Parser<ArrayList<Statement>> = {
+    right(
+        many(_lineEnd),
+        orEither(delimited(statement, some(_lineBreak)), newLined(statement) / { arrayListOf(it) })
+    )()
+}
 
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
@@ -83,57 +76,52 @@ val sReturn: Parser<Statement> = delimit(right(_keyword("return"), pExp) / { Ret
 
 val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
-val sIf: Parser<Statement> = (right(_keyword("if"), delimit(pExp) + blockOrParallel) +
-        right(delimit(_keyword("else")), blockOrParallel)) /
-        { If(it.first.first, it.first.second, it.second) }
+val sIf: Parser<Statement> = (right(_keyword("if"), delimit(pExp) + blockOrParallel) + right(
+    delimit(_keyword("else")), blockOrParallel
+)) / { If(it.first.first, it.first.second, it.second) }
 
 val sWhen: Parser<Statement> = (middle(
-    newLined(_keyword("when")) + newLined(_char('{')),
-    (many(
+    newLined(_keyword("when")) + newLined(_char('{')), (many(
         left(
-            left(pExp, newLined(_char(':'))) + statementOrBlock,
-            newLined(_char(','))
+            left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(','))
         )
-    ) + optional(left(pExp, newLined(_char(':'))) + statementOrBlock))
-            + optional(
+    ) + optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) + optional(
         middle(
             newLined(_keyword("else") + _char(':')),
             statementOrBlock,
             optional(newLined(_char(',')))
         )
-    ),
-    newLined(_char('}'))
+    ), newLined(_char('}'))
 )) / {
     if (it.first.second != null) it.first.first.add(it.first.second!!); When(
-    it.first.first,
-    it.second
+    it.first.first, it.second
 )
 }
 
 val sWhile: Parser<Statement> =
-    (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) /
-            { While(it.first, it.second) }
+    (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) / {
+        While(
+            it.first, it.second
+        )
+    }
 
 val sDoWhile: Parser<Statement> = right(
-    _keyword("do") + many(_char('\n')),
-    blockOrParallel + delimit(right(_keyword("while"), pExp))
+    _keyword("do") + many(_char('\n')), blockOrParallel + delimit(right(_keyword("while"), pExp))
 ) / {
     DoWhile(it.second, it.first)
 }
 
-val sParallelAssign: Parser<Statement> =
-    (delimited(_nonKeyword, _char(',')) + right(
-        tok(string(":=")),
-        delimit(delimited(pExp, _char(',')))
-    ))[{
-        if (it.value.second.size != it.value.first.size) {
-            fail(
-                "The number of parameters does not match the number of values to assign."
-            )
-        } else pass(
-            it.match.start, ParallelAssign(it.value.first.zip(it.value.second) as ArrayList)
+val sParallelAssign: Parser<Statement> = (delimited(_nonKeyword, _char(',')) + right(
+    tok(string(":=")), delimit(delimited(pExp, _char(',')))
+))[{
+    if (it.value.second.size != it.value.first.size) {
+        fail(
+            "The number of parameters does not match the number of values to assign."
         )
-    }]
+    } else pass(
+        it.match.start, ParallelAssign(it.value.first.zip(it.value.second) as ArrayList)
+    )
+}]
 
 val sAssign: Parser<Statement> = delimit(_nonKeyword + right(_keyword(":="), pExp)) / {
     Assign(it.first, it.second)
@@ -154,11 +142,8 @@ val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
 val sParallel: Parser<Statement> = {
     (delimited2(
         middle(
-            newLined(_char('{')),
-            many(delimit(statement)),
-            newLined(_char('}'))
-        ),
-        _char('|') + many(_lineBreak)
+            newLined(_char('{')), many(delimit(statement)), newLined(_char('}'))
+        ), _char('|') + many(_lineBreak)
     ) / { Parallel(it) as Statement })()
 }
 
@@ -167,27 +152,25 @@ class ParseException(reason: String) : Exception(reason)
 fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
     ParserState(input).parse(topLevel(program))
 
-@Suppress("UNCHECKED_CAST")
-fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> =
-    ParserState(input).parse(
-        topLevel(
-            many(
-                asum(
-                    (_lineEnd * { it, pos -> LineEnd(it, pos) }) as Parser<Token>,
-                    pVariable as Parser<Token>,
-                    pComment as Parser<Token>,
-                    pIntLit as Parser<Token>,
-                    pBoolLit as Parser<Token>,
-                    pStrLit as Parser<Token>,
-                    (_anyKeyword * { it, pos -> KeyWord(it, pos) }) as Parser<Token>,
-                    (tok(reservedChar) * { it, pos -> Symbol(it, pos) }) as Parser<Token>,
-                    (tok(some(freeChar)) * { _, pos -> Token(pos) })
-                )
+fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> = ParserState(input).parse(
+    topLevel(
+        many(
+            asum(
+                (_lineEnd * { it, pos -> LineEnd(it, pos) }) as Parser<Token>,
+                pVariable as Parser<Token>,
+                pComment as Parser<Token>,
+                pIntLit as Parser<Token>,
+                pBoolLit as Parser<Token>,
+                pStrLit as Parser<Token>,
+                (_anyKeyword * { it, pos -> KeyWord(it, pos) }) as Parser<Token>,
+                (tok(reservedChar) * { it, pos -> Symbol(it, pos) }) as Parser<Token>,
+                (tok(some(freeChar)) * { _, pos -> Token(pos) })
             )
         )
     )
+)
 
 
-fun Env.runProgram(statements: ArrayList<Statement>) {
+fun Env.runProgram(statements: ArrayList<out Statement>) {
     for (statement in statements) statement.evaluate(this)
 }

@@ -54,7 +54,7 @@ inline fun <T> assertFailsAt(
 ) {
     val result = initialState.parse { parser() }
     assertTrue("Expected Fail at $expectedIndex, but Passed with value: ${(result as? Pass)?.value}") {
-        result is Fail<T>
+        result is Fail
     }
     assertEquals(
         expectedIndex,

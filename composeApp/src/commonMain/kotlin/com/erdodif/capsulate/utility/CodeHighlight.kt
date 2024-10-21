@@ -105,7 +105,7 @@ class CodeHighlight private constructor(
 
     fun visualTransformation(code: String, tokenStream: ParserResult<ArrayList<Token>>) =
         VisualTransformation {
-            if (tokenStream is Fail<*>) {
+            if (tokenStream is Fail) {
                 TransformedText(buildAnnotatedString {
                     withStyle(style = SpanStyle(color = Color.Red, background = Color.Black))
                     { append(code) }

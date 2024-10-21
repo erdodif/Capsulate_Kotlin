@@ -4,9 +4,9 @@ package com.erdodif.capsulate.lang.util
 
 data class MatchPos(val start: Int, val end: Int)
 
-sealed interface Either<T, R>
-data class Left<T, R>(val value: T) : Either<T, R>
-data class Right<T, R>(val value: R) : Either<T, R>
+sealed interface Either<out T, out R>
+data class Left<T>(val value: T) : Either<T, Nothing>
+data class Right<R>(val value: R) : Either<Nothing, R>
 
 open class ParserState(val input: String) {
     var position: Int = 0
@@ -35,7 +35,7 @@ open class ParserState(val input: String) {
     inline fun <T> pass(start: Int, value: T): Pass<T> =
         Pass(value, this, MatchPos(start, position))
 
-    inline fun <T> fail(reason: String): Fail<T> = Fail(reason, this)
+    inline fun fail(reason: String): Fail = Fail(reason, this)
 
     override fun toString(): String = buildString {
         append("pos: $position, text:\"")
@@ -58,17 +58,14 @@ open class ParserState(val input: String) {
     operator fun get(match: MatchPos): String = input.get(match.start, match.end)
 }
 
-sealed class ParserResult<T>(open val state: ParserState) {
+sealed class ParserResult<out T>(open val state: ParserState) {
     /**
      * Calls the given transformation [lambda] if [Pass], or does nothing on [Fail]
      */
-    inline fun <R> fMap(crossinline lambda: ParserState.(T) -> R): ParserResult<R> =
-        if (this is Pass) {
-            Pass(lambda(state, value), state, match)
-        } else {
-            this as Fail
-            this.to()
-        }
+    inline fun <R> fMap(crossinline lambda: ParserState.(T) -> R): ParserResult<R> = when (this) {
+        is Pass -> Pass(lambda(state, value), state, match)
+        is Fail -> this
+    }
 
     /**
      * Calls the given transformation [lambda] using the match [MatchPos] as extra context.
@@ -76,11 +73,9 @@ sealed class ParserResult<T>(open val state: ParserState) {
      * Transforms the result on [Pass], or does nothing on [Fail]
      */
     inline fun <R> fMapPos(crossinline lambda: ParserState.(T, MatchPos) -> R): ParserResult<R> =
-        if (this is Pass) {
-            Pass(lambda(state, value, match), state, match)
-        } else {
-            this as Fail
-            this.to()
+        when (this) {
+            is Pass -> Pass(lambda(state, value, match), state, match)
+            is Fail -> this
         }
 }
 
@@ -89,10 +84,8 @@ data class Pass<T>(val value: T, override val state: ParserState, val match: Mat
     override fun toString(): String = "Pass(value: $value, matched:${state[match]}, state: $state)"
 }
 
-data class Fail<T>(val reason: String, override val state: ParserState) : ParserResult<T>(state) {
-    @Suppress("UNCHECKED_CAST")
-    fun <R> to(): Fail<R> = this as Fail<R>
-
+data class Fail(val reason: String, override val state: ParserState) :
+    ParserResult<Nothing>(state) {
     override fun toString(): String = "Fail(reason: $reason, state: ($state))"
 }
 
@@ -113,9 +106,10 @@ typealias SuccessParser<T> = ParserState.() -> Pass<T>
  * Calls the given transformation [lambda] on the result if the parser passes
  */
 inline fun <T, R> Parser<T>.fMap(crossinline lambda: ParserState.(T) -> R): Parser<R> = {
-    val res = this@fMap()
-    if (res is Pass) res.fMap(lambda)
-    else (res as Fail).to()
+    when (val res = this@fMap()) {
+        is Pass -> res.fMap(lambda)
+        is Fail -> res
+    }
 }
 
 /**
@@ -123,9 +117,10 @@ inline fun <T, R> Parser<T>.fMap(crossinline lambda: ParserState.(T) -> R): Pars
  */
 inline fun <T, R> Parser<T>.fMapPos(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R> =
     {
-        val res = this@fMapPos()
-        if (res is Pass) res.fMapPos(lambda)
-        else (res as Fail).to()
+        when (val res = this@fMapPos()) {
+            is Pass -> res.fMapPos(lambda)
+            is Fail -> res
+        }
     }
 
 inline operator fun <T, R> Parser<T>.times(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R> =
@@ -135,8 +130,8 @@ inline operator fun <T, R> Parser<T>.div(crossinline lambda: ParserState.(T) -> 
     fMap(lambda)
 
 inline operator fun <T, R> Parser<T>.get(
-    crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>,
-    crossinline onFail: ParserState.(Fail<T>) -> ParserResult<R>
+    crossinline onPass: ParserState.(Pass<out T>) -> ParserResult<R>,
+    crossinline onFail: ParserState.(Fail) -> ParserResult<R>
 ): Parser<R> = {
     val res = this@get()
     if (res is Pass) {
@@ -145,12 +140,12 @@ inline operator fun <T, R> Parser<T>.get(
 }
 
 inline operator fun <T, R> Parser<T>.get(
-    crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>
+    crossinline onPass: ParserState.(Pass<out T>) -> ParserResult<R>
 ): Parser<R> = {
-    val res = this@get()
-    if (res is Pass) {
-        onPass(res)
-    } else (res as Fail).to()
+    when (val res = this@get()) {
+        is Pass -> onPass(res)
+        is Fail -> res
+    }
 }
 
 /**
@@ -172,13 +167,16 @@ inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {
     val pos = position
     var result: ParserResult<T> = fail("Nothing matched")
     for (factory in parsers) {
-        val tmpResult = factory()
-        if (tmpResult is Fail<T>) {
-            result = fail("${tmpResult.reason};\n${(result as Fail).reason}")
-            position = pos
-        } else {
-            result = tmpResult
-            break
+        when (val tmpResult = factory()) {
+            is Fail -> {
+                result = fail("${tmpResult.reason};\n${(result as Fail).reason}")
+                position = pos
+            }
+
+            else -> {
+                result = tmpResult
+                break
+            }
         }
     }
     result

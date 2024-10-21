@@ -66,7 +66,7 @@ class Variable(val id: String, match: MatchPos) : Exp<Value>, Token(match) {
     override fun evaluate(env: Env): Value {
         val param = env.get(id)
         if (param is Left) {
-            return (param as Left<Parameter, *>).value.value
+            return param.value.value
         } else {
             throw RuntimeException("Variable '$id' is not defined!")
         }
@@ -85,14 +85,14 @@ val pStrLit: Parser<StrLit> = middle(
 val pIntLit: Parser<IntLit> = _integer * { it, pos -> IntLit(it, pos) }
 
 val pBoolLit: Parser<BoolLit> =
-    or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*, *>, pos) }
+    or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*>, pos) }
 
 val pVariable: Parser<Variable> = _nonKeyword[{
     if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
     else pass(it.match.start, Variable(it.value, it.match))
 }]
 
-val litOrder: Array<Parser<*>> = arrayOf(
+val litOrder: Array<Parser<Exp<*>>> = arrayOf(
     pIntLit,
     pBoolLit,
     pStrLit,
@@ -101,10 +101,9 @@ val litOrder: Array<Parser<*>> = arrayOf(
 
 typealias ExParser = Parser<Exp<*>>
 
-@Suppress("UNCHECKED_CAST")
 inline fun pAtom(): ExParser = {
     // Can't be directly assigned, or else the pExp reference ------v___v would be null
-    asum(*litOrder as Array<Parser<Exp<*>>>, middle(_char('('), pExp, _char(')')))()
+    asum(*litOrder, middle(_char('('), pExp, _char(')')))()
 }
 
 val pExp: ExParser = OperatorTable().parser(pAtom())
