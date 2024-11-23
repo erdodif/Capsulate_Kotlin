@@ -1,32 +1,37 @@
 package com.erdodif.capsulate.lang.parsers
 
-import com.erdodif.capsulate.assertFail
-import com.erdodif.capsulate.assertPassAt
-import com.erdodif.capsulate.assertValue
+import com.erdodif.capsulate.at
+import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.util.MatchPos
-import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.program.grammar.string
+import com.erdodif.capsulate.pass
+import com.erdodif.capsulate.withValue
 import kotlin.test.Test
 
 class StringTest {
     @Test
-    fun string_fail_empty_string() = assertFail(ParserState("").parse(string("text")))
-
-    @Test
-    fun string_fail_shorter_string() = assertFail(ParserState("tex").parse(string("text")))
-
-    @Test
-    fun string_fail_mismatched_string() {
-        assertFail(ParserState("texz").parse(string("text")))
-        assertFail(ParserState("zext").parse(string("text")))
+    fun `string fails on empty string`(){
+        string("text") fail ""
     }
 
     @Test
-    fun string_pass_string() = assertValue("text", ParserState("text").parse(string("text")))
+    fun `string fails on shorter string`(){
+        string("text") fail "tex"
+    }
 
     @Test
-    fun string_pass_at_string() = assertPassAt(
-        ParserState("text as").parse(string("text")),
-        MatchPos(0, 4)
-    )
+    fun `string fails on mismatched string`() {
+        string("text") fail "texz" at 4
+        string("text") fail "zext" at 0
+    }
+
+    @Test
+    fun `string passes with value`(){
+        string("text") pass "text" withValue "text"
+    }
+
+    @Test
+    fun `string passes at location`(){
+        string("text") pass "text as" at MatchPos(0,4)
+    }
 }

@@ -1,29 +1,29 @@
-package com.erdodif.capsulate.lang.grammar
+package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.assertFail
+import com.erdodif.capsulate.assertPass
 import com.erdodif.capsulate.assertTrue
-import com.erdodif.capsulate.lang.program.grammar.Exp
-import com.erdodif.capsulate.lang.program.grammar.Value
-import com.erdodif.capsulate.lang.program.grammar.operator.Association
+import com.erdodif.capsulate.at
 import com.erdodif.capsulate.lang.program.grammar.operator.BinaryCalculation
 import com.erdodif.capsulate.lang.program.grammar.operator.BinaryOperator
-import com.erdodif.capsulate.lang.program.grammar.operator.Fixation
-import com.erdodif.capsulate.lang.program.grammar.operator.OperatorTable
 import com.erdodif.capsulate.lang.program.grammar.operator.UnaryCalculation
 import com.erdodif.capsulate.lang.program.grammar.operator.UnaryOperator
-import com.erdodif.capsulate.lang.program.grammar.topLevel
+import com.erdodif.capsulate.lang.util.Association
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.Fixation
+import com.erdodif.capsulate.lang.util.OperatorTable
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util._char
+import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
-import com.erdodif.capsulate.lang.util.freeChar
 import com.erdodif.capsulate.lang.util.tok
+import com.erdodif.capsulate.matches
 import kotlin.test.Test
 
 class OperatorTest {
-
     private companion object {
         private data class TestValue(val char: Char) : Value {
             override fun equals(other: Any?) =
@@ -34,7 +34,7 @@ class OperatorTest {
         }
 
         private data class TestExp(val matchedChar: Char) : Exp<Value> {
-            override fun evaluate(env: Env) = TestValue(matchedChar)
+            override fun evaluate(context: Env) = TestValue(matchedChar)
             override fun toString(state: ParserState) = matchedChar.toString()
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == matchedChar) ||
@@ -47,8 +47,9 @@ class OperatorTest {
         { _, _ -> TestValue('/') }
         val weakLeft = BinaryOperator(10, "-", _char('-'), Association.LEFT)
         { _, _ -> TestValue('-') }
-        val strongRight = BinaryOperator(20, "*", _char('*'), Association.RIGHT)
-        { _, _ -> TestValue('*') }
+        val strongRight =
+            BinaryOperator(20, "*", _char('*'), Association.RIGHT)
+            { _, _ -> TestValue('*') }
         val weakRight = BinaryOperator(10, "+", _char('+'), Association.RIGHT)
         { _, _ -> TestValue('+') }
         val unaryPreLeft = UnaryOperator(20, "-", _char('-'), Fixation.PREFIX)
@@ -69,9 +70,14 @@ class OperatorTest {
             unaryPre, unaryPostLeft, unaryPost, strongNone, weakNone
         )
         val operatorsSimple = OperatorTable(weakLeft, weakRight, weakNone, unaryPre, unaryPost)
-        val testAtom: Parser<Exp<*>> = tok(freeChar) / { TestExp(it) }
+        val testAtom: Parser<Exp<Value>> = tok(asum(
+            char('a'),
+            char('b'),
+            char('c'),
+            char('d')
+        )) / { TestExp(it) }
 
-        fun OperatorTable.parse(text: String) =
+        fun OperatorTable<Exp<Value>>.parse(text: String) =
             ParserState(text).parse(topLevel(verboseParser(testAtom)))
 
         fun expectForSingle(
@@ -116,6 +122,12 @@ class OperatorTest {
                     (calc2.first as TestExp).matchedChar == secondChar &&
                     (calc2.second as TestExp).matchedChar == thirdChar
         }
+
+        infix fun OperatorTable<Exp<Value>>.pass(text: String): Pass<Exp<Value>> =
+            this.parse(text).let(::assertPass)
+
+        infix fun OperatorTable<Exp<Value>>.fail(text: String): Fail =
+            this.parse(text).let(::assertFail)
     }
 
     @Test
@@ -132,98 +144,98 @@ class OperatorTest {
 
     @Test
     fun simple_value_Fail() {
-        assertFail(operatorsSimple.parse("a b "))
-        assertFail(operatorsConflict.parse("a b "))
+        operatorsSimple fail "a b " at 2
+        operatorsConflict fail "a b " at 2
     }
 
     @Test
     fun weakRight_Pass_single() {
-        val expectedPredicate: (Pass<*>) -> Boolean = expectForSingle("+")
-        assertTrue(expectedPredicate, operatorsSimple.parse("a + b "))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a +b "))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a+ b "))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a+b "))
+        val expectedPredicate: (Pass<Exp<Value>>) -> Boolean = expectForSingle("+")
+        operatorsSimple pass "a + b " matches expectedPredicate
+        operatorsSimple pass "a +b " matches expectedPredicate
+        operatorsSimple pass "a+ b " matches expectedPredicate
+        operatorsSimple pass "a+b " matches expectedPredicate
     }
 
     @Test
     fun weakRight_Pass_chained() {
         val expectedPredicate: (Pass<*>) -> Boolean = expectForChainRight("+")
-        assertTrue(expectedPredicate, operatorsSimple.parse("a + b + c "))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a +b+c "))
+        operatorsSimple pass "a + b + c " matches expectedPredicate
+        operatorsSimple pass "a +b+c " matches expectedPredicate
     }
 
     @Test
     fun weakRight_Fail() {
-        assertFail(operatorsSimple.parse("a++b"))
-        assertFail(operatorsSimple.parse("a+b++c"))
-        assertFail(operatorsSimple.parse("a+b c "))
-        assertFail(operatorsSimple.parse("a b + c "))
-        assertFail(operatorsSimple.parse("a\n + c "))
-        assertFail(operatorsSimple.parse("a+ c\n"))
-        assertFail(operatorsSimple.parse("+ c"))
-        assertFail(operatorsSimple.parse("+c"))
+        operatorsSimple fail "a++b" at 1
+        operatorsSimple fail "a++b" at 1
+        operatorsSimple fail "a+b++c" at 3
+        operatorsSimple fail "a+b c " at 4
+        operatorsSimple fail "a b + c " at 2
+        operatorsSimple fail "a\n + c " at 1
+        operatorsSimple fail "a+ c\n" at 4
+        operatorsSimple fail "+ c" at 0
+        operatorsSimple fail "+c" at 0
     }
 
     @Test
     fun weakLeft_Pass_single() {
         val expectedPredicate: (Pass<*>) -> Boolean = expectForSingle("-")
-        assertTrue(expectedPredicate, operatorsSimple.parse("a - b "))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a -b"))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a- b"))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a-b"))
+        operatorsSimple pass "a - b " matches expectedPredicate
+        operatorsSimple pass "a -b" matches expectedPredicate
+        operatorsSimple pass "a- b" matches expectedPredicate
+        operatorsSimple pass "a-b" matches expectedPredicate
     }
 
     @Test
     fun weakLeft_Pass_chained() {
         val expectedPredicate: (Pass<*>) -> Boolean = expectForChainLeft("-")
-        assertTrue(expectedPredicate, operatorsSimple.parse("a - b - c "))
-        assertTrue(expectedPredicate, operatorsSimple.parse("a -b-c "))
+        operatorsSimple pass "a - b - c " matches expectedPredicate
+        operatorsSimple pass "a -b-c " matches expectedPredicate
     }
 
     @Test
     fun weakLeft_Fail() {
-        assertFail(operatorsSimple.parse("a-+b"))
-        assertFail(operatorsSimple.parse("a-+b-c"))
-        assertFail(operatorsSimple.parse("a-b c"))
-        assertFail(operatorsSimple.parse("a b - c"))
-        assertFail(operatorsSimple.parse("a\n - c"))
-        assertFail(operatorsSimple.parse("a- c\n"))
-        assertFail(operatorsSimple.parse("- c"))
-        assertFail(operatorsSimple.parse("-c"))
+        operatorsSimple fail "a-+b" at 1
+        operatorsSimple fail "a-+b-c" at 1
+        operatorsSimple fail "a-b c" at 4
+        operatorsSimple fail "a b - c" at 2
+        operatorsSimple fail "a\n - c" at 1
+        operatorsSimple fail "a- c\n" at 4
+        operatorsSimple fail "- c" at 0
+        operatorsSimple fail "-c" at 0
     }
 
     @Test
     fun unaryPreLeft_Pass() {
-        val expectPredicate: (Pass<Exp<*>>) -> Boolean =
+        val expectPredicate: (Pass<Exp<Value>>) -> Boolean =
             { it.value is UnaryCalculation && ((it.value as UnaryCalculation).param as TestExp).matchedChar == 'a' }
-        assertTrue(expectPredicate, operatorsSimple.parse("@a"))
-        assertTrue(expectPredicate, operatorsSimple.parse("@ a"))
-        assertTrue(expectPredicate, operatorsSimple.parse("@  a "))
+        operatorsSimple pass "@a" matches expectPredicate
+        operatorsSimple pass "@ a" matches expectPredicate
+        operatorsSimple pass "@  a " matches expectPredicate
     }
 
     @Test
     fun unaryPostRight_Fail() {
-        assertFail(operatorsSimple.parse("a@"))
-        assertFail(operatorsSimple.parse("@\n a"))
-        assertFail(operatorsSimple.parse("b @ a "))
+        operatorsSimple fail "a@" at 1
+        operatorsSimple fail "@\n a" at 0
+        operatorsSimple fail "b @ a " at 2
     }
 
     @Test
     fun weakNone_Pass() {
-        val expectPredicate: (Pass<Exp<*>>) -> Boolean = { true }
-        assertTrue(expectPredicate, operatorsSimple.parse("a = b"))
-        assertTrue(expectPredicate, operatorsSimple.parse("a = b + c"))
-        assertTrue(expectPredicate, operatorsSimple.parse("a + b = c "))
-        assertTrue(expectPredicate, operatorsSimple.parse("a + b = c + d"))
-        assertTrue(expectPredicate, operatorsSimple.parse("a = @d"))
+        operatorsSimple pass "a = b"
+        operatorsSimple pass "a = b + c"
+        operatorsSimple pass "a + b = c "
+        operatorsSimple pass "a + b = c + d"
+        operatorsSimple pass "a = @d"
     }
 
     @Test
     fun weakNone_Fail() {
-        assertFail(operatorsSimple.parse("a = b = c"))
-        assertFail(operatorsSimple.parse("a ="))
-        assertFail(operatorsSimple.parse("= a"))
-        assertFail(operatorsSimple.parse("a + b = a - b = c"))
+        operatorsSimple fail "a = b = c" at 9
+        operatorsSimple fail "a =" at 3
+        operatorsSimple fail "= a" at 0
+        operatorsSimple fail "a + b = a - b = c" at 17
     }
 
     //TODO: Mixing binding strengths

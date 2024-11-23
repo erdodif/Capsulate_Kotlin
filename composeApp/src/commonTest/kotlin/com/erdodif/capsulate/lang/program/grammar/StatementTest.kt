@@ -1,16 +1,7 @@
-package com.erdodif.capsulate.lang.grammar
+package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.fail
-import com.erdodif.capsulate.lang.program.grammar.pComment
-import com.erdodif.capsulate.lang.program.grammar.pVariable
-import com.erdodif.capsulate.lang.program.grammar.plus
-import com.erdodif.capsulate.lang.program.grammar.sAssign
-import com.erdodif.capsulate.lang.program.grammar.sDoWhile
-import com.erdodif.capsulate.lang.program.grammar.sIf
-import com.erdodif.capsulate.lang.program.grammar.sParallelAssign
-import com.erdodif.capsulate.lang.program.grammar.sWhen
-import com.erdodif.capsulate.lang.program.grammar.sWhile
-import com.erdodif.capsulate.lang.program.grammar.topLevel
+import com.erdodif.capsulate.at
 import com.erdodif.capsulate.pass
 import kotlin.test.Test
 
@@ -24,59 +15,63 @@ class StatementTest {
     private val `when` = topLevel(sWhen)
 
     @Test
-    fun `comment pass`(){
+    fun `comment passes single line`(){
         comment pass "//asda//s /**/ "
-        comment pass "/**/"
+        topLevel(pComment + pVariable) pass "//asdasdasdas\na"
+    }
+
+    @Test
+    fun `comment passes multi line`(){
+        comment pass "/**/" at 4
         comment pass "/*asd asd*/"
         comment pass "/*//*/"
         comment pass "/*/*/"
         comment pass "/* ** /*/"
         comment pass "/*/* /*/"
-        topLevel(pComment + pVariable) pass "//asdasdasdas\na"
         topLevel(pComment + pVariable) pass "/*\nasd\nd*/ a"
     }
 
     @Test
     fun `comment fails`(){
-        comment fail "//asda//s /**/\nd"
-        comment fail "/**/w"
+        comment fail "//asda//s /**/\nd" at 15
+        comment fail "/**/w" at 4
         comment fail "/*asd*/asd*///"
-        comment fail "/**/*/"
-        comment fail "/  /"
-        comment fail "/*  /*"
-        comment fail "*/  */"
-        comment fail "*/"
-        comment fail "/*"
+        comment fail "/**/*/" at 4
+        comment fail "/  /" at 2
+        comment fail "/*  /*" at 6
+        comment fail "*/  */" at 1
+        comment fail "*/" at 1
+        comment fail "/*" at 2
         topLevel(pComment + pVariable) fail "//asdasdasdasa"
         topLevel(pComment + pVariable) fail "/*\nasd\nd a"
     }
 
     @Test
-    fun `assignment pass`(){
+    fun `assignment passes`(){
         assign pass "a := 1"
         assign pass "a := a"
     }
 
     @Test
-    fun `assignment fail`(){
-        assign fail " := 1"
-        assign fail " a := "
+    fun `assignment fails`(){
+        assign fail " := 1" at 1
+        assign fail " a := " at 6
     }
 
     @Test
-    fun `parallel assignment pass`(){
+    fun `parallel assignment passes`(){
         `parallel assign` pass "a := 1"
         `parallel assign` pass "a := a"
     }
 
     @Test
-    fun `parallel assignment fail`(){
+    fun `parallel assignment fails`(){
         `parallel assign` fail " := 1"
         `parallel assign` fail " a := "
     }
 
     @Test
-    fun `if statement pass`(){
+    fun `if statement passes`(){
         `if` pass "if true { } else { }"
         `if` pass "if true { } else { skip }"
         `if` pass "if true {skip} else { }"
@@ -95,32 +90,32 @@ class StatementTest {
     }
 
     @Test
-    fun `while pass`(){
+    fun `while passes`(){
         `while` pass "while 0\n{\n}"
         `while` pass "while 0 {skip}"
     }
 
     @Test
-    fun `do while pass`(){
+    fun `do while passes`(){
         `do while` pass "do {} while true"
         `do while` pass "do\n{skip\nskip;skip}\nwhile (e)"
     }
 
 
     @Test
-    fun `while fail`(){
+    fun `while fails`(){
         `while` fail "while {} "
         `while` fail "while 0 "
     }
 
     @Test
-    fun `do while fail`(){
+    fun `do while fails`(){
         `do while` fail "do {} while"
         `do while` fail "do while (e)"
     }
 
     @Test
-    fun `when pass regular`() {
+    fun `when passes regular`() {
         `when` pass "when{}"
         `when` pass "when{a:a}"
         `when` pass "when{a:{a}}"
@@ -131,23 +126,24 @@ class StatementTest {
     }
 
     @Test
-    fun `when pass trailing coma`(){
+    fun `when passes with trailing coma`(){
         `when` pass "when{a:{a},b:b,} "
         `when` pass "when\n{\na:{a},\nb:{d},}\n "
+        `when` pass "when\n{\na:{a},\n}"
     }
 
     @Test
-    fun `when pass with else`(){
-        `when` pass "when{a:{a}}else{b} "
-        `when` pass "when\n{\na:\n{a}}\nelse{d} "
-        `when` pass "when\n{\na:{a}\n}\nelse{\nd\n}\n "
-        `when` pass "when\n{\na:\n{a},}\nelse\n{d} "
+    fun `when passes with else block`(){
+        `when` pass "when{else:{b}}"
+        `when` pass "when{a:{a}\nelse:{b}} "
+        `when` pass "when\n{\na:\n{a},\nelse:{d}} "
+        `when` pass "when\n{\na:{a}\n,\nelse:{\nd\n}}\n "
+        `when` pass "when\n{\na:\n{a},\nelse:\n{d}} "
     }
 
     @Test
-    fun `when fail`(){
-        `when` fail "when{a:{a},else:b} "
-        `when` fail "when{else:{b}}"
+    fun `when fails`(){
+        `when` fail "when{a:{a}}else{b} "
         `when` fail "when{a:0}else:{b}"
         `when` fail "when{,}"
         `when` fail "when{a\n:{a}}"

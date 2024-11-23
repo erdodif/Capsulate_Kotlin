@@ -1,78 +1,72 @@
 package com.erdodif.capsulate.lang.parsers
 
-import com.erdodif.capsulate.assertFail
-import com.erdodif.capsulate.assertFailsAt
-import com.erdodif.capsulate.assertPass
-import com.erdodif.capsulate.assertPassAt
-import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.at
+import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.util.MatchPos
-import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Pass
-import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.program.grammar.and
 import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.program.grammar.not
 import com.erdodif.capsulate.lang.program.grammar.or
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.match
+import com.erdodif.capsulate.pass
+import com.erdodif.capsulate.withValue
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class CombinatorTest {
     @Test
-    fun and_pass(){
-        val result = ParserState("cr").parse(and(char('c'), char('r')))
-        assertPassAt(result, MatchPos(0,2))
-        result as Pass
-        assertEquals('c', result.value.first)
-        assertEquals('r', result.value.second)
+    fun `and passes`(){
+        and(char('c'), char('r')) pass "cr" match {it.first == 'c' && it.second == 'r'}
     }
 
     @Test
-    fun and_fail_first() = assertFailsAt(
-        1,
-        ParserState("xr"),
-        and(char('c'), char('r'))
-    )
+    fun `and fails on first failure`(){
+        and(char('c'), char('r')) fail "xr" at 1
+    }
 
     @Test
-    fun and_fail_second() = assertFailsAt(
-        2,
-        ParserState("cx"),
-        and(char('c'), char('r'))
-    )
+    fun `and fails on second failure`() {
+        and(char('c'), char('r')) fail "cx" at 2
+    }
 
     @Test
-    fun or_pass_first_at() = assertPassAt(
-        ParserState("c").parse(or(char('c'), char('r'))),
-        MatchPos(0,1)
-    )
+    fun `or passes first at position`() {
+        or(char('c'), char('r')) pass "c" at MatchPos(0,1)
+    }
 
     @Test
-    fun or_pass_second_at() = assertPassAt(
-        ParserState("r").parse(or(char('c'), char('r'))),
-        MatchPos(0,1)
-    )
+    fun `or passes second at position`() {
+        or(char('c'), char('r')) pass "r" at MatchPos(0,1)
+    }
+    @Test
+    fun `or passes with first value`(){
+        or(char('c'), char('r')) pass "c" match { (it as Left).value == 'c'}
+    }
 
     @Test
-    fun or_pass_first() = assertValue(Left('c'), ParserState("c").parse(or(char('c'), char('c'))))
+    fun `or passes with second value`(){
+        or(char('c'), char('r')) pass "r"  match { (it as Right).value == 'r'}
+    }
 
     @Test
-    fun or_pass_second() = assertValue(Right('r'), ParserState("r").parse(or(char('c'), char('r'))))
+    fun `or fails`(){
+        or(char('c'), char('r')) fail "x"
+    }
 
     @Test
-    fun or_fail() = assertFail(ParserState("x").parse(or(char('c'), char('r'))))
+    fun `not fails on success`(){
+        not(char('c')) fail "c" at 1
+    }
 
     @Test
-    fun not_fail() = assertFail(ParserState("c").parse(not(char('c'))))
+    fun `not passes`() {
+        not(char('c')) pass "x"
+    }
 
     @Test
-    fun not_pass() = assertPassAt(ParserState("x").parse(not(char('c'))), MatchPos(0,0))
-
-    @Test
-    fun not_reset() {
-        val state = ParserState("x")
-        assertPass(state.parse(not(char('c'))))
-        assertEquals(0, state.position)
+    fun `not resets position`() {
+        not(char('c')) pass "x" at MatchPos(0,0)
     }
 
 }

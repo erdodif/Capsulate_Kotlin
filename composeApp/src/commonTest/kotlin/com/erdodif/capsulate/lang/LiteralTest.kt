@@ -1,40 +1,25 @@
 package com.erdodif.capsulate.lang
 
-import com.erdodif.capsulate.assertPass
-import com.erdodif.capsulate.assertPassAt
-import com.erdodif.capsulate.lang.program.grammar.StrLit
 import com.erdodif.capsulate.lang.program.grammar.pStrLit
-import com.erdodif.capsulate.lang.util.MatchPos
-import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.match
+import com.erdodif.capsulate.pass
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class LiteralTest {
     @Test
-    fun pStrLit_pass_char_only(){
-        val result = ParserState("\"s\"").parse(pStrLit)
-        assertPassAt(result, MatchPos(0,3))
-        result as Pass
-        assertEquals("s",(result.value as StrLit).value)
+    fun `pStrLit passes with one char in the literal`(){
+        pStrLit pass "\"s\" " match { it.value == "s" }
     }
 
     @Test
-    fun pStrLit_pass_empty_string(){
-        val result = ParserState("\"\"").parse(pStrLit)
-        assertPass(result)
-        result as Pass
-        assertEquals("",(result.value as StrLit).value)
+    fun `pStrLit passes empty string literal`(){
+        pStrLit pass "\"\" " match { it.value == "" }
     }
 
     @Test
-    fun pStrLit_pass_escape(){
-        val result = ParserState("\"\\\"s \\e\"").parse(pStrLit)
-        assertPass(result)
-        result as Pass
-        assertEquals("\"s e",(result.value as StrLit).value)
+    fun `pStrLit passes escaped string literal`(){
+        pStrLit pass "\"\\\"s \\e\"" match { it.value == "\"s e" }
     }
-
 
 }
 

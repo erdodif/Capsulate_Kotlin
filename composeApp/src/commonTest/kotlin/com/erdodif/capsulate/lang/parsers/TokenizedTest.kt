@@ -1,26 +1,43 @@
 package com.erdodif.capsulate.lang.parsers
 
-import com.erdodif.capsulate.assertPass
 import com.erdodif.capsulate.lang.program.grammar.EOF
-import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.program.grammar.and
 import com.erdodif.capsulate.lang.program.grammar.char
+import com.erdodif.capsulate.lang.program.grammar.topLevel
 import com.erdodif.capsulate.lang.util.tok
+import com.erdodif.capsulate.pass
 import kotlin.test.Test
 
 class TokenizedTest {
     @Test
-    fun tok_pass_eof_empty() = assertPass(ParserState("").parse(tok(EOF)))
+    fun `tok passes eof on empty`(){
+        tok(EOF) pass ""
+    }
 
     @Test
-    fun tok_pass_true_ws() = assertPass(ParserState("  ").parse(tok { pass(0,Unit) }))
+    fun `tok fails eof with whitespace`(){
+        tok(EOF) pass "  "
+        topLevel(tok(EOF)) pass "  "
+    }
 
     @Test
-    fun tok_pass_char_only() = assertPass(ParserState("c").parse(tok(char('c'))))
+    fun `tok passes constant pass with whitespace`(){
+        tok { pass(0,Unit) } pass " "
+    }
 
     @Test
-    fun tok_pass_char_ws() = assertPass(ParserState("c  ").parse(tok(char('c'))))
+    fun `tok passes char exact`(){
+        tok(char('c')) pass "c"
+    }
 
     @Test
-    fun tok_pass_chars() = assertPass(ParserState("c  r").parse(and(tok(char('c')), char('r'))))
+    fun `tok passes char with whitespace`(){
+        tok(char('c')) pass "c  "
+        topLevel(tok(char('c'))) pass "c  "
+    }
+
+    @Test
+    fun `tok passes two char parser`(){
+        and(tok(char('c')), char('r')) pass "c  r"
+    }
 }

@@ -1,111 +1,80 @@
 package com.erdodif.capsulate.lang.parsers
 
-import com.erdodif.capsulate.assertFail
-import com.erdodif.capsulate.assertPassAt
-import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.util.MatchPos
-import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.at
+import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.program.grammar.between
 import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.program.grammar.exactly
 import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.program.grammar.optional
 import com.erdodif.capsulate.lang.program.grammar.some
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.match
+import com.erdodif.capsulate.pass
+import com.erdodif.capsulate.withValue
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class QuantityTest {
 
     @Test
-    fun optional_pass_char_empty() = assertValue(null, ParserState("").parse(optional(char('c'))))
-
-    @Test
-    fun optional_pass_char() = assertValue('c', ParserState("cr").parse(optional(char('c'))))
-
-    @Test
-    fun optional_fail_reset() {
-        val state = ParserState("sd")
-        assertValue(null, state.parse(optional(char('c'))))
-        assertEquals(0, state.position)
+    fun `optional passes char on empty string`() {
+        optional(char('c')) pass "" withValue null
     }
 
     @Test
-    fun some_fail_char() = assertFail(ParserState("r").parse(some(char('c'))))
-
-    @Test
-    fun some_pass_reset() {
-        val state = ParserState("ccr")
-        val result = state.parse(some(char('c')))
-        assertPassAt(result, MatchPos(0, 2))
-        result as Pass
-        assertEquals(2, result.value.size)
-        assertEquals('c', result.value[0])
-        assertEquals('c', result.value[1])
-        assertEquals(2, state.position)
+    fun `optional passes char`(){
+        optional(char('c')) pass "cr" withValue 'c'
     }
 
     @Test
-    fun many_pass_empty() {
-        val result = ParserState("").parse(many(char('c')))
-        assertPassAt(result, MatchPos(0, 0))
-        result as Pass
-        assertEquals(0, result.value.size)
+    fun `optional resets position`() {
+        optional(char('c')) pass "sd" at 0
     }
 
     @Test
-    fun many_pass_reset() {
-        val state = ParserState("ccr")
-        val result = state.parse(many(char('c')))
-        assertPassAt(result, MatchPos(0, 2))
-        result as Pass
-        assertEquals(2, result.value.size)
-        assertEquals('c', result.value[0])
-        assertEquals('c', result.value[1])
-        assertEquals(2, state.position)
+    fun `some fails no match`(){
+        some(char('c')) fail "r"
     }
 
     @Test
-    fun between_fail_few() = assertFail(
-        ParserState("cr").parse(between(2, 3, char('c')))
-    )
-
-    @Test
-    fun between_pass_reset() {
-        val state = ParserState("cccrr")
-        val result = state.parse(between(2, 4, char('c')))
-        assertPassAt(result, MatchPos(0, 3))
-        result as Pass
-        assertEquals(3, result.value.size)
-        assertEquals('c', result.value[2])
-        assertEquals(3, state.position)
+    fun `some pass resets position`() {
+        some(char('c')) pass "ccr" match {it.size ==2  && it[0] == 'c' && it[1] == 'c'} at 2
     }
 
     @Test
-    fun exactly_fail_few() = assertFail(
-        ParserState("cr").parse(exactly(2, char('c')))
-    )
-
-    @Test
-    fun exactly_pass_much() {
-        val state = ParserState("cccr")
-        val result = state.parse(exactly(2, char('c')))
-        assertPassAt(result, MatchPos(0, 2))
-        result as Pass
-        assertEquals(2, result.value.size)
-        assertEquals('c', result.value[1])
-        assertEquals(2, state.position)
+    fun `many passes no match`() {
+        many(char('c')) pass "" at 0
+        many(char('c')) pass "r" at 0
     }
 
     @Test
-    fun exactly_pass() {
-        val state = ParserState("ccrr")
-        val result = state.parse(exactly(2, char('c')))
-        assertPassAt(result, MatchPos(0, 2))
-        result as Pass
-        assertEquals(2, result.value.size)
-        assertEquals('c', result.value[1])
-        assertEquals(2, state.position)
+    fun `many resets position`() {
+        many(char('c')) pass "ccr" match {it.size == 2 && it[0] =='c' && it[1] == 'c' } at 2
+    }
+
+    @Test
+    fun `between fails few`() {
+        between(2, 3, char('c')) fail "cr"
+    }
+
+    @Test
+    fun `between resets position`() {
+        between(2, 4, char('c')) pass "cccrr" match {it.size == 3} at MatchPos(0,3)
+    }
+
+    @Test
+    fun `exactly fails on too few`(){
+        exactly(2, char('c')) fail "cr" at 2
+    }
+
+    @Test
+    fun `exactly passes early on many`() {
+        exactly(2, char('c')) pass "cccr" at 2
+    }
+
+    @Test
+    fun `exactly passes`() {
+        exactly(2, char('c')) pass "ccrr" match { it.size == 2 && it[0] == 'c' }
     }
 
 }

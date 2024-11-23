@@ -1,47 +1,64 @@
 package com.erdodif.capsulate.lang.parsers
 
-import com.erdodif.capsulate.assertFail
-import com.erdodif.capsulate.assertValue
-import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.at
+import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.program.grammar.left
 import com.erdodif.capsulate.lang.program.grammar.middle
 import com.erdodif.capsulate.lang.program.grammar.right
+import com.erdodif.capsulate.pass
+import com.erdodif.capsulate.withValue
 import kotlin.test.Test
 
 class DiscardTest {
     @Test
-    fun left_pass_char() = assertValue('c', ParserState("cr").parse(left(char('c'), char('r'))))
+    fun `left passes chars first value`(){
+        left(char('c'), char('r')) pass "cr" withValue 'c' at 2
+    }
 
     @Test
-    fun left_fail_char_first() = assertFail(ParserState("xr").parse(left(char('c'), char('r'))))
+    fun `left fails when first char fails`(){
+        left(char('c'), char('r')) fail "xr" at 1
+    }
 
     @Test
-    fun left_fail_char_second() = assertFail(ParserState("cx").parse(left(char('c'), char('r'))))
+    fun `left fails when second char fails`(){
+        left(char('c'), char('r')) fail "cx" at 2
+    }
 
     @Test
-    fun right_pass_char() = assertValue('r', ParserState("cr").parse(right(char('c'), char('r'))))
+    fun `right passes chars second value`(){
+        right(char('c'), char('r')) pass "cr" withValue 'r' at 2
+    }
 
     @Test
-    fun right_fail_char_first() = assertFail(ParserState("xr").parse(right(char('c'), char('r'))))
+    fun `right fail char first`(){
+        right(char('c'), char('r')) fail "xr" at 1
+    }
 
     @Test
-    fun right_fail_char_second() = assertFail(ParserState("cx").parse(right(char('c'), char('r'))))
+    fun `right fail char second`(){
+        right(char('c'), char('r')) fail "cx" at 2
+    }
 
     @Test
-    fun middle_pass_char() =
-        assertValue('c', ParserState("lcr").parse(middle(char('l'), char('c'), char('r'))))
+    fun `middle passes chars second value`(){
+        middle(char('l'), char('c'), char('r')) pass "lcr" withValue 'c' at 3
+    }
 
     @Test
-    fun middle_fail_char_left() =
-        assertFail(ParserState("xcr").parse(middle(char('l'), char('c'), char('r'))))
+    fun `middle fail char left`(){
+        middle(char('l'), char('c'), char('r')) fail "xcr" at 1
+    }
 
     @Test
-    fun middle_fail_char_middle() =
-        assertFail(ParserState("lxr").parse(middle(char('l'), char('c'), char('r'))))
+    fun `middle fail char middle`(){
+        middle(char('l'), char('c'), char('r')) fail "lxr" at 2
+    }
 
     @Test
-    fun middle_fail_char_right() =
-        assertFail(ParserState("lcx").parse(middle(char('l'), char('c'), char('r'))))
+    fun `middle fail char right`(){
+        middle(char('l'), char('c'), char('r')) fail "lcx" at 3
+    }
 
 }
