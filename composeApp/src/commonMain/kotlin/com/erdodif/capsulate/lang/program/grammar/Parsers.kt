@@ -382,8 +382,7 @@ val int: Parser<Int> = and(optional(char('-')), natural) / { (sign, num) ->
 /**
  * Looks for simple whitespace characters
  */
-val whiteSpace: Parser<Unit> =
-    or(char(' '), char('\t'))[{ Pass(Unit, it.state, it.match) }]
+val whiteSpace: Parser<Unit> = or(char(' '), char('\t'))[{ Pass(Unit, it.state, it.match) }]
 // asum(whiteSpaceChars.map{char(it)}.toTypedArray())[{ Pass(Unit, it.state, it.match) }, { it.to() }]
 
 /**
@@ -392,8 +391,7 @@ val whiteSpace: Parser<Unit> =
  * Expects at least one delimiter (as well as two parser match around)
  */
 inline fun <reified T> delimited2(
-    crossinline parser: Parser<T>,
-    crossinline delimiter: Parser<*>
+    crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
 ): Parser<ArrayList<out T>> = (some(left(parser, delimiter)) + parser) / {
     val ret = it.first.toMutableList()
     ret.add(it.second)
@@ -421,8 +419,7 @@ inline fun <reified T> delimited(
 fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = (value + { vMatch ->
     orEither((func + chainr1(value, func)) / {
         it.first(
-            vMatch.value,
-            it.second
+            vMatch.value, it.second
         )
     }) { pass(vMatch.match.start, vMatch.value) }
 }) * { a, _ -> a.second }
@@ -432,9 +429,7 @@ fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = (value
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun
-
-        <T> chainl1(
+fun <T> chainl1(
     value: Parser<T>, func: Parser<(T, T) -> T>
 ): Parser<T> = value[{ valueFirst ->
     var pos = position
@@ -452,9 +447,7 @@ fun
 fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
     chainr1(parser, left({ pass(position, func) }, separator))
 
-fun
-
-        <T> leftAssoc(
+fun <T> leftAssoc(
     func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>
 ): Parser<T> = chainl1(parser, left({ pass(position, func) }, separator))
 

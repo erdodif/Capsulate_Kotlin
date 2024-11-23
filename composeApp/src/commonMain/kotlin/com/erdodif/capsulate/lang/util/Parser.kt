@@ -5,8 +5,17 @@ package com.erdodif.capsulate.lang.util
 data class MatchPos(val start: Int, val end: Int)
 
 sealed interface Either<out T, out R>
-data class Left<T>(val value: T) : Either<T, Nothing>
-data class Right<R>(val value: R) : Either<Nothing, R>
+
+data class Left<out T>(val value: T) : Either<T, Nothing>
+data class Right<out R>(val value: R) : Either<Nothing, R>
+
+inline operator fun <T, R, S> Either<T, R>.get(
+    crossinline left: (Left<T>) -> S,
+    crossinline right: (Right<R>) -> S
+): S = when (this) {
+    is Left<T> -> left(this)
+    is Right<R> -> right(this)
+}
 
 open class ParserState(val input: String) {
     var position: Int = 0
@@ -160,7 +169,8 @@ inline fun <T, R> Parser<T?>.applyIf(crossinline lambda: ParserState.(T) -> R): 
  */
 inline fun <T, R> Parser<T?>.applyIfPos(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R?> =
     fMapPos { it, pos ->
-        if (it != null) lambda(it, pos) else null
+        @Suppress("UNCHECKED_CAST")
+        if (it == null) null else lambda(it as T, pos)
     }
 
 inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {

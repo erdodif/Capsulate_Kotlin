@@ -171,6 +171,6 @@ fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> = ParserState
 )
 
 
-fun Env.runProgram(statements: ArrayList<out Statement>) {
+fun Env.runProgram(statements: List<Statement>) {
     for (statement in statements) statement.evaluate(this)
 }

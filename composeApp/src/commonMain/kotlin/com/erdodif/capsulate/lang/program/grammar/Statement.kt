@@ -26,8 +26,8 @@ data class If(
 }
 
 data class When(
-    val blocks: ArrayList<Pair<Exp<*>, ArrayList<out Statement>>>,
-    val elseBlock: ArrayList<out Statement>? = null
+    val blocks: List<Pair<Exp<*>, List<Statement>>>,
+    val elseBlock: List<Statement>? = null
 ) : Statement {
     override fun evaluate(env: Env) { // TODO: allow non-determinism
         if (env.deterministic) {
@@ -108,13 +108,13 @@ data class Select(val id: String, val set: Any? /*Specification: Type*/) : State
     }
 }
 
-data class ParallelAssign(val assigns: ArrayList<Pair<String, Exp<*>>>) : Statement {
+data class ParallelAssign(val assigns: ArrayList<Pair<String, Exp<Value>>>) : Statement {
     override fun evaluate(env: Env) {
         for (assign in assigns) env.set(assign.first, assign.second.evaluate(env))
     }
 }
 
-data class Expression(val expression: Exp<*>) : Statement {
+data class Expression(val expression: Exp<Value>) : Statement {
     override fun evaluate(env: Env) {
         expression.evaluate(env)
     }
