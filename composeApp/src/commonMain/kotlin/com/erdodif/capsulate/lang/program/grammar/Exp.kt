@@ -1,11 +1,11 @@
 package com.erdodif.capsulate.lang.program.grammar
 
-import com.erdodif.capsulate.lang.program.grammar.operator.OperatorTable
+import com.erdodif.capsulate.lang.program.grammar.operator.builtInOperatorTable
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
-import com.erdodif.capsulate.lang.util.Parameter
 import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._integer
@@ -17,11 +17,11 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 
 interface Exp<T : Value> {
-    fun evaluate(env: Env): T
+    fun evaluate(context: Env): T
     fun toString(state: ParserState): String
 }
 
-open class Token(val match: MatchPos) {
+open class Token(open val match: MatchPos) {
     inline fun matchedToken(parserState: ParserState): String =
         parserState.input[match.start, match.end]
 }
@@ -43,28 +43,28 @@ val pComment: Parser<Comment> = orEither(
 ) * { it, pos -> Comment(it.asString(), pos) }
 
 class StrLit(val value: String, match: MatchPos) : Exp<VStr>, Token(match) {
-    override fun evaluate(env: Env): VStr = VStr(value)
+    override fun evaluate(context: Env): VStr = VStr(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
 class IntLit(val value: Int, match: MatchPos) : Exp<VWhole>, Token(match) {
-    override fun evaluate(env: Env): VWhole = VWhole(value)
+    override fun evaluate(context: Env): VWhole = VWhole(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
 class NatLit(val value: UInt, match: MatchPos) : Exp<VNat>, Token(match) {
-    override fun evaluate(env: Env): VNat = VNat(value)
+    override fun evaluate(context: Env): VNat = VNat(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
 class BoolLit(val value: Boolean, match: MatchPos) : Exp<VBool>, Token(match) {
-    override fun evaluate(env: Env): VBool = VBool(value)
+    override fun evaluate(context: Env): VBool = VBool(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
 class Variable(val id: String, match: MatchPos) : Exp<Value>, Token(match) {
-    override fun evaluate(env: Env): Value {
-        val param = env.get(id)
+    override fun evaluate(context: Env): Value {
+        val param = context.get(id)
         if (param is Left) {
             return param.value.value
         } else {
@@ -99,11 +99,12 @@ val litOrder: Array<Parser<Exp<*>>> = arrayOf(
     pVariable
 )
 
-typealias ExParser = Parser<Exp<*>>
+typealias ExParser = Parser<Exp<Value>>
 
+@Suppress("UNCHECKED_CAST")
 inline fun pAtom(): ExParser = {
     // Can't be directly assigned, or else the pExp reference ------v___v would be null
-    asum(*litOrder, middle(_char('('), pExp, _char(')')))()
+    asum(*litOrder, middle(_char('('), pExp, _char(')')))() as ParserResult<Exp<Value>>
 }
 
-val pExp: ExParser = OperatorTable().parser(pAtom())
+val pExp: Parser<Exp<Value>> = builtInOperatorTable.parser(pAtom())

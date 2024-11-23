@@ -1,10 +1,18 @@
 package com.erdodif.capsulate.lang.program.grammar.operator
 
+import com.erdodif.capsulate.lang.program.grammar.Exp
 import com.erdodif.capsulate.lang.program.grammar.VBool
 import com.erdodif.capsulate.lang.program.grammar.VNat
 import com.erdodif.capsulate.lang.program.grammar.VNum
 import com.erdodif.capsulate.lang.program.grammar.VWhole
+import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.type
+import com.erdodif.capsulate.lang.util.Association
+import com.erdodif.capsulate.lang.util.Calculation
+import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Fixation
+import com.erdodif.capsulate.lang.util.Operator
+import com.erdodif.capsulate.lang.util.OperatorTable
 import com.erdodif.capsulate.lang.util._char
 
 object Add : BinaryOperator(
@@ -222,3 +230,8 @@ object Factorial : UnaryOperator(
 )
 
 // FunctionCall TODO
+
+val builtInOperators = arrayListOf(Add, Sub, Sign, Mul, Div, And, Or, Not, Equal)
+
+@Suppress("UNCHECKED_CAST")
+val builtInOperatorTable: OperatorTable<Exp<Value>> = OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>)
