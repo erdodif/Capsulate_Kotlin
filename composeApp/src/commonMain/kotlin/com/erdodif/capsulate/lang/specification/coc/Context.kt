@@ -1,146 +1,148 @@
 package com.erdodif.capsulate.lang.specification.coc
 
-//
 // https://cs.ru.nl/~freek/courses/tt-2019/public/coq-manual-4.4.pdf
 // Left at Var typing rule
 
-abstract class Variable(open val name: String, override val type: Sort) : Sort
-data class Definition(override val name: String, val value: String, override val type: Sort) :
-    Variable(name, type) {
-    override fun toString(): String = "$name := $value : $type"
-}
-
-// TODO: Have {forall, lambda, app, const}
-
-data class Assumption(override val name: String, override val type: Sort) : Variable(name, type) {
-
-    override fun toString(): String = "$name : $type"
-}
-
-sealed interface Sort {
-    override fun equals(other: Any?): Boolean
-
-    val type: Sort
-
-    override fun toString(): String
-}
-
 /**
- * Type sets of which elements can not be extracted as a value
- */
-class Prop(val label: String) : Sort {
-    override fun equals(other: Any?): Boolean = other is Prop && other.label == label
-
-    /**
-     * Gets the type of Prop, which is (by definition) Type(1)
-     *
-     * This value ensures Ax-Prop
-     */
-    override val type: Sort
-        get() = Type(1)
-
-    override fun toString(): String = "Prop"
-}
-
-/**
- * Elements of this set can be extracted as values
- */
-class Set : Sort {
-    override fun equals(other: Any?): Boolean = other is Set
-
-    /**
-     * Gets the type of Set, which is (by definition) Type(1)
-     *
-     * This value ensures Ax-Set
-     */
-    override val type: Sort
-        get() = Type(1)
-
-    override fun toString(): String = "Set"
-}
-
-/**
- * Set to represent the infinite sort of sets
+ * A set of Terms that makes sure that type-inference rules are enforced during construction
  *
- * A Set[level] will always be a part of a Set on the next level
+ * A context can tell whether it's well formed or not
  */
-data class Type(val level: Int) : Sort {
-    override fun equals(other: Any?): Boolean = other is Type && other.level == level
-
-    override fun hashCode(): Int = level
-
-    /**
-     * Gets the type of Type(n), which is (by definition) Type(n+1)
-     *
-     * The infinite set of types is needed so Type:Type kinds of contradictions are not possible
-     *
-     * This value ensures Ax-Type
-     */
-    override val type: Sort
-        get() = Type(level + 1)
-
-    override fun toString(): String = "Type($level)"
-}
-
-abstract class Context(protected val declarations: MutableList<Variable>) {
-    operator fun get(index: Int): Variable = declarations[index]
-    abstract operator fun get(name: String): Variable?
-
+abstract class Context(protected val declarations: MutableList<Sort>) {
+    operator fun get(index: Int): Sort = declarations[index]
+    abstract operator fun get(name: String): Sort?
 
     abstract fun wellFormed(type: Sort): Boolean
     abstract fun wellFormed(): Boolean
-    abstract fun Sort.hasType(other: Sort): Boolean
-
-    fun define(name: String, value: String, type: String): Definition {
-        require(this[type] != null){
-            "Type definition not found here:\n$this"
-        }
-        return define(name, value, this[type]!!)
-    }
 
     /**
      * Adds the given definition [name] := [value] : [type]
      *
-     * This ensures W-Global/Local-Def
+     * This ensures W-Global/Local-Def as well as Var/Const
      */
-    fun define(name: String, value: String, type: Sort): Definition {
-        require(declarations.none { it.name == name }) {
+    fun define(name: String, value: String, type: String): Definition {
+        require(this[name] == null) {
             "The name '$name' is already within this context!\n$this"
         }
+        require(this[type] != null) {
+            "Type definition not found here:\n$this"
+        }
+        val tp = this[type]!!
         val source = this[value]
         require(source != null) {
             "Definition for value ($source) cannot be found here:\n$this"
         }
-        require(source.hasType(type)) {
-            "Type of ($source : ${source.type}) cannot be inferred as $type!\n$this"
+        require(source.hasType(tp)) {
+            "Type of ($source : ${source.type}) cannot be inferred as $tp!\n$this"
         }
-        val definition = Definition(name, value, type)
+        val definition = Definition(name, value, tp)
         declarations.add(definition)
         return definition
-    }
-
-    fun assume(name: String, type: String): Assumption {
-        require(this[type] != null){
-            "Type definition not found here:\n$this"
-        }
-        return assume(name, this[type]!!)
     }
 
     /**
      * Adds the given assumption [name] : [type]
      *
-     * This ensures W-Global/Local-Assum
+     * This ensures W-Global/Local-Assum as well as Var/Const
      */
-    fun assume(name: String, type: Sort): Assumption {
-        require(declarations.none { it.name == name }) {
+    fun assume(name: String, type: String): Assumption {
+        require(this[name] == null) {
             "The name '$name' is already within this context!\n$this"
         }
-        require(wellFormed(type) || type in this){
+        require(this[type] != null) {
+            "Type definition not found here:\n$this"
+        }
+        val tp = this[type]!!
+        require(wellFormed(tp) || tp in this) {
             "Given ($type) is not well formed within this context!\n$this"
         }
-        val assumption = Assumption(name, type)
+        val assumption = Assumption(name, tp)
         declarations.add(assumption)
         return assumption
+    }
+
+    /**
+     * Defines a Product type
+     *
+     * This ensures Prod-Prop, Prod-Set, Prod-Type
+     */
+    fun prod(label:String, type: String): Prod{
+        //TODO("This is Type inference territory E[Γ]⊢∀x:T, U:s  s∈{Prop,Set,Type}")
+        require(this[type] != null) {
+            "Type definition not found here:\n$this"
+        }
+        val tp = this[type]!!
+        require(this[label] == null){
+            "Type re-declared here:\n$this"
+        }
+        val prod = when(tp){
+            is Set -> SetProd(label)
+            is Type -> TypeProd(label, tp.level)
+            is Prop -> PropProd(label)
+            else -> throw IllegalArgumentException("Product cannot be made out of $tp, context:\n$this")
+        }
+        declarations.add(prod)
+        return prod
+    }
+
+    /**
+     * Adds a lambda abstraction with it's corresponding [Prod] type
+     *
+     * This ensures Lam
+     */
+    fun lam(name: String, type: String, term: String): Lam {
+        //TODO("This is Type inference territory E[Γ::(x:T)]⊢U:Type(i)")
+        require(this[name] == null) {
+            "Re-declared variable $name for lambda expression in:\n$this"
+        }
+        require(this[type] != null){
+            "Type for $name ($type) not found here:\n$this"
+        }
+        require(this[term] != null){
+            "Type $term not found here:\n$this"
+        }
+        require(this[term] is Prod){
+            "Type mismatch, $term should be Product type here:\n$this"
+        }
+        val prodType = this[term] as Prod
+        val tp = this[type]!!
+        val lam = Lam(name, tp, prodType)
+        declarations.add(lam)
+        return lam
+    }
+
+    /**
+     * Applies the given [value] to [lam]
+     *
+     * This ensures App
+     */
+    private fun app(lambda: String, value: String): App{
+        //TODO("This is rewrite territory E[Γ]⊢(t u):T{x/u}")
+        require(this[lambda] != null || this[lambda] !is Lam){
+            "Function $lambda not found here:\n$this"
+        }
+        require(this[value] != null || this[value] !is Variable){
+            "Variable $value not found here:\n$this"
+        }
+        val app = App(this[lambda] as Lam, this[value] as Variable)
+        declarations.add(app)
+        return app
+    }
+
+
+    /**
+     * Uses Let..in.. notation to make a temporal declaration in a [term] that does not appear in [Context]
+     *
+     * This ensures Let
+     */
+    private fun let(definition: Definition, term: Sort): Let{
+        //TODO("This is rewrite and Type inference territory E[Γ]⊢let x:=t:T in u:U{x/t}")
+        require(this[definition.name] == null){
+            "Re-declared ${this[definition.name]} here:\n$this"
+        }
+        val let = Let(definition, term)
+        declarations.add(let)
+        return let
     }
 
     /**
@@ -151,14 +153,22 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
         is Type -> true
         is Set -> true
         is Prop -> true
+        is App -> TODO()
+        is Lam -> TODO()
+        is Let -> TODO()
+        is Prod -> TODO()
+    }
+
+    fun Sort.hasType(other: Sort): Boolean {
+        TODO("This is Convertibility territory")
     }
 }
 
 /**
  * Context, which shall be well founded on it's own (cannot depend on other contexts)
  */
-class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMutableList()) {
-    override operator fun get(name: String): Variable? = declarations.find { it.name == name }
+class GlobalEnvironment(vararg declaration: Sort) : Context(declaration.toMutableList()) {
+    override operator fun get(name: String): Sort? = declarations.find {it is Variable && it.name == name}
 
     override fun wellFormed(type: Sort): Boolean {
         return type is Variable && this[type.name] != null || type is Type
@@ -186,10 +196,6 @@ class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMu
         sb.append(')')
         return sb.toString()
     }
-
-    override fun Sort.hasType(other: Sort): Boolean {
-        TODO("This is Convertibility territory")
-    }
 }
 
 /**
@@ -197,15 +203,15 @@ class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMu
  *
  * If a variable is not found locally, the "global" context will be queried
  */
-class LocalContext(private val context: GlobalEnvironment, vararg declaration: Variable) :
+class LocalContext(private val context: GlobalEnvironment, vararg declaration: Sort) :
     Context(declaration.toMutableList()) {
-    override operator fun get(name: String): Variable? = declarations.find { it.name == name } ?: context[name]
+    override operator fun get(name: String): Sort? =
+        declarations.find { it is Variable && it.name == name } ?: context[name]
 
     operator fun plus(other: LocalContext): LocalContext {
         require(declarations.none { it in other.declarations }) {
             "The two contexts share name on an element, which is unacceptable"
         }
-        // TODO: Consider renaming variables
         return LocalContext(context, *(declarations + other.declarations).toTypedArray())
     }
 
@@ -235,9 +241,5 @@ class LocalContext(private val context: GlobalEnvironment, vararg declaration: V
         sb.deleteRange(sb.length - 2, sb.length - 1)
         sb.append(']')
         return sb.toString()
-    }
-
-    override fun Sort.hasType(other: Sort): Boolean {
-        TODO("This is Convertibility territory")
     }
 }

@@ -67,7 +67,9 @@ Naive approach is a stack-based evaluation-queue
 
 [quick reminder](https://coq.inria.fr/doc/v8.9/refman/language/cic.html)
 
-Inference rules
+##### Inference rules
+
+> Variable might need to store it's value in a Sort, not a String
 
 [x] W-Empty
 [x] W-Local-Assum
@@ -77,11 +79,31 @@ Inference rules
 [x] Ax-Prop
 [x] Ax-Set
 [x] Ax-Type
-[ ] Var
-[ ] Const
+[x] Var
+[x] Const
 [ ] Prod-Prop
 [ ] Prod-Set
 [ ] Prod-Type
 [ ] Lam
 [ ] App
 [ ] Let
+
+For the constructors to work, type inference algorithm must be implemented, as well as the local context shall be temporarily enriched with definitions just to prove a point.
+
+Rewriting rules must be implemented for app and let
+
+##### Conversion rules
+
+[ ] β-reduction
+[ ] ι-reduction
+[ ] δ-reduction
+[ ] ζ-reduction
+[ ] η-expansion
+
+After all this, Convertibility as well as subtyping should be doable (since it is just a bunch of reduction rules applied after one another)
+
+> Once all of this is done, the inductive objects must be doable
+
+#### Well-formed inductive defs
+
+TBD
