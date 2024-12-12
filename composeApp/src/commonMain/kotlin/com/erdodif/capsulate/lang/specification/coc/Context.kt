@@ -1,21 +1,28 @@
 package com.erdodif.capsulate.lang.specification.coc
 
-import com.erdodif.capsulate.lang.specification.grammar.Var
-
 //
 // https://cs.ru.nl/~freek/courses/tt-2019/public/coq-manual-4.4.pdf
 // Left at Var typing rule
 
 abstract class Variable(open val name: String, override val type: Sort) : Sort
 data class Definition(override val name: String, val value: String, override val type: Sort) :
-    Variable(name, type)
+    Variable(name, type) {
+    override fun toString(): String = "$name := $value : $type"
+}
 
-data class Assumption(override val name: String, override val type: Sort) : Variable(name, type)
+// TODO: Have {forall, lambda, app, const}
 
-interface Sort {
+data class Assumption(override val name: String, override val type: Sort) : Variable(name, type) {
+
+    override fun toString(): String = "$name : $type"
+}
+
+sealed interface Sort {
     override fun equals(other: Any?): Boolean
 
-    val type:Sort
+    val type: Sort
+
+    override fun toString(): String
 }
 
 /**
@@ -24,28 +31,32 @@ interface Sort {
 class Prop(val label: String) : Sort {
     override fun equals(other: Any?): Boolean = other is Prop && other.label == label
 
+    /**
+     * Gets the type of Prop, which is (by definition) Type(1)
+     *
+     * This value ensures Ax-Prop
+     */
     override val type: Sort
         get() = Type(1)
-}
 
-/**
- * Proposition for which the value is irrelevant and should be ignored
- */
-class SProp(val label: String) : Sort {
-    override fun equals(other: Any?): Boolean = other is SProp && other.label == label
-
-    override val type: Sort
-        get() = Type(1)
+    override fun toString(): String = "Prop"
 }
 
 /**
  * Elements of this set can be extracted as values
  */
-class Set: Sort {
+class Set : Sort {
     override fun equals(other: Any?): Boolean = other is Set
 
-    override val type:Sort
+    /**
+     * Gets the type of Set, which is (by definition) Type(1)
+     *
+     * This value ensures Ax-Set
+     */
+    override val type: Sort
         get() = Type(1)
+
+    override fun toString(): String = "Set"
 }
 
 /**
@@ -58,117 +69,137 @@ data class Type(val level: Int) : Sort {
 
     override fun hashCode(): Int = level
 
-    override val type:Sort
+    /**
+     * Gets the type of Type(n), which is (by definition) Type(n+1)
+     *
+     * The infinite set of types is needed so Type:Type kinds of contradictions are not possible
+     *
+     * This value ensures Ax-Type
+     */
+    override val type: Sort
         get() = Type(level + 1)
+
+    override fun toString(): String = "Type($level)"
 }
 
-interface Context{
-    operator fun get(index: Int): Variable
-    operator fun get(name:String): Variable?
-    fun define(name: String, value: String, type: Sort): Definition
-    fun assume(name: String, type: Sort) : Assumption
-    fun wellFormed(type: Sort) : Boolean
-    fun wellFormed(): Boolean
-}
+abstract class Context(protected val declarations: MutableList<Variable>) {
+    operator fun get(index: Int): Variable = declarations[index]
+    abstract operator fun get(name: String): Variable?
 
-class GlobalEnvironment(vararg declaration: Variable): Context{
-    private val declarations: MutableList<Variable> = declaration.toMutableList()
 
-    override operator fun get(index: Int): Variable = declarations[index]
-    override operator fun get(name:String): Variable? = declarations.find{it.name == name}
+    abstract fun wellFormed(type: Sort): Boolean
+    abstract fun wellFormed(): Boolean
+    abstract fun Sort.hasType(other: Sort): Boolean
+
+    fun define(name: String, value: String, type: String): Definition {
+        require(this[type] != null){
+            "Type definition not found here:\n$this"
+        }
+        return define(name, value, this[type]!!)
+    }
 
     /**
      * Adds the given definition [name] := [value] : [type]
      *
-     * This ensures W-Global-Def
+     * This ensures W-Global/Local-Def
      */
-    override fun define(name: String, value: String, type: Sort): Definition {
+    fun define(name: String, value: String, type: Sort): Definition {
         require(declarations.none { it.name == name }) {
-            "The name '$name' is already within the this local context!"
+            "The name '$name' is already within this context!\n$this"
         }
-        val source = this[name]
+        val source = this[value]
         require(source != null) {
-            "The name '$name' is already within the this local context!"
+            "Definition for value ($source) cannot be found here:\n$this"
         }
-        require(source.type == type){
-            "The value given has type mismatch!"
+        require(source.hasType(type)) {
+            "Type of ($source : ${source.type}) cannot be inferred as $type!\n$this"
         }
         val definition = Definition(name, value, type)
         declarations.add(definition)
         return definition
     }
 
+    fun assume(name: String, type: String): Assumption {
+        require(this[type] != null){
+            "Type definition not found here:\n$this"
+        }
+        return assume(name, this[type]!!)
+    }
+
     /**
      * Adds the given assumption [name] : [type]
      *
-     * This ensures W-Global-Assum
+     * This ensures W-Global/Local-Assum
      */
-    override fun assume(name: String, type: Sort) : Assumption {
+    fun assume(name: String, type: Sort): Assumption {
         require(declarations.none { it.name == name }) {
-            "The name '$name' is already within the this local context!"
+            "The name '$name' is already within this context!\n$this"
+        }
+        require(wellFormed(type) || type in this){
+            "Given ($type) is not well formed within this context!\n$this"
         }
         val assumption = Assumption(name, type)
         declarations.add(assumption)
         return assumption
     }
+
+    /**
+     * Determines whether the given [sort] is in this context
+     */
+    operator fun contains(sort: Sort): Boolean = when (sort) {
+        is Variable -> get(sort.name) != null
+        is Type -> true
+        is Set -> true
+        is Prop -> true
+    }
+}
+
+/**
+ * Context, which shall be well founded on it's own (cannot depend on other contexts)
+ */
+class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMutableList()) {
+    override operator fun get(name: String): Variable? = declarations.find { it.name == name }
 
     override fun wellFormed(type: Sort): Boolean {
         return type is Variable && this[type.name] != null || type is Type
     }
 
+    /**
+     * Ensures that the Global environment is Well Formed
+     *
+     * For that, one must ensure that all(!) declarations are well formed
+     *
+     * By definition, an empty context is Well Formed
+     *
+     * This function ensures W-Empty
+     */
     override fun wellFormed(): Boolean = declarations.all(::wellFormed)
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        sb.append('(')
+        for (def in declarations) {
+            sb.append(def.toString())
+            sb.append(", ")
+        }
+        sb.deleteRange(sb.length - 2, sb.length - 1)
+        sb.append(')')
+        return sb.toString()
+    }
+
+    override fun Sort.hasType(other: Sort): Boolean {
+        TODO("This is Convertibility territory")
+    }
 }
 
 /**
- * A local context within the global environment
+ * A context that depends on another(global) context hiding constants on re-declaration
+ *
+ * If a variable is not found locally, the "global" context will be queried
  */
-class LocalContext(private val context: GlobalEnvironment, vararg declaration: Variable): Context {
-    private val declarations: MutableList<Variable> = declaration.toMutableList()
-    override operator fun get(index: Int): Variable = declarations[index]
-    override operator fun get(name:String): Variable? = declarations.find{it.name == name}
-
-    /**
-     * Adds the given definition [name] := [value] : [type]
-     *
-     * This ensures W-Local-Def
-     */
-    override fun define(name: String, value: String, type: Sort) : Definition {
-        require(declarations.none { it.name == name }) {
-            "The name '$name' is already within the this local context!"
-        }
-        val source = this[name]
-        require(source == null) {
-            "The name '$name' is already within the this local context!"
-        }
-        val definition = Definition(name, value, type)
-        declarations.add(definition)
-        return definition
-    }
-
-    /**
-     * Adds the given assumption [name] : [type]
-     *
-     * This ensures W-Local-Assum
-     */
-    override fun assume(name: String, type: Sort) : Assumption {
-        require(declarations.none { it.name == name }) {
-            "The name '$name' is already within the this local context!"
-        }
-        val assumption = Assumption(name, type)
-        declarations.add(assumption)
-        return assumption
-    }
-
-    /**
-     *
-     */
-    fun typeOf(name: String): Sort {
-        val def = declarations.find { it.name == name }
-        require(def != null) {
-            "Variable with name '$name' not found"
-        }
-        return def.type
-    }
+class LocalContext(private val context: GlobalEnvironment, vararg declaration: Variable) :
+    Context(declaration.toMutableList()) {
+    override operator fun get(name: String): Variable? = declarations.find { it.name == name } ?: context[name]
 
     operator fun plus(other: LocalContext): LocalContext {
         require(declarations.none { it in other.declarations }) {
@@ -179,8 +210,34 @@ class LocalContext(private val context: GlobalEnvironment, vararg declaration: V
     }
 
     override fun wellFormed(type: Sort): Boolean {
-        return (type is Variable && (this[type.name] != null || context[type.name] != null) ) || type is Type
+        return (type is Variable && (this[type.name] != null || context[type.name] != null)) || type is Type
     }
 
+    /**
+     * Ensures that the current Local context is Well Formed
+     *
+     * For that, one must ensure that both the global environment as well as all(!) declarations are well formed
+     *
+     * By definition, an empty context is Well Formed
+     *
+     * This function ensures W-Empty
+     */
     override fun wellFormed(): Boolean = declarations.all(::wellFormed) && context.wellFormed()
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        sb.append(context.toString())
+        sb.append('[')
+        for (def in declarations) {
+            sb.append(def.toString())
+            sb.append(", ")
+        }
+        sb.deleteRange(sb.length - 2, sb.length - 1)
+        sb.append(']')
+        return sb.toString()
+    }
+
+    override fun Sort.hasType(other: Sort): Boolean {
+        TODO("This is Convertibility territory")
+    }
 }

@@ -60,3 +60,28 @@ Naive approach is a stack-based evaluation-queue
 - Step-by-step options
   - evaluate expressions in the current context
   - automatic and manual branch-selection for the parallel scheduler
+
+### CIC Milestones
+
+#### COC Milestones
+
+[quick reminder](https://coq.inria.fr/doc/v8.9/refman/language/cic.html)
+
+Inference rules
+
+[x] W-Empty
+[x] W-Local-Assum
+[x] W-Local-Def
+[x] W-Global-Assum
+[x] W-Global-Def
+[x] Ax-Prop
+[x] Ax-Set
+[x] Ax-Type
+[ ] Var
+[ ] Const
+[ ] Prod-Prop
+[ ] Prod-Set
+[ ] Prod-Type
+[ ] Lam
+[ ] App
+[ ] Let

@@ -8,7 +8,6 @@ import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.specification.coc.Assumption
 import com.erdodif.capsulate.lang.specification.coc.Context
 import com.erdodif.capsulate.lang.specification.coc.Definition
-import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.Pass
@@ -32,20 +31,15 @@ val sSort: Parser<CocType> = right(_keyword("Set"), middle(_char('('), _natural,
 
 fun assumption(context: Context): Parser<Assumption> = (left(sVar, _char(':')) + sType)[{
     val (variable, type) = it.value
-    when {
-        context[variable.name] != null -> {
-            fail("Cannot redeclare variable '${variable.name}' in context($context)!")
-        }
-
-        context.wellFormed(/*TODO: type*/) ->
-            Pass(
-                //TODO, Check if well formed and create type out of it
-                context.assume(variable.name, CocType(0)),
-                this,
-                MatchPos(variable.match.start, it.match.end)
-            )
-
-        else -> Fail("Type does not appear to be well formed!", it.state)
+    try {
+        Pass(
+            context.assume(variable.name, type.name),
+            this,
+            MatchPos(variable.match.start, type.match.end)
+        )
+    }
+    catch (e : Exception){
+        fail(e.message ?: "Error while assuming $variable")
     }
 }]
 
@@ -53,22 +47,15 @@ fun definition(context: Context): Parser<Definition> =
     (left(sVar, _keyword(":=")) + left(_nonKeyword, _char(':')) + sType)[{
         val (def, type) = it.value
         val (variable, value) = def
-        when {
-            context[type.name] == null -> {
-                fail("Missing type ${type.name} in context($context)")
-            }
-
-            context[variable.name] != null -> {
-                fail("Cannot redeclare variable '${variable.name}' in context($context)!")
-            }
-
-            else -> {
-                Pass(
-                    context.define(variable.name, value, context[type.name]!!),
-                    this,
-                    MatchPos(variable.match.start, type.match.end)
-                )
-            }
+        try {
+            Pass(
+                context.define(variable.name, value, type.name),
+                this,
+                MatchPos(variable.match.start, type.match.end)
+            )
+        }
+        catch (e : Exception){
+            fail(e.message ?: "Error while defining $variable")
         }
     }]
 

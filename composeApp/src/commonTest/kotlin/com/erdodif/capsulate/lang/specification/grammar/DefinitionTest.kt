@@ -11,12 +11,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class DefinitionTest {
-    var env: Context = GlobalEnvironment(Assumption("Nat", Type(0)))
+    var env: Context = GlobalEnvironment(Assumption("Nat", Type(0)), Assumption("0", Type(0)))
     val definition = definition(env)
 
     @BeforeTest
     fun before(){
-        env = GlobalEnvironment(Assumption("Nat", Type(0)))
+        env = GlobalEnvironment(Assumption("Nat", Type(0)), Assumption("0", Type(0)))
     }
 
     @Test

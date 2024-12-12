@@ -8,10 +8,10 @@ import com.erdodif.capsulate.withValue
 import kotlin.test.Test
 
 class AssumptionTest {
-    val assumption = assumption(GlobalEnvironment(Assumption("Nat", Type(1))))
+    val assumption = assumption(GlobalEnvironment(Assumption("Nat", Type(0))))
 
     @Test
     fun `assumption passes`(){
-        assumption pass "a : Nat" withValue Assumption("a", Type(0))
+        assumption pass "a : Nat" withValue Assumption("a", Assumption("Nat", Type(0)))
     }
 }

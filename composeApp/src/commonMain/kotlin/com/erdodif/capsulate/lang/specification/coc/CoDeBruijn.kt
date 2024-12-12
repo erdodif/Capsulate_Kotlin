@@ -31,7 +31,7 @@ data class Cover(private val _left: Scope, private val _right: Scope, private va
         get() = copy(_left + _global[0], _right + _global[0], _global)
 }
 
-sealed class Term(val scope: Scope) {
+/*sealed class Term(val scope: Scope) {
     data class Var(val name: Name) : Term(listOf(name))
     data class Lam(val name: Name, val expression: Term) : Term(expression.scope + name)
     data class Lam_(val name: Name, val expression: Term) : Term(expression.scope) // Parameter not used
@@ -41,3 +41,4 @@ sealed class Term(val scope: Scope) {
 }
 
 val ex: Term = Term.Lam("f", Term.Lam("x", Term.App(done.left.right, Term.Var("f"), Term.Var("x"))))
+*/
