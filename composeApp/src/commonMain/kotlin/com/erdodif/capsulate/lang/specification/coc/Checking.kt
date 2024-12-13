@@ -11,7 +11,7 @@ sealed interface Sort {
 /**
  * Type sets of which elements can not be extracted as a value
  */
-class Prop : Sort {
+object Prop : Sort {
     override fun equals(other: Any?): Boolean = other is Prop
 
     /**
@@ -29,7 +29,7 @@ class Prop : Sort {
 /**
  * Elements of this set can be extracted as values
  */
-class Set : Sort {
+object Set : Sort {
     override fun equals(other: Any?): Boolean = other is Set
 
     /**
@@ -73,15 +73,19 @@ data class Type(val level: Int) : Sort {
  *
  * See it as Var in local, or Const in global context
  */
-abstract class Variable(open val name: String, override val type: Sort) : Sort
+sealed class Variable(open val name: String, override val type: Sort) : Sort
 
 /**
  * Variable with value and type
  */
-data class Definition(override val name: String, val value: String, override val type: Sort) :
+data class Definition(override val name: String, val value: Sort, override val type: Sort) :
     Variable(name, type) {
-    override fun toString(): String = "$name := $value : $type"
-    override fun rewrite(label: String, value: Sort): Sort = TODO("Finish Rewrite!")
+    override fun toString() = "$name := $value : $type"
+    override fun rewrite(label: String, value: Sort): Sort = if (label == label) {
+        value
+    } else {
+        Definition(name, this.value.rewrite(label, value), type)
+    }
 }
 
 /**
@@ -90,64 +94,82 @@ data class Definition(override val name: String, val value: String, override val
 data class Assumption(override val name: String, override val type: Sort) : Variable(name, type) {
 
     override fun toString(): String = "$name : $type"
-    override fun rewrite(label: String, value: Sort): Sort =
-        (if (label == label) value else Assumption(name, value.rewrite(label, value)))
+    override fun rewrite(label: String, value: Sort): Sort = if (label == label) value else this
 }
 
 /**
  * Product type (forall)
  */
-abstract class Prod(open val label: String) : Sort {
-    override fun rewrite(label: String, value: Sort): Sort = TODO("Finish Rewrite!")
-}
+abstract class Prod(open val variable: Assumption, open val term: Sort) : Sort
 
-data class PropProd(override val label: String) : Prod(label) {
+data class PropProd(override val variable: Assumption, override val term: Sort) :
+    Prod(variable, term) {
     override val type: Sort
-        get() = Prop()
+        get() = Prop
+
+    override fun rewrite(label: String, value: Sort): Sort =
+        PropProd(variable, term.rewrite(label, value))
 }
 
-data class SetProd(override val label: String) : Prod(label) {
+data class SetProd(override val variable: Assumption, override val term: Sort) :
+    Prod(variable, term) {
     override val type: Sort
-        get() = Set()
+        get() = Set
+
+    override fun rewrite(label: String, value: Sort): Sort =
+        SetProd(variable, term.rewrite(label, value))
 }
 
-data class TypeProd(override val label: String, val level: Int) : Prod(label) {
+data class TypeProd(override val variable: Assumption, override val term: Sort, val level: Int) :
+    Prod(variable, term) {
     override val type: Sort
         get() = Type(level)
+
+    override fun rewrite(label: String, value: Sort): Sort =
+        TypeProd(variable, term.rewrite(label, value), level)
 }
 
-// TODO Term for Lambda expression
 /**
  * Lambda abstractions as in lambda calculus
  */
-data class Lam(val label: String, val term: Sort, val productType: Prod) : Sort {
+data class Lam(val variable: Assumption, val term: Sort, val productType: Prod) : Sort {
     override val type: Sort
         get() = productType
 
-    override fun rewrite(label: String, value: Sort): Sort = TODO("Finish Rewrite!")
+    /**
+     * Breaks the rewriting chain and returns itself iff the variable subject to rewrite is bound
+     */
+    override fun rewrite(label: String, value: Sort): Sort =
+        if (label == variable.name) this else term.rewrite(label, value)
 }
 
 /**
  * Application of [x] on [f]
+ *
+ * Calling [type] does the rewriting, hence App holds
+ * `E[Γ] ⊢ (t u) : T{x/u}`
  */
 data class App(val f: Lam, val x: Variable) : Sort {
     override val type: Sort
-        get() = TODO("This is Rewrite territory! E[Γ]⊢(t u):T{x/u}")
+        get() = f.rewrite(f.variable.name, x)
 
-    override fun rewrite(label: String, value: Sort): Sort = TODO("Finish Rewrite!")
+    override fun rewrite(label: String, value: Sort): Sort =
+        App(f, x.rewrite(label, value) as Variable)
 }
 
-// TODO Term for let .. in .. notation
 /**
  * Let .. in .. notation
  *
  * Will be well formed if with the given [definition], [term] can be rewritten at the occurrences in [definition]
  */
-data class Let(val definition: Definition, val term: Sort) : Sort {
+data class Let(val definition: Definition, val term: Sort, override val type: Sort) : Sort {
 
-    override val type: Sort
-        get() = term.rewrite(definition.name, TODO("Until ${definition.value} is a Sort..."))
-
-    override fun rewrite(label: String, value: Sort): Sort = TODO("Finish Rewrite!")
+    override fun rewrite(label: String, value: Sort): Sort =
+        if (definition.name == label) Let(
+            definition.rewrite(label, value) as Definition,
+            term.rewrite(label, value),
+            type
+        )
+        else
+            Let(definition, term.rewrite(label, value), type)
 }
-

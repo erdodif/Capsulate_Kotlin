@@ -33,7 +33,7 @@ fun assumption(context: Context): Parser<Assumption> = (left(sVar, _char(':')) +
     val (variable, type) = it.value
     try {
         Pass(
-            context.assume(variable.name, type.name),
+            context.assume(variable.name, context[type.name]!!),
             this,
             MatchPos(variable.match.start, type.match.end)
         )
@@ -49,7 +49,7 @@ fun definition(context: Context): Parser<Definition> =
         val (variable, value) = def
         try {
             Pass(
-                context.define(variable.name, value, type.name),
+                context.define(variable.name, context[value]!!, context[type.name]!!),
                 this,
                 MatchPos(variable.match.start, type.match.end)
             )
