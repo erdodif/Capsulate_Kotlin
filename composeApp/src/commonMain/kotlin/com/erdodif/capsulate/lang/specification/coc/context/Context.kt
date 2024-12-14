@@ -1,7 +1,20 @@
-package com.erdodif.capsulate.lang.specification.coc
+package com.erdodif.capsulate.lang.specification.coc.context
 
-// https://cs.ru.nl/~freek/courses/tt-2019/public/coq-manual-4.4.pdf
-// Left at Var typing rule
+import com.erdodif.capsulate.lang.specification.coc.App
+import com.erdodif.capsulate.lang.specification.coc.Assumption
+import com.erdodif.capsulate.lang.specification.coc.Definition
+import com.erdodif.capsulate.lang.specification.coc.Lam
+import com.erdodif.capsulate.lang.specification.coc.Let
+import com.erdodif.capsulate.lang.specification.coc.Prod
+import com.erdodif.capsulate.lang.specification.coc.Prop
+import com.erdodif.capsulate.lang.specification.coc.PropProd
+import com.erdodif.capsulate.lang.specification.coc.Set
+import com.erdodif.capsulate.lang.specification.coc.SetProd
+import com.erdodif.capsulate.lang.specification.coc.Sort
+import com.erdodif.capsulate.lang.specification.coc.Type
+import com.erdodif.capsulate.lang.specification.coc.TypeProd
+import com.erdodif.capsulate.lang.specification.coc.Variable
+import com.erdodif.capsulate.lang.specification.coc.norm
 
 /**
  * A set of Terms that makes sure that type-inference rules are enforced during construction
@@ -18,6 +31,9 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
     abstract fun wellFormed(type: Sort): Boolean
     abstract fun wellFormed(): Boolean
     open fun add(variable: Variable) {
+        require(declarations.none{variable.name == it.name}){
+            "Cannot enrich the context with ${variable}, conflicting in context:\n$this"
+        }
         declarations.add(variable)
     }
 
@@ -27,8 +43,11 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
      * This ensures W-Global/Local-Def as well as Var/Const
      */
     fun define(name: String, value: Sort, type: Sort): Definition {
-        require(this[name] == null) {
-            "The name '$name' is already within this context!\n$this"
+        require(declarations.none{ it.name == name}) {
+            "Cannot enrich the context with ${name}, conflicting ${
+                if (this[name] is Assumption) "assumption"
+                else "definition"
+            } in context:\n$this"
         }
         require(value.hasType(type)) {
             "Type of ($value : ${value.type}) cannot be inferred as $type!\n$this"
@@ -42,7 +61,7 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
      * This ensures W-Global/Local-Assum as well as Var/Const
      */
     fun assume(name: String, type: Sort): Assumption {
-        require(this[name] == null) {
+        require(declarations.none{ it.name == name}) {
             "Cannot enrich the context with ${name}, conflicting ${
                 if (this[name] is Assumption) "assumption"
                 else "definition"
@@ -226,109 +245,4 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
         require(withVar(definition){term.hasType(type)})
         return Let(definition, term, type)
     }
-}
-
-/**
- * Context, which shall be well founded on it's own (cannot depend on other contexts)
- */
-class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMutableList()) {
-    override operator fun get(name: String): Sort? = declarations.find { it.name == name }
-
-    override fun wellFormed(type: Sort): Boolean {
-        return type is Variable && this[type.name] != null || type is Type
-    }
-
-    /**
-     * Ensures that the Global environment is Well Formed
-     *
-     * For that, one must ensure that all(!) declarations are well formed
-     *
-     * By definition, an empty context is Well Formed
-     *
-     * This function ensures W-Empty
-     */
-    override fun wellFormed(): Boolean = declarations.all(::wellFormed)
-
-    override fun toString(): String {
-        val sb = StringBuilder()
-        sb.append('(')
-        for (def in declarations) {
-            sb.append(def.toString())
-            sb.append(", ")
-        }
-        sb.deleteRange(sb.length - 2, sb.length - 1)
-        sb.append(')')
-        return sb.toString()
-    }
-
-    /**
-     * `E[Γ] ⊢ c:T`
-     */
-    fun Const(c: String, t: Sort): Boolean = this[c] != null
-            && this[c]!!.type == t
-
-    override fun has(label: String, type: Sort): Boolean = Const(label, type)
-    override fun fresh(label: String): Boolean = declarations.none { it.name == label }
-    override val usedLabels: List<String>
-        get() = declarations.map { it.name }.toList()
-
-}
-
-/**
- * A context that depends on another(global) context hiding constants on re-declaration
- *
- * If a variable is not found locally, the "global" context will be queried
- */
-class LocalContext(private val context: GlobalEnvironment, vararg declaration: Variable) :
-    Context(declaration.toMutableList()) {
-    override operator fun get(name: String): Sort? =
-        declarations.find { it.name == name } ?: context[name]
-
-    operator fun plus(other: LocalContext): LocalContext {
-        require(declarations.none { it in other.declarations }) {
-            "The two contexts share name on an element, which is unacceptable"
-        }
-        return LocalContext(context, *(declarations + other.declarations).toTypedArray())
-    }
-
-    override fun wellFormed(type: Sort): Boolean {
-        return (type is Variable && (this[type.name] != null || context[type.name] != null)) || type is Type
-    }
-
-    /**
-     * Ensures that the current Local context is Well Formed
-     *
-     * For that, one must ensure that both the global environment as well as all(!) declarations are well formed
-     *
-     * By definition, an empty context is Well Formed
-     *
-     * This function ensures W-Empty
-     */
-    override fun wellFormed(): Boolean = declarations.all(::wellFormed) && context.wellFormed()
-
-    override fun toString(): String {
-        val sb = StringBuilder()
-        sb.append(context.toString())
-        sb.append('[')
-        for (def in declarations) {
-            sb.append(def.toString())
-            sb.append(", ")
-        }
-        sb.deleteRange(sb.length - 2, sb.length - 1)
-        sb.append(']')
-        return sb.toString()
-    }
-
-    /**
-     *  `E[Γ] ⊢ x:T`
-     */
-    fun Var(x: String, t: Sort): Boolean = declarations.firstOrNull { it.name == x }?.type == t
-
-    override fun has(label: String, type: Sort): Boolean =
-        Var(label, type) || context.Const(label, type)
-
-    override fun fresh(label: String): Boolean =
-        declarations.none { it.name == label } && context.fresh(label)
-    override val usedLabels: List<String>
-        get() = declarations.map { it.name }.union(context.usedLabels).toList()
 }

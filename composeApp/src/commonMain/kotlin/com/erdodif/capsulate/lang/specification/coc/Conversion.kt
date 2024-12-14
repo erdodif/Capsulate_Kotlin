@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.lang.specification.coc
 
+import com.erdodif.capsulate.lang.specification.coc.context.Context
+
 /**
  * Replaces a function application with it's value
  *

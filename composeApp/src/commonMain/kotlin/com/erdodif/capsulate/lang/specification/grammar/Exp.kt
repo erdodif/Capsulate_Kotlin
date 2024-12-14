@@ -6,7 +6,7 @@ import com.erdodif.capsulate.lang.program.grammar.middle
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.specification.coc.Assumption
-import com.erdodif.capsulate.lang.specification.coc.Context
+import com.erdodif.capsulate.lang.specification.coc.context.Context
 import com.erdodif.capsulate.lang.specification.coc.Definition
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
@@ -31,6 +31,7 @@ val sSort: Parser<CocType> = right(_keyword("Set"), middle(_char('('), _natural,
 
 fun assumption(context: Context): Parser<Assumption> = (left(sVar, _char(':')) + sType)[{
     val (variable, type) = it.value
+    println(it)
     try {
         Pass(
             context.assume(variable.name, context[type.name]!!),
