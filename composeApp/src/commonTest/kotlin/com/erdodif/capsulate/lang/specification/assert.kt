@@ -12,9 +12,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-data class AssertContext(val contextGen: () -> Context) {
-    val context: Context
-        get() = contextGen()
+data class AssertContext(val context :Context) {
 
     private val Context.print: String
         get() = if (context is LocalContext) "local context:\n$context" else "global environment:\n$context"
@@ -65,6 +63,8 @@ data class AssertContext(val contextGen: () -> Context) {
         )
         return this
     }
+
+
 }
 
 /**
@@ -72,6 +72,6 @@ data class AssertContext(val contextGen: () -> Context) {
  *
  * The result of [block] is returned in the end
  */
-fun <T> assertWithContext(contextGen: () -> Context, block: AssertContext.() -> T) {
-    AssertContext(contextGen).block()
+fun <T> assertWithContext(context: Context, block: AssertContext.() -> T) {
+    AssertContext(context).block()
 }

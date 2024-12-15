@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.lang.specification.coc.context
 
+import com.erdodif.capsulate.lang.specification.coc.Prop
+import com.erdodif.capsulate.lang.specification.coc.Set
 import com.erdodif.capsulate.lang.specification.coc.Sort
 import com.erdodif.capsulate.lang.specification.coc.Type
 import com.erdodif.capsulate.lang.specification.coc.Variable
@@ -22,7 +24,7 @@ class LocalContext(private val context: GlobalEnvironment, vararg declaration: V
     }
 
     override fun wellFormed(type: Sort): Boolean {
-        return (type is Variable && (this[type.name] != null || context[type.name] != null)) || type is Type
+        return (type is Variable && (this[type.name] != null || context[type.name] != null)) || type is Type || type == Set || type == Prop
     }
 
     /**

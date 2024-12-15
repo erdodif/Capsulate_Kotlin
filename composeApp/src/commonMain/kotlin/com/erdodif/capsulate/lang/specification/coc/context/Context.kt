@@ -85,7 +85,7 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
      * `S ≡ {Prop, Set, Type(i) | i ∈ N}`
      */
     private fun Sort.typeInS(): Boolean =
-        (type is Type && (type as Type).level != 0) || type.typeInS()
+        this == Prop || this == Set || (this is Type && this.level > 0)
 
     /**
      * `E[Γ] ⊢ ∀x:T, U:Prop`

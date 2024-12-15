@@ -77,6 +77,9 @@ kotlin {
         iosMain.dependencies {
 // implementation(libs.kotlin.test.native)
         }
+        commonTest.dependencies {
+            implementation(kotlin("reflect"))
+        }
         androidTarget {
             @OptIn(ExperimentalKotlinGradlePluginApi::class)
             compilerOptions.freeCompilerArgs.addAll(

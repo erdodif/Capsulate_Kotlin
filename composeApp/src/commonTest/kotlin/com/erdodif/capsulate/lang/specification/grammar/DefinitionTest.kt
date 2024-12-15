@@ -1,10 +1,11 @@
 package com.erdodif.capsulate.lang.specification.grammar
 
+import com.erdodif.capsulate.lang.specification.assertWithContext
 import com.erdodif.capsulate.lang.specification.coc.Assumption
 import com.erdodif.capsulate.lang.specification.coc.Sort
+import com.erdodif.capsulate.lang.specification.coc.Type
 import com.erdodif.capsulate.lang.specification.coc.context.Context
 import com.erdodif.capsulate.lang.specification.coc.context.GlobalEnvironment
-import com.erdodif.capsulate.lang.specification.coc.Type
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.pass
 import kotlin.test.BeforeTest
@@ -18,19 +19,14 @@ class DefinitionTest {
     }
 
     @BeforeTest
-    fun setup(){
-        context = GlobalEnvironment(Assumption("Nat", Type(0)))
-        context.add(context.assume("0", context["Nat"]!!))
+    fun setup() {
+        context = GlobalEnvironment(Assumption("Nat", Type(1)), Assumption("0",Assumption("Nat", Type(1)) ))
     }
 
 
     @Test
-    fun `definition passes`() {
-        definition pass "a := 0 : Nat"
-        definition pass "b := a : Nat"
-        assertEquals(context["a"]!!.type, Assumption("Nat",Type(0)))
-        //assertEquals((env["a"] as Definition).value, )
-        assertEquals(context["b"]!!.type, Assumption("Nat",Type(0)))
-        //assertEquals((env["b"] as Definition).value, "a")
+    fun `definition passes`() = assertWithContext(context) {
+        definition pass "a := 0 : Nat" withTypeLabel "Nat"
+        definition pass "b := a : Nat" withTypeLabel "Nat"
     }
 }
