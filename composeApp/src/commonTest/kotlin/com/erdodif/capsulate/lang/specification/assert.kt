@@ -56,7 +56,7 @@ data class AssertContext(val context :Context) {
         )
         val variable = (context[(this.value as Variable).name] as Variable)
         assertEquals(
-            context[other], variable.type,
+            context[other] as Sort, variable.type,
             "${
                 if (variable is Assumption) "Assumption" else "Definition"
             } ($variable) does not match on type with ${context[other]} in ${context.print}"

@@ -15,6 +15,7 @@ import com.erdodif.capsulate.lang.specification.coc.Type
 import com.erdodif.capsulate.lang.specification.coc.TypeProd
 import com.erdodif.capsulate.lang.specification.coc.Variable
 import com.erdodif.capsulate.lang.specification.coc.norm
+import com.erdodif.capsulate.lang.specification.grammar.Var
 
 /**
  * A set of Terms that makes sure that type-inference rules are enforced during construction
@@ -23,7 +24,7 @@ import com.erdodif.capsulate.lang.specification.coc.norm
  */
 abstract class Context(protected val declarations: MutableList<Variable>) {
     operator fun get(index: Int): Variable = declarations[index]
-    abstract operator fun get(name: String): Sort?
+    abstract operator fun get(name: String): Variable?
     abstract fun has(label: String, type: Sort): Boolean
     abstract fun fresh(label: String): Boolean
     abstract val usedLabels: List<String>
@@ -132,7 +133,7 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
         }
         val lam = object : Context(mutableListOf(variable)) {
             val hidden = this@Context
-            override fun get(name: String): Sort? =
+            override fun get(name: String): Variable? =
                 if (name == variable.name) variable else hidden[name]
 
             override fun has(label: String, type: Sort): Boolean =
@@ -168,31 +169,30 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
      *
      * This ensures Prod-Prop, Prod-Set, Prod-Type
      */
-    fun prod(label: String, type: String, term: Sort): Prod {
-        val tp = this[type]!!
+    fun prod(label: String, type: Sort, term: Sort): Prod {
         require(this[label] == null) {
             "Type re-declared here:\n$this"
         }
-        return when (term.type) {
+        return when (term) {
             is Set -> {
-                require(ProdSet(label,tp, term)){
+                require(ProdSet(label,type, term)){
                     "ProdSet rule violated, term ($term) cannot be inferred as Set in:\n$this"
                 }
-                SetProd(Assumption(label, tp), term)
+                SetProd(Assumption(label, type), term)
             }
             is Type -> {
-                require(ProdType(label,tp, term, ((term.type as Type).level))){
+                require(ProdType(label,type, term, ((term.type as Type).level))){
                     "ProdType rule violated, term ($term) cannot be inferred as ${term.type} in:\n$this"
                 }
-                TypeProd(Assumption(label, tp), term, (term as Type).level)
+                TypeProd(Assumption(label, type), term, (term as Type).level)
             }
             is Prop -> {
-                require(ProdProp(label,tp, term)){
+                require(ProdProp(label,type, term)){
                     "ProdSProp rule violated, term ($term) cannot be inferred as Prop in:\n$this"
                 }
-                PropProd(Assumption(label, tp), term)
+                PropProd(Assumption(label, type), term)
             }
-            else -> throw IllegalArgumentException("Product cannot be made out of $tp, context:\n$this")
+            else -> throw IllegalArgumentException("Product cannot be made out of $type, context:\n$this")
         }
     }
 
@@ -222,14 +222,14 @@ abstract class Context(protected val declarations: MutableList<Variable>) {
     /**
      * Applies the given [value] to [lam]
      */
-    fun app(lambda: String, value: String): App {
-        require(this[lambda] != null || this[lambda] !is Lam) {
-            "Function $lambda not found here:\n$this"
+    fun app(lambda: Sort, value: Sort): App {
+        require(lambda is Lam){
+            "Given $lambda is not a lambda!"
         }
-        require(this[value] != null || this[value] !is Variable) {
-            "Variable $value not found here:\n$this"
+        require(value is Variable){
+            "Given $lambda is not a variable!"
         }
-        return App(this[lambda] as Lam, this[value] as Variable)
+        return App(lambda, value)
     }
 
 

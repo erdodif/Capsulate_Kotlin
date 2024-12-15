@@ -11,10 +11,10 @@ import com.erdodif.capsulate.lang.specification.coc.Variable
  * Context, which shall be well founded on it's own (cannot depend on other contexts)
  */
 class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMutableList()) {
-    override operator fun get(name: String): Sort? = declarations.find { it.name == name }
+    override operator fun get(name: String): Variable? = declarations.find { it.name == name }
 
     override fun wellFormed(type: Sort): Boolean {
-        return type is Variable && this[type.name] != null  || type is Type || type == Set || type == Prop
+        return type is Variable && this[type.name] != null || type is Type || type == Set || type == Prop
     }
 
     /**
@@ -35,7 +35,7 @@ class GlobalEnvironment(vararg declaration: Variable) : Context(declaration.toMu
             sb.append(def.toString())
             sb.append(", ")
         }
-        if(declarations.isNotEmpty()){
+        if (declarations.isNotEmpty()) {
             sb.deleteRange(sb.length - 2, sb.length - 1)
         }
         sb.append(')')

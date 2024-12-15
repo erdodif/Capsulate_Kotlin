@@ -13,7 +13,7 @@ import com.erdodif.capsulate.lang.specification.coc.Variable
  */
 class LocalContext(private val context: GlobalEnvironment, vararg declaration: Variable) :
     Context(declaration.toMutableList()) {
-    override operator fun get(name: String): Sort? =
+    override operator fun get(name: String): Variable? =
         declarations.find { it.name == name } ?: context[name]
 
     operator fun plus(other: LocalContext): LocalContext {

@@ -16,9 +16,8 @@ import kotlin.test.Test
 
 class AssumptionTest {
     var context: Context = GlobalEnvironment()
-    val assumption: Parser<Sort> = {
-        assumption(context)()
-    }
+    val assumption: Parser<Sort>
+        get() = context.assumption()
 
     @BeforeTest
     fun setup() {
