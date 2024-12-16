@@ -1,7 +1,7 @@
-package com.erdodif.capsulate.utility
+package com.erdodif.capsulate.utility.chars
 
 fun getFromPrefix(prefix: String): List<String> = if (prefix.isEmpty()) listOf() else
-    escapes.keys.filter { it.length >= prefix.length && prefix == it.substring(0, prefix.length) }
+    escapes.keys.filter { it.length > prefix.length && prefix == it.substring(0, prefix.length) }
 
 val escapes = mapOf(
     Pair("eq", "=∼∽≈≋∻∾∿≀≃⋍≂≅≌≊≡≣≐≑≒≓≔≕≖≗≘≙≚≛≜≝≞≟≍≎≏≬⋕＝"),

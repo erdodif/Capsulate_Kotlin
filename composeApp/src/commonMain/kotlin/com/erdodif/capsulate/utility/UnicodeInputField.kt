@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -57,11 +57,21 @@ import com.erdodif.capsulate.onMobile
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.jet_brains_mono_bold
 import com.erdodif.capsulate.resources.jet_brains_mono_italic
+import com.erdodif.capsulate.utility.chars.escapes
+import com.erdodif.capsulate.utility.chars.getFromLatexPrefix
+import com.erdodif.capsulate.utility.chars.getFromPrefix
+import com.erdodif.capsulate.utility.chars.latexEscapes
 import com.slack.circuit.overlay.Overlay
 import com.slack.circuit.overlay.OverlayNavigator
 import org.jetbrains.compose.resources.Font
 
-class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
+enum class MatchStatus {
+    HasMatch,
+    NoMatchButPrefix,
+    Nothing
+}
+
+class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char> {
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
@@ -70,20 +80,47 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
         val focusRequester = remember { FocusRequester() }
         var value by remember { mutableStateOf(TextFieldValue("\\ ", TextRange(1))) }
         var index by remember { mutableStateOf(0) }
-        val match = escapes[value.text.substring(1, value.text.length - 1)]
-        val prefixes = getFromPrefix(value.text.substring(1, value.text.length - 1))
-        val borderColor = when {
-            match != null -> MaterialTheme.colorScheme.primary
-            prefixes.isNotEmpty() -> MaterialTheme.colorScheme.tertiary
-            else -> MaterialTheme.colorScheme.error
+        val word = value.text.substring(1, value.text.length - 1)
+        val match = escapes[word] ?: latexEscapes[word]
+        var extraMatches by remember { mutableStateOf(CharArray(0)) }
+        var matchStatus by remember { mutableStateOf(MatchStatus.Nothing) }
+        val selectedChar = if (match != null && index < match.length) {
+            match[index]
+        } else {
+            val newIndex = index - (match?.length ?: 0)
+            if (newIndex < extraMatches.size) {
+                extraMatches[newIndex]
+            } else {
+                ' '
+            }
         }
-        RoundedCornerShape(5.dp)
+        var prefixes by remember { mutableStateOf(emptyList<String>()) }
+        val borderColor = when (matchStatus) {
+            MatchStatus.HasMatch -> MaterialTheme.colorScheme.primary
+            MatchStatus.NoMatchButPrefix -> MaterialTheme.colorScheme.tertiary
+            MatchStatus.Nothing -> MaterialTheme.colorScheme.error
+        }
+        LaunchedEffect(value) {
+            prefixes = getFromPrefix(word) + getFromLatexPrefix(word)
+            matchStatus = when {
+                match != null -> MatchStatus.HasMatch
+                prefixes.isNotEmpty() -> MatchStatus.NoMatchButPrefix
+                else -> MatchStatus.Nothing
+            }
+            extraMatches =
+                prefixes.mapNotNull { escapes[it] ?: latexEscapes[it] }.flatMap { it.toList() }
+                    .filter { it !in (match ?: "") }.toCharArray()
+        }
         Column(
-            modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f)),
+            modifier.background(
+                MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f),
+                RoundedCornerShape(5.dp)
+            ),
             horizontalAlignment = Alignment.Start
         ) {
             Row(
-                Modifier.fillMaxWidth().weight(if (match != null) 1f else 3f),
+                Modifier.fillMaxWidth()
+                    .weight(if (match != null || extraMatches.isNotEmpty()) 1f else 3f),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.Top
             ) {
@@ -91,19 +128,19 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
                     Icon(Icons.Filled.Close, "Close")
                 }
             }
-            if (match != null) {
+            if (match != null || extraMatches.isNotEmpty()) {
                 FlowRow(
                     Modifier.weight(2f).clip(RectangleShape)
                         .verticalScroll(rememberScrollState(0), true),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    match.forEachIndexed { i, char ->
+                    match?.forEachIndexed { i, char ->
                         Text(
-                            char.toString(),
+                            text = char.toString(),
                             fontSize = 24.sp,
                             modifier = Modifier.padding(2.dp)
                                 .clickable { navigator.finish(char) }
-                                .width(40.dp)
+                                .size(40.dp)
                                 .padding(1.dp)
                                 .background(
                                     if (i == index) MaterialTheme.colorScheme.tertiaryContainer else
@@ -111,6 +148,29 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
                                     RoundedCornerShape(5.dp)
                                 ),
                             color = if (i == index) MaterialTheme.colorScheme.onTertiaryContainer else
+                                MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 40.sp
+                        )
+                    }
+                    extraMatches.forEachIndexed { i, char ->
+                        Text(
+                            char.toString(),
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(2.dp)
+                                .clickable { navigator.finish(char) }
+                                .size(40.dp)
+                                .padding(1.dp)
+                                .background(
+                                    if (i + (match?.length
+                                            ?: 0) == index
+                                    ) MaterialTheme.colorScheme.tertiaryContainer else
+                                        MaterialTheme.colorScheme.surfaceContainerLow,
+                                    RoundedCornerShape(5.dp)
+                                ),
+                            color = if (i + (match?.length
+                                    ?: 0) == index
+                            ) MaterialTheme.colorScheme.onTertiaryContainer else
                                 MaterialTheme.colorScheme.onPrimaryContainer,
                             textAlign = TextAlign.Center)
                     }
@@ -138,7 +198,7 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
                     }
                 }
                 Row(
-                    Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 40.dp),
+                    Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 60.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
@@ -156,8 +216,9 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
                                     it.selection.start != value.selection.start &&
                                     !match.isNullOrEmpty()
                                 ) {
+                                    val maxIndex = match.length + extraMatches.size
                                     index =
-                                        (index + it.selection.start - value.selection.start + match.length) % match.length
+                                        (index + it.selection.start - value.selection.start + maxIndex) % maxIndex
                                 }
                             } else {
                                 index = 0
@@ -178,7 +239,7 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
                         ),
                         keyboardActions = KeyboardActions(
                             onSend = {
-                                if (match != null) navigator.finish(match[index]) else navigator.finish(
+                                if (match != null) navigator.finish(selectedChar) else navigator.finish(
                                     0.toChar()
                                 )
                             }
@@ -190,12 +251,12 @@ class UnicodeOverlay(val useImePadding: Boolean = false) : Overlay<Char> {
                         ),
                         cursorBrush = SolidColor(Color.Transparent)
                     )
-                    if (match != null) {
+                    if (match != null || extraMatches.isNotEmpty()) {
                         Text(
-                            match[index].toString(),
+                            selectedChar.toString(),
                             fontSize = 40.sp,
                             modifier = Modifier
-                                .clickable { navigator.finish(match[index]) }
+                                .clickable { navigator.finish(selectedChar) }
                                 .weight(1f).height(50.dp)
                                 .background(MaterialTheme.colorScheme.primaryContainer),
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
