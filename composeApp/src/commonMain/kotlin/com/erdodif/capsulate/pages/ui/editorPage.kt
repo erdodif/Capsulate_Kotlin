@@ -26,6 +26,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Dp
@@ -186,7 +188,7 @@ internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
             }
             Button(
                 { state.eventHandler(EditorScreen.Event.Close) },
-                Modifier.padding(5.dp, 1.dp),
+                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
                 contentPadding = PaddingValues(2.dp)
             ) {
                 Text("X") // STOPSHIP: Locale

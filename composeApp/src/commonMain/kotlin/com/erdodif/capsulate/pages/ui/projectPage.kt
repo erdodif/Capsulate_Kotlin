@@ -48,11 +48,11 @@ fun projectPage(): Ui<ProjectScreen.State> = ui { state, modifier ->
         }
         Column(Modifier.fillMaxSize()) {
             val circuit = Circuit.Builder()
-                .addPresenterFactory(EditorPresenter.Factory(""))
+                .addPresenterFactory(EditorPresenter.Factory)
                 .addUi<EditorScreen, EditorScreen.State> { state, modifier ->
                     editorPage().Content(state, modifier)
                 }.build()
-            val backStack = rememberSaveableBackStack(root = EditorScreen)
+            val backStack = rememberSaveableBackStack(root = EditorScreen(""))
             val navigator = rememberCircuitNavigator(backStack) {
                 state.eventHandler(ProjectScreen.Event.Close)
             }

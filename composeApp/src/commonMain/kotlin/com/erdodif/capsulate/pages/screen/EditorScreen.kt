@@ -26,7 +26,7 @@ import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 
 @KParcelize
-object EditorScreen : Screen {
+data class EditorScreen(val initialText: String) : Screen {
     data class State(
         val code: TextFieldValue,
         val structogram: Structogram?,
@@ -48,11 +48,11 @@ object EditorScreen : Screen {
     }
 }
 
-class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val initialText: String) :
+class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
     Presenter<EditorScreen.State> {
     @Composable
     override fun present(): EditorScreen.State {
-        var inputValue by remember { mutableStateOf(TextFieldValue(initialText, TextRange.Zero)) }
+        var inputValue by remember { mutableStateOf(TextFieldValue(screen.initialText, TextRange.Zero)) }
         var showCode by remember { mutableStateOf(true) }
         var showStructogram by remember { mutableStateOf(true) }
         var structogram: Structogram? by remember { mutableStateOf(null) }
@@ -64,20 +64,10 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val in
             when (event) {
                 is EditorScreen.Event.TextInput -> {
                     inputValue = event.code
-                    val parserState = ParserState(event.code.text)
-                    val result = parserState.parse(halfProgram)
-                    structogram = Structogram.fromStatements(
-                        *((result as? Pass<*>)?.value as List<*>?)?.filterNot { it is Right<*> }
-                            ?.map {
-                                it as Left<*>
-                                Statement.fromStatement(
-                                    parserState,
-                                    it.value as com.erdodif.capsulate.lang.program.grammar.Statement
-                                )
-                            }?.toTypedArray() ?: arrayOf(
-                            Command((result as Fail).reason, Skip)
-                        )
-                    )
+                    structogram = when (val result = Structogram.fromString(event.code.text)){
+                        is Left -> result.value
+                        is Right -> Structogram.fromStatements(Command(result.value.reason, Skip))
+                    }
                 }
 
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode
@@ -90,11 +80,11 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator, val in
         }
     }
 
-    data class Factory(val initialText: String) : Presenter.Factory {
+    data object Factory : Presenter.Factory {
         override fun create(
             screen: Screen, navigator: Navigator, context: CircuitContext
         ): Presenter<*>? = when (screen) {
-            is EditorScreen -> EditorPresenter(screen, navigator, initialText)
+            is EditorScreen -> EditorPresenter(screen, navigator)
             else -> null
         }
     }

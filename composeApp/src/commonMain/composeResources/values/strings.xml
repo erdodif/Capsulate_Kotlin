@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name" translatable="false">Capsulate</string>
+    <string name="open_preset">Open Preset</string>
     <string name="open_folder">Open Folder</string>
 </resources>

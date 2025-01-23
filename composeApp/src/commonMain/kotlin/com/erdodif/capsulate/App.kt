@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.pages.screen.EmptyScreen
 import com.erdodif.capsulate.pages.screen.EmptyScreenPresenter
+import com.erdodif.capsulate.pages.screen.PresetPresenter
 import com.erdodif.capsulate.pages.screen.ProjectPresenter
 import com.erdodif.capsulate.pages.screen.ProjectScreen
+import com.erdodif.capsulate.pages.ui.PresetUiFactory
 import com.erdodif.capsulate.pages.ui.emptyPage
 import com.erdodif.capsulate.pages.ui.projectPage
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -57,6 +59,8 @@ fun App() {
         .addUi<ProjectScreen, ProjectScreen.State> { state, modifier ->
             projectPage().Content(state, modifier)
         }
+        .addPresenterFactory(PresetPresenter.Factory)
+        .addUiFactory(PresetUiFactory)
         .build()
     MaterialTheme(colorScheme = resolveColors()) {
         Theme.initialize()

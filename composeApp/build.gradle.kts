@@ -1,4 +1,3 @@
-import com.android.aaptcompiler.shouldIgnoreElement
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi

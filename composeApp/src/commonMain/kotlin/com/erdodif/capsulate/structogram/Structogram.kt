@@ -12,6 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.lang.program.grammar.halfProgram
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -30,7 +38,7 @@ class Structogram {
     }
 
     @Composable
-    fun content(modifier: Modifier = Modifier, draggable: Boolean = false) = key(this, draggable){
+    fun content(modifier: Modifier = Modifier, draggable: Boolean = false) = key(this, draggable) {
         Column(
             modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)
                 .padding(Theme.borderWidth, 0.dp)
@@ -43,6 +51,26 @@ class Structogram {
     }
 
     companion object {
+        fun fromString(text: String): Either<Structogram, Fail> {
+            val parserState = ParserState(text)
+            val result = halfProgram(parserState)
+            val parsedStatements =
+                ((result as? Pass<*>)?.value as List<*>?)?.filterNot { it is Right<*> }
+                    ?.map {
+                        it as Left<*>
+                        Statement.fromStatement(
+                            parserState,
+                            it.value as com.erdodif.capsulate.lang.program.grammar.Statement
+                        )
+                    }?.toTypedArray()
+            return if (parsedStatements?.isNotEmpty() == true) {
+               Left(Structogram(parsedStatements))
+            } else {
+                Right(result as? Fail ?: Fail("No statement matched!", parserState))
+            }
+        }
+
+
         fun fromStatements(vararg statements: Statement): Structogram {
             return Structogram(statements.asList())
         }

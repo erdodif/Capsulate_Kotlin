@@ -73,7 +73,7 @@ open class IfStatement(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.weight(1f, true)
                     .background(MaterialTheme.colorScheme.primary).fillMaxWidth()
-                    .onDpSize(density){conditionHeight = it.height}
+                    .onDpSize(density) { conditionHeight = it.height }
             ) {
                 Column(
                     Modifier.defaultMinSize(Dp.Unspecified, 25.dp).fillMaxHeight().weight(1f, true)
@@ -94,10 +94,8 @@ open class IfStatement(
                 }
                 VerticalBorder()
                 Column(
-                    Modifier.defaultMinSize(Dp.Unspecified, 25.dp).fillMaxHeight().weight(1f, true)
-                        .background(
-                            MaterialTheme.colorScheme.primary
-                        )
+                    Modifier.defaultMinSize(Dp.Unspecified, 20.dp).fillMaxHeight().weight(1f, true)
+                        .background(MaterialTheme.colorScheme.primary)
                 ) {
                     StackWithSeparator(
                         falseBranch,

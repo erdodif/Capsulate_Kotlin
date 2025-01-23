@@ -38,8 +38,8 @@ fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
 fun CodeEditor(
     code: TextFieldValue = TextFieldValue(""),
     modifier: Modifier = Modifier,
-    onBackSlashEntered: () -> Unit,
-    onValueChange: (TextFieldValue) -> Unit
+    onBackSlashEntered: () -> Unit = {},
+    onValueChange: ((TextFieldValue) -> Unit)? = null
 ) {
     val tokenStream = tokenizeProgram(code.text)
     val text = code.text
@@ -56,6 +56,7 @@ fun CodeEditor(
         }
         BasicTextField( //Prepare for BasicTextField2
             value = code,
+            readOnly = onValueChange == null,
             onValueChange = {
                 if (it.text.length >= max(
                         it.selection.start,
@@ -64,7 +65,7 @@ fun CodeEditor(
                 ) {
                     onBackSlashEntered()
                 } else {
-                    onValueChange(it)
+                    onValueChange?.invoke(it)
                 }
             },
             textStyle = textStyle,
