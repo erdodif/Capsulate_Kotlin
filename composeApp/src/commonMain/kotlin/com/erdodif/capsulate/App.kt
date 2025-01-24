@@ -16,10 +16,9 @@ import com.erdodif.capsulate.pages.screen.EmptyScreen
 import com.erdodif.capsulate.pages.screen.EmptyScreenPresenter
 import com.erdodif.capsulate.pages.screen.PresetPresenter
 import com.erdodif.capsulate.pages.screen.ProjectPresenter
-import com.erdodif.capsulate.pages.screen.ProjectScreen
-import com.erdodif.capsulate.pages.ui.PresetUiFactory
-import com.erdodif.capsulate.pages.ui.emptyPage
-import com.erdodif.capsulate.pages.ui.projectPage
+import com.erdodif.capsulate.pages.ui.EmptyPage
+import com.erdodif.capsulate.pages.ui.PresetPage
+import com.erdodif.capsulate.pages.ui.ProjectPage
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
@@ -52,15 +51,11 @@ fun App() {
     }
     val circuit = Circuit.Builder()
         .addPresenterFactory(EmptyScreenPresenter.Factory)
-        .addUi<EmptyScreen, EmptyScreen.State> { state, modifier ->
-            emptyPage().Content(state, modifier)
-        }
+        .addUiFactory(EmptyPage.Factory)
         .addPresenterFactory(ProjectPresenter.Factory)
-        .addUi<ProjectScreen, ProjectScreen.State> { state, modifier ->
-            projectPage().Content(state, modifier)
-        }
+        .addUiFactory(ProjectPage.Factory)
         .addPresenterFactory(PresetPresenter.Factory)
-        .addUiFactory(PresetUiFactory)
+        .addUiFactory(PresetPage.Factory)
         .build()
     MaterialTheme(colorScheme = resolveColors()) {
         Theme.initialize()

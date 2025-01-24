@@ -18,6 +18,7 @@ import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.structogram.statements.Statement
+import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -50,9 +51,17 @@ data class EditorScreen(val initialText: String) : Screen {
 
 class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
     Presenter<EditorScreen.State> {
+
+    companion object Factory :
+        Presenter.Factory by screenPresenterFactory<EditorScreen, EditorPresenter>(::EditorPresenter)
+
     @Composable
     override fun present(): EditorScreen.State {
-        var inputValue by remember { mutableStateOf(TextFieldValue(screen.initialText, TextRange.Zero)) }
+        var inputValue by remember {
+            mutableStateOf(
+                TextFieldValue(screen.initialText, TextRange.Zero)
+            )
+        }
         var showCode by remember { mutableStateOf(true) }
         var showStructogram by remember { mutableStateOf(true) }
         var structogram: Structogram? by remember { mutableStateOf(null) }
@@ -64,7 +73,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
             when (event) {
                 is EditorScreen.Event.TextInput -> {
                     inputValue = event.code
-                    structogram = when (val result = Structogram.fromString(event.code.text)){
+                    structogram = when (val result = Structogram.fromString(event.code.text)) {
                         is Left -> result.value
                         is Right -> Structogram.fromStatements(Command(result.value.reason, Skip))
                     }
@@ -77,15 +86,6 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 is EditorScreen.Event.OpenUnicodeInput -> input = true
                 is EditorScreen.Event.CloseUnicodeInput -> input = false
             }
-        }
-    }
-
-    data object Factory : Presenter.Factory {
-        override fun create(
-            screen: Screen, navigator: Navigator, context: CircuitContext
-        ): Presenter<*>? = when (screen) {
-            is EditorScreen -> EditorPresenter(screen, navigator)
-            else -> null
         }
     }
 

@@ -2,6 +2,7 @@ package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -13,13 +14,18 @@ import com.slack.circuit.runtime.screen.Screen
 data object SettingsScreen : Screen {
     class State(val eventHandler: (Event) -> Unit) : CircuitUiState
 
-    sealed class Event : CircuitUiEvent {
-        data object Exit : Event()
+    sealed interface Event : CircuitUiEvent {
+        data object Exit : Event
     }
 }
 
-class SettingsScreenPresenter(private val screen: SettingsScreen, private val navigator: Navigator) :
-    Presenter<SettingsScreen.State> {
+class SettingsScreenPresenter(
+    private val screen: SettingsScreen,
+    private val navigator: Navigator
+) : Presenter<SettingsScreen.State> {
+
+    companion object Factory :
+        Presenter.Factory by screenPresenterFactory<SettingsScreen, SettingsScreenPresenter>(::SettingsScreenPresenter)
 
     @Composable
     override fun present(): SettingsScreen.State {
@@ -30,17 +36,5 @@ class SettingsScreenPresenter(private val screen: SettingsScreen, private val na
         }
     }
 
-
-    object Factory : Presenter.Factory {
-        override fun create(
-            screen: Screen,
-            navigator: Navigator,
-            context: CircuitContext
-        ): Presenter<*>? {
-            return if (screen is SettingsScreen) {
-                SettingsScreenPresenter(screen,navigator)
-            } else null
-        }
-    }
 
 }

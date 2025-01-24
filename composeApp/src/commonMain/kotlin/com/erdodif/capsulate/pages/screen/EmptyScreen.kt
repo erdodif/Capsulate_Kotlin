@@ -11,14 +11,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.presets.Preset
-import com.slack.circuit.runtime.CircuitContext
+import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import kotlinx.coroutines.launch
-import kotlin.coroutines.coroutineContext
 
 @KParcelize
 data object EmptyScreen : Screen {
@@ -37,8 +36,13 @@ data object EmptyScreen : Screen {
     }
 }
 
-class EmptyScreenPresenter(private val screen: EmptyScreen, private val navigator: Navigator) :
-    Presenter<EmptyScreen.State> {
+class EmptyScreenPresenter(
+    private val screen: EmptyScreen,
+    private val navigator: Navigator
+) : Presenter<EmptyScreen.State> {
+
+    companion object Factory :
+        Presenter.Factory by screenPresenterFactory<EmptyScreen, EmptyScreenPresenter>(::EmptyScreenPresenter)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -59,18 +63,6 @@ class EmptyScreenPresenter(private val screen: EmptyScreen, private val navigato
                     }
                 }
             }
-        }
-    }
-
-    object Factory : Presenter.Factory {
-        override fun create(
-            screen: Screen,
-            navigator: Navigator,
-            context: CircuitContext
-        ): Presenter<*>? {
-            return if (screen is EmptyScreen) {
-                EmptyScreenPresenter(screen, navigator)
-            } else null
         }
     }
 }
