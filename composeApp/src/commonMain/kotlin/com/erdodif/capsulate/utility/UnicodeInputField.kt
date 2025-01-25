@@ -233,7 +233,7 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                         singleLine = true,
                         enabled = true,
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            autoCorrect = false,
+                            autoCorrectEnabled = false,
                             keyboardType = KeyboardType.Ascii,
                             imeAction = ImeAction.Send
                         ),

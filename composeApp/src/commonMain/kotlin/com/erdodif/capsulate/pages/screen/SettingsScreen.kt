@@ -25,7 +25,7 @@ class SettingsScreenPresenter(
 ) : Presenter<SettingsScreen.State> {
 
     companion object Factory :
-        Presenter.Factory by screenPresenterFactory<SettingsScreen, SettingsScreenPresenter>(::SettingsScreenPresenter)
+        Presenter.Factory by screenPresenterFactory<SettingsScreen>(::SettingsScreenPresenter)
 
     @Composable
     override fun present(): SettingsScreen.State {

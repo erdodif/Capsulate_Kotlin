@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.defaultScreenError
+import com.erdodif.capsulate.pages.screen.DebugPresenter
 import com.erdodif.capsulate.pages.screen.EditorPresenter
 import com.erdodif.capsulate.pages.screen.EditorScreen
 import com.erdodif.capsulate.pages.screen.ProjectScreen
@@ -31,8 +32,7 @@ import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import org.jetbrains.compose.resources.stringResource
 
 class ProjectPage : Ui<ProjectScreen.State> {
-    companion object Factory :
-        Ui.Factory by screenUiFactory<ProjectScreen>(::ProjectPage)
+    companion object Factory : Ui.Factory by screenUiFactory<ProjectScreen>(::ProjectPage)
 
     @Composable
     override fun Content(
@@ -63,9 +63,9 @@ class ProjectPage : Ui<ProjectScreen.State> {
                 val circuit = Circuit.Builder()
                     .addPresenterFactory(EditorPresenter.Factory)
                     .addUiFactory(EditorPage.Factory)
-                    .addUi<EditorScreen, EditorScreen.State> { state, modifier ->
-                        EditorPage().Content(state, modifier)
-                    }.build()
+                    .addPresenterFactory(DebugPresenter.Factory)
+                    .addUiFactory(DebugPage.Factory)
+                    .build()
                 val backStack = rememberSaveableBackStack(root = EditorScreen(""))
                 val navigator = rememberCircuitNavigator(backStack) {
                     state.eventHandler(ProjectScreen.Event.Close)

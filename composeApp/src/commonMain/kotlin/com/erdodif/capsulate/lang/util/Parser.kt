@@ -2,7 +2,11 @@
 
 package com.erdodif.capsulate.lang.util
 
-data class MatchPos(val start: Int, val end: Int)
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
+
+@KParcelize
+data class MatchPos(val start: Int, val end: Int) : KParcelable
 
 sealed interface Either<out T, out R>
 

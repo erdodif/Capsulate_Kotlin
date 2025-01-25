@@ -25,7 +25,7 @@ data class PresetPresenter(
 ) : Presenter<State> {
 
     object Factory :
-        Presenter.Factory by screenPresenterFactory<PresetScreen, PresetPresenter>(::PresetPresenter)
+        Presenter.Factory by screenPresenterFactory<PresetScreen>(::PresetPresenter)
 
     @Composable
     override fun present(): State {

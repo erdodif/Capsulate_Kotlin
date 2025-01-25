@@ -1,9 +1,9 @@
 package com.erdodif.capsulate.lang.util
 
 abstract class Operator<T>(
-    val bindingStrength: Int,
-    val label: String,
-    val operatorParser: Parser<*>
+    open val bindingStrength: Int,
+    open val label: String,
+    open val operatorParser: Parser<*>
 ) {
     operator fun compareTo(other: Operator<T>) =
         this.bindingStrength.compareTo(other.bindingStrength)

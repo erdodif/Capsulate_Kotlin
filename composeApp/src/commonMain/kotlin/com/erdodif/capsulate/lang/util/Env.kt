@@ -5,12 +5,15 @@ import com.erdodif.capsulate.lang.program.grammar.Type
 import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.type
 
-class Parameter(val id: String, val type: Type, var value: Value)
+data class Parameter(val id: String, val type: Type, var value: Value)
 
 class Env(
     private val values: MutableList<Parameter>,
     val deterministic: Boolean = false
 ) {
+    fun copy(): Env{
+        return Env(values.map { it.copy() }.toMutableList(), deterministic)
+    }
     /**
      * Determines whether the asked variable is defined in this context
      */

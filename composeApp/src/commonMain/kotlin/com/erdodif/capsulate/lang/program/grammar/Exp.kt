@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.operator.builtInOperatorTable
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Left
@@ -16,12 +18,13 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 
-interface Exp<T : Value> {
+interface Exp<T : Value>: KParcelable {
     fun evaluate(context: Env): T
     fun toString(state: ParserState): String
 }
 
-open class Token(open val match: MatchPos) {
+@KParcelize
+open class Token(open val match: MatchPos) : KParcelable {
     inline fun matchedToken(parserState: ParserState): String =
         parserState.input[match.start, match.end]
 }
@@ -42,27 +45,32 @@ val pComment: Parser<Comment> = orEither(
     )
 ) * { it, pos -> Comment(it.asString(), pos) }
 
-class StrLit(val value: String, match: MatchPos) : Exp<VStr>, Token(match) {
+@KParcelize
+class StrLit(val value: String,override val match: MatchPos) : Exp<VStr>, Token(match) {
     override fun evaluate(context: Env): VStr = VStr(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
-class IntLit(val value: Int, match: MatchPos) : Exp<VWhole>, Token(match) {
+@KParcelize
+class IntLit(val value: Int,override val  match: MatchPos) : Exp<VWhole>, Token(match) {
     override fun evaluate(context: Env): VWhole = VWhole(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
-class NatLit(val value: UInt, match: MatchPos) : Exp<VNat>, Token(match) {
+@KParcelize
+class NatLit(val value: UInt,override val  match: MatchPos) : Exp<VNat>, Token(match) {
     override fun evaluate(context: Env): VNat = VNat(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
-class BoolLit(val value: Boolean, match: MatchPos) : Exp<VBool>, Token(match) {
+@KParcelize
+class BoolLit(val value: Boolean,override val  match: MatchPos) : Exp<VBool>, Token(match) {
     override fun evaluate(context: Env): VBool = VBool(value)
     override fun toString(state: ParserState): String = state[match]
 }
 
-class Variable(val id: String, match: MatchPos) : Exp<Value>, Token(match) {
+@KParcelize
+class Variable(val id: String,override val  match: MatchPos) : Exp<Value>, Token(match) {
     override fun evaluate(context: Env): Value {
         val param = context.get(id)
         if (param is Left) {

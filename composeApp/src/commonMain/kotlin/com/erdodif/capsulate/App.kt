@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,8 +25,12 @@ import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
+import com.slack.circuit.foundation.internal.BackHandler
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.screen.Screen
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modifier ->
@@ -41,14 +46,16 @@ val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modif
     }
 }
 
+val applicationExitJob = Job()
 
 @Composable
 @Preview
 fun App() {
     val backStack = rememberSaveableBackStack(root = EmptyScreen)
     val navigator = rememberCircuitNavigator(backStack) {
-        // Handle close
+        applicationExitJob.complete()
     }
+    BackHandler(true, navigator::pop)
     val circuit = Circuit.Builder()
         .addPresenterFactory(EmptyScreenPresenter.Factory)
         .addUiFactory(EmptyPage.Factory)
@@ -59,17 +66,19 @@ fun App() {
         .build()
     MaterialTheme(colorScheme = resolveColors()) {
         Theme.initialize()
-        Column(
-            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            CircuitCompositionLocals(circuit) {
-                NavigableCircuitContent(
-                    navigator = navigator,
-                    backStack = backStack,
-                    modifier = Modifier.fillMaxSize(),
-                    unavailableRoute = defaultScreenError
-                )
+        Surface(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircuitCompositionLocals(circuit) {
+                    NavigableCircuitContent(
+                        navigator = navigator,
+                        backStack = backStack,
+                        modifier = Modifier.fillMaxSize(),
+                        unavailableRoute = defaultScreenError
+                    )
+                }
             }
         }
     }

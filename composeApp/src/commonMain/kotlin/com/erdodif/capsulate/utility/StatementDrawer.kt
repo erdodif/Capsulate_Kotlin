@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -19,7 +21,8 @@ import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.WhenStatement
 
-private val tmpStatement = object : Statement {
+@KParcelize
+object tmpStatement : Statement , KParcelable{
     override fun evaluate(env: Env) {
         TODO("Won't be implemented")
     }

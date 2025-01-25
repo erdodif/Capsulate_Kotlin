@@ -42,7 +42,7 @@ class EmptyScreenPresenter(
 ) : Presenter<EmptyScreen.State> {
 
     companion object Factory :
-        Presenter.Factory by screenPresenterFactory<EmptyScreen, EmptyScreenPresenter>(::EmptyScreenPresenter)
+        Presenter.Factory by screenPresenterFactory<EmptyScreen>(::EmptyScreenPresenter)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable

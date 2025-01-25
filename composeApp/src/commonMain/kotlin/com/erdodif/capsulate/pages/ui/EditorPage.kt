@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -159,8 +160,9 @@ internal fun codeEdit(): Ui<EditorScreen.State> =
 
 internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
     BottomAppBar {
+        val scrollState = rememberScrollState(0)
         Row(
-            modifier.fillMaxWidth(),
+            modifier.fillMaxWidth().horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
@@ -202,6 +204,13 @@ internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
                 contentPadding = PaddingValues(2.dp)
             ) {
                 Text("X") // STOPSHIP: Locale
+            }
+            Button(
+                { state.eventHandler(EditorScreen.Event.Run) },
+                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                contentPadding = PaddingValues(2.dp)
+            ) {
+                Text("Run") // STOPSHIP: Locale
             }
         }
     }

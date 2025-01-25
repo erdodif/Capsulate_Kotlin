@@ -19,6 +19,8 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 
@@ -129,7 +131,7 @@ val sAssign: Parser<Statement> = delimit(_nonKeyword + right(_keyword(":="), pEx
 
 val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specification part
 val sSelect: Parser<Statement> = delimit(_nonKeyword + right(_keyword(":∈"), pType)) / {
-    Select(it.first, it.second)
+    Select(it.first, it.second.toString())
 }
 
 val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
@@ -170,7 +172,25 @@ fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> = ParserState
     )
 )
 
-
 fun Env.runProgram(statements: List<Statement>) {
     for (statement in statements) statement.evaluate(this)
+}
+
+data class DebugEnv(
+    val env: Env,
+    private val program: List<Statement>,
+    private val head: Int = 0
+){
+    val currentStatement: Statement
+        get() = program[head]
+}
+
+fun debugProgram(startingEnvironment: Env, statements: List<Statement>): Flow<DebugEnv> = flow {
+    val env = startingEnvironment
+    var head = 0
+    for (statement in statements) {
+        statement.evaluate(env)
+        head += 1
+        emit(DebugEnv(env, statements, head))
+    }
 }

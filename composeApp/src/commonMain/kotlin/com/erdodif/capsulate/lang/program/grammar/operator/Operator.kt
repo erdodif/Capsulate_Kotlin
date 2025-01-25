@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.lang.program.grammar.operator
 
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Exp
 import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.left
@@ -17,6 +19,7 @@ import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.div
 
+@KParcelize
 data class UnaryCalculation(
     val param: Exp<Value>,
     val label: String = "∘",
@@ -39,12 +42,13 @@ data class UnaryCalculation(
         }
 }
 
+@KParcelize
 data class BinaryCalculation(
     val first: Exp<Value>,
     val second: Exp<Value>,
     val label: String = "∘",
     val operation: Env.(Exp<Value>, Exp<Value>) -> Value
-) : Calculation<Value, Env> , Exp<Value> {
+) : Calculation<Value, Env> , Exp<Value> , KParcelable{
     constructor(first: Exp<Value>, second: Exp<Value>, operator: BinaryOperator) : this(
         first,
         second,
@@ -59,13 +63,14 @@ data class BinaryCalculation(
 }
 
 
+@KParcelize
 open class UnaryOperator(
-    bindingStrength: Int,
-    label: String = "~",
-    operatorParser: Parser<*>,
+    override val bindingStrength: Int,
+    override val label: String = "~",
+    override val operatorParser: Parser<*>,
     val fixation: Fixation,
     val operation: Env.(Exp<Value>) -> Value
-) : Operator<Exp<Value>>(bindingStrength, label, operatorParser){
+) : Operator<Exp<Value>>(bindingStrength, label, operatorParser), KParcelable{
     override fun parse(strongerParser: Parser<Exp<Value>>): Parser<Exp<Value>> =
         orEither(when (fixation) {
             Fixation.PREFIX -> right(operatorParser, strongerParser) / {
@@ -78,13 +83,14 @@ open class UnaryOperator(
         }, strongerParser)
 }
 
+@KParcelize
 open class BinaryOperator(
-    bindingStrength: Int,
-    label: String,
-    operatorParser: Parser<*>,
+    override val bindingStrength: Int,
+    override val label: String,
+    override val operatorParser: Parser<*>,
     val association: Association,
     val operation: Env.(Exp<Value>, Exp<Value>) -> Value
-) : Operator<Exp<Value>>(bindingStrength, label, operatorParser) {
+) : Operator<Exp<Value>>(bindingStrength, label, operatorParser), KParcelable {
     override fun parse(strongerParser: Parser<Exp<Value>>): Parser<Exp<Value>> =
         when (association) {
             Association.LEFT -> leftAssoc(

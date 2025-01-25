@@ -35,7 +35,7 @@ class ProjectPresenter(
     private var project: Project? = null
 ) : Presenter<ProjectScreen.State> {
     object Factory :
-        Presenter.Factory by screenPresenterFactory<ProjectScreen, ProjectPresenter>({ screen, navigator ->
+        Presenter.Factory by screenPresenterFactory<ProjectScreen>({ screen, navigator ->
             ProjectPresenter(screen, navigator, null)
         })
 

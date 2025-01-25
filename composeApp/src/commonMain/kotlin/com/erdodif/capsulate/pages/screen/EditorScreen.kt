@@ -38,14 +38,15 @@ data class EditorScreen(val initialText: String) : Screen {
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
-    sealed class Event : CircuitUiEvent {
-        data class TextInput(val code: TextFieldValue) : Event()
-        data object Close : Event()
-        data object ToggleCode : Event()
-        data object ToggleStructogram : Event()
-        data object ToggleStatementDrag : Event()
-        data object OpenUnicodeInput : Event()
-        data object CloseUnicodeInput : Event()
+    sealed interface Event : CircuitUiEvent {
+        data class TextInput(val code: TextFieldValue) : Event
+        data object Close : Event
+        data object Run : Event
+        data object ToggleCode : Event
+        data object ToggleStructogram : Event
+        data object ToggleStatementDrag : Event
+        data object OpenUnicodeInput : Event
+        data object CloseUnicodeInput : Event
     }
 }
 
@@ -53,7 +54,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
     Presenter<EditorScreen.State> {
 
     companion object Factory :
-        Presenter.Factory by screenPresenterFactory<EditorScreen, EditorPresenter>(::EditorPresenter)
+        Presenter.Factory by screenPresenterFactory<EditorScreen>(::EditorPresenter)
 
     @Composable
     override fun present(): EditorScreen.State {
@@ -82,6 +83,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode
                 is EditorScreen.Event.ToggleStructogram -> showStructogram = !showStructogram
                 is EditorScreen.Event.Close -> navigator.pop()
+                is EditorScreen.Event.Run -> navigator.goTo(DebugScreen(structogram!!)) // TODO - Handle Error state
                 is EditorScreen.Event.ToggleStatementDrag -> dragStatements = !dragStatements
                 is EditorScreen.Event.OpenUnicodeInput -> input = true
                 is EditorScreen.Event.CloseUnicodeInput -> input = false

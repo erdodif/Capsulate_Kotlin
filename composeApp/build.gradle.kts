@@ -62,6 +62,9 @@ kotlin {
             implementation(libs.material.kolor)
             implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.multiplatform.settings.serialization)
+            implementation(libs.adaptive)
+            implementation(libs.adaptive.layout)
+            implementation(libs.adaptive.navigation)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
