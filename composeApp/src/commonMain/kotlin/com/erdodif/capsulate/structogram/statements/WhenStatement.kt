@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -35,9 +37,10 @@ import com.erdodif.capsulate.structogram.composables.elseIndicator
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
 
+@KParcelize
 class WhenStatement(
     val blocks: Array<Block>,
-    statement: com.erdodif.capsulate.lang.program.grammar.Statement
+    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement
 ) : Statement(statement) {
     constructor(statement: When, state: ParserState) :
             this(
@@ -47,12 +50,14 @@ class WhenStatement(
                         block.second.map { fromStatement(state, it) }.toTypedArray()
                     )
                 }.toMutableList().also { blocks ->
-                    if (statement.elseBlock != null) blocks.add(Block(
-                        "else",
-                        statement.elseBlock.map {
-                            fromStatement(state, it)
-                        }.toTypedArray()
-                    ))
+                    if (statement.elseBlock != null) blocks.add(
+                        Block(
+                            "else",
+                            statement.elseBlock.map {
+                                fromStatement(state, it)
+                            }.toTypedArray()
+                        )
+                    )
                 }.toTypedArray(),
                 statement
             )
@@ -91,7 +96,7 @@ class WhenStatement(
                         }
                     }
                     HorizontalBorder()
-                    Column(Modifier.fillMaxSize()){
+                    Column(Modifier.fillMaxSize()) {
                         StackWithSeparator(it.statements, {
                             it.Show(Modifier.fillMaxSize(), draggable)
                         }, {
@@ -132,7 +137,7 @@ class WhenStatement(
                     StackWithSeparator(elseBranch!!.statements, {
                         it.Show(Modifier.fillMaxWidth().weight(1f, true), draggable)
                     }, {
-                        commandPlaceHolder(Modifier.fillMaxWidth().weight(1f,true))
+                        commandPlaceHolder(Modifier.fillMaxWidth().weight(1f, true))
                     }
                     ) { HorizontalBorder() }
                 }
@@ -141,4 +146,5 @@ class WhenStatement(
     }
 }
 
-class Block(var condition: String, var statements: StatementList = arrayOf())
+@KParcelize
+class Block(var condition: String, var statements: StatementList = arrayOf()) : KParcelable

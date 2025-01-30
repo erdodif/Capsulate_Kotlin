@@ -4,27 +4,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.halfProgram
+import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
-import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Command
-import com.erdodif.capsulate.structogram.statements.Statement
 import com.erdodif.capsulate.utility.screenPresenterFactory
-import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.time.measureTime
 
 @KParcelize
 data class EditorScreen(val initialText: String) : Screen {
@@ -65,30 +66,50 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         }
         var showCode by remember { mutableStateOf(true) }
         var showStructogram by remember { mutableStateOf(true) }
-        var structogram: Structogram? by remember { mutableStateOf(null) }
+        var structogram: Structogram by remember {
+            mutableStateOf(Structogram.fromStatements(Command("", Skip)))
+        }
         var dragStatements by remember { mutableStateOf(false) }
         var input by remember { mutableStateOf(false) }
+        val coroutineScope = rememberCoroutineScope()
         return EditorScreen.State(
             inputValue, structogram, showCode, input, showStructogram, dragStatements
         ) { event ->
             when (event) {
                 is EditorScreen.Event.TextInput -> {
                     inputValue = event.code
-                    structogram = when (val result = Structogram.fromString(event.code.text)) {
-                        is Left -> result.value
-                        is Right -> Structogram.fromStatements(Command(result.value.reason, Skip))
+                    coroutineScope.launch{
+                        initStructogram(inputValue.text){
+                            structogram = when (it) {
+                                is Left -> it.value
+                                is Right -> Structogram.fromStatements(Command(it.value.reason, Skip))
+                            }
+                        }
                     }
                 }
 
                 is EditorScreen.Event.ToggleCode -> showCode = !showCode
                 is EditorScreen.Event.ToggleStructogram -> showStructogram = !showStructogram
                 is EditorScreen.Event.Close -> navigator.pop()
-                is EditorScreen.Event.Run -> navigator.goTo(DebugScreen(structogram!!)) // TODO - Handle Error state
+                is EditorScreen.Event.Run -> navigator.goTo(DebugScreen(structogram))
                 is EditorScreen.Event.ToggleStatementDrag -> dragStatements = !dragStatements
                 is EditorScreen.Event.OpenUnicodeInput -> input = true
                 is EditorScreen.Event.CloseUnicodeInput -> input = false
             }
         }
+    }
+
+
+    private suspend fun initStructogram(
+        input: String,
+        onResult: (Either<Structogram, Fail>) -> Unit
+    ) = withContext(Dispatchers.Default) {
+        var structogram: Either<Structogram, Fail>
+        val time = measureTime {
+            structogram = Structogram.fromString(input)
+        }
+        println("Structogram built in ${time}")
+        onResult(structogram)
     }
 
 }

@@ -12,11 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
-import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
@@ -25,17 +26,15 @@ import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.Statement
 import com.erdodif.capsulate.structogram.statements.StatementList
+import kotlinx.coroutines.yield
 
-class Structogram {
-    var statements: StatementList
+@KParcelize
+class Structogram private constructor(var statements: StatementList) : KParcelable {
+    val program: List<com.erdodif.capsulate.lang.program.grammar.Statement>
+        get() = statements.map { it.statement }
 
-    private constructor(statements: StatementList) {
-        this.statements = statements
-    }
+    private constructor(statements: List<Statement>) : this(statements.toTypedArray())
 
-    private constructor(statements: List<Statement>) {
-        this.statements = statements.toTypedArray()
-    }
 
     @Composable
     fun content(modifier: Modifier = Modifier, draggable: Boolean = false) = key(this, draggable) {
@@ -51,12 +50,13 @@ class Structogram {
     }
 
     companion object {
-        fun fromString(text: String): Either<Structogram, Fail> {
+        suspend fun fromString(text: String): Either<Structogram, Fail> {
             val parserState = ParserState(text)
             val result = halfProgram(parserState)
             val parsedStatements =
                 ((result as? Pass<*>)?.value as List<*>?)?.filterNot { it is Right<*> }
                     ?.map {
+                        yield()
                         it as Left<*>
                         Statement.fromStatement(
                             parserState,
@@ -64,7 +64,7 @@ class Structogram {
                         )
                     }?.toTypedArray()
             return if (parsedStatements?.isNotEmpty() == true) {
-               Left(Structogram(parsedStatements))
+                Left(Structogram(parsedStatements))
             } else {
                 Right(result as? Fail ?: Fail("No statement matched!", parserState))
             }

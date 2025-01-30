@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -42,6 +38,7 @@ import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
 
 class PresetPage(private val preset: Preset) : Ui<State> {
@@ -77,7 +74,8 @@ class PresetPage(private val preset: Preset) : Ui<State> {
                                     Modifier.heightIn(max = 350.dp).fillMaxWidth()
                                 )
                                 val result =
-                                    remember { derivedStateOf { Structogram.fromString(it.code) } }
+                                    remember { derivedStateOf {
+                                        runBlocking{ Structogram.fromString(it.code) } }} // TODO: Loading
                                 when (result.value) {
                                     is Left<Structogram> -> (result.value as Left<Structogram>).value.content()
                                     is Right<Fail> -> Text(

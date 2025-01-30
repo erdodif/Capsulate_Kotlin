@@ -1,16 +1,24 @@
 package com.erdodif.capsulate.lang.util
 
-import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.Type
 import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.type
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
-data class Parameter(val id: String, val type: Type, var value: Value)
+data class Parameter(val id: String, val type: Type, var value: Value){
+    override fun toString(): String {
+        return "#$id = $value : $type"
+    }
+}
 
 class Env(
     private val values: MutableList<Parameter>,
     val deterministic: Boolean = false
 ) {
+    val parameters: ImmutableList<Parameter>
+        get() = values.toImmutableList()
+
     fun copy(): Env{
         return Env(values.map { it.copy() }.toMutableList(), deterministic)
     }
@@ -65,12 +73,10 @@ class Env(
         val empty: Env
             get() = Env(mutableListOf())
     }
+
+    override fun toString(): String {
+        return values.toString()
+    }
 }
 
 class ErrorContext
-
-fun program(statement: Statement) {
-    Env.empty.run {
-
-    }
-}

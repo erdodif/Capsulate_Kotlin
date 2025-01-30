@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -31,8 +32,9 @@ import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.utility.dim
 
+@KParcelize
 class ParallelStatement(
-    statement: com.erdodif.capsulate.lang.program.grammar.Statement,
+    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement,
     private vararg var blocks: StatementList
 ) : Statement(statement) {
     constructor(
@@ -86,7 +88,10 @@ class ParallelStatement(
                 }) {
                 DraggableArea(Modifier.width(Theme.borderWidth * 4), draggable, size) {
                     dragging = it
-                    Row(Modifier.width(Theme.borderWidth * 4), horizontalArrangement = Arrangement.Center) {
+                    Row(
+                        Modifier.width(Theme.borderWidth * 4),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         VerticalBorder()
                         Spacer(Modifier.width(Theme.borderWidth * 2))
                         VerticalBorder()

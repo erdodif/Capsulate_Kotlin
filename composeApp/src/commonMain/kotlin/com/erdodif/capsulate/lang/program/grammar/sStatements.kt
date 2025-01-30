@@ -175,22 +175,3 @@ fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> = ParserState
 fun Env.runProgram(statements: List<Statement>) {
     for (statement in statements) statement.evaluate(this)
 }
-
-data class DebugEnv(
-    val env: Env,
-    private val program: List<Statement>,
-    private val head: Int = 0
-){
-    val currentStatement: Statement
-        get() = program[head]
-}
-
-fun debugProgram(startingEnvironment: Env, statements: List<Statement>): Flow<DebugEnv> = flow {
-    val env = startingEnvironment
-    var head = 0
-    for (statement in statements) {
-        statement.evaluate(env)
-        head += 1
-        emit(DebugEnv(env, statements, head))
-    }
-}

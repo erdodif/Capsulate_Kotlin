@@ -27,6 +27,8 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
@@ -46,7 +48,8 @@ import kotlinx.coroutines.launch
 
 typealias StatementList = Array<Statement>
 
-abstract class Statement(val statement: com.erdodif.capsulate.lang.program.grammar.Statement) {
+abstract class Statement(open val statement: com.erdodif.capsulate.lang.program.grammar.Statement) :
+    KParcelable {
 
     /**
      * Creates an area where the current statement can be dragged if enabled

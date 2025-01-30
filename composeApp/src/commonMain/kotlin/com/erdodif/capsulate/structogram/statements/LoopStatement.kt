@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.ParserState
@@ -38,12 +39,12 @@ private fun Condition(text: String, modifier: Modifier = Modifier) =
         modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(Theme.commandPadding)
     )
 
-
+@KParcelize
 class LoopStatement(
     var condition: String,
     var statements: StatementList = arrayOf(),
     var inOrder: Boolean = true,
-    statement: com.erdodif.capsulate.lang.program.grammar.Statement
+    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement
 ) : Statement(statement) {
     constructor(statement: While, state: ParserState) : this(
         statement.condition.toString(state),

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -35,12 +36,14 @@ import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
+import kotlinx.coroutines.yield
 
+@KParcelize
 open class IfStatement(
     var condition: String,
     var trueBranch: StatementList = arrayOf(),
     var falseBranch: StatementList = arrayOf(),
-    statement: com.erdodif.capsulate.lang.program.grammar.Statement
+    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement
 ) : Statement(statement) {
     constructor(statement: If, state: ParserState) : this(
         statement.condition.toString(state),
