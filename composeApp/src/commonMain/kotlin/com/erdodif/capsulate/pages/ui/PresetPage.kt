@@ -77,7 +77,7 @@ class PresetPage(private val preset: Preset) : Ui<State> {
                                     remember { derivedStateOf {
                                         runBlocking{ Structogram.fromString(it.code) } }} // TODO: Loading
                                 when (result.value) {
-                                    is Left<Structogram> -> (result.value as Left<Structogram>).value.content()
+                                    is Left<Structogram> -> (result.value as Left<Structogram>).value.Content()
                                     is Right<Fail> -> Text(
                                         (result.value as Right<Fail>).value.reason,
                                         color = Color.Red

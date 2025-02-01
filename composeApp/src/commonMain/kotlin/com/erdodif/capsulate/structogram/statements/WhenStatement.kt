@@ -36,11 +36,12 @@ import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 class WhenStatement(
     val blocks: Array<Block>,
-    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement
+    override val statement: GrammarStatement
 ) : Statement(statement) {
     constructor(statement: When, state: ParserState) :
             this(
@@ -63,7 +64,7 @@ class WhenStatement(
             )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }

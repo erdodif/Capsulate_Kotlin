@@ -1,8 +1,10 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -23,13 +25,21 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
+import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
-class Command(var text: String, override val statement: com.erdodif.capsulate.lang.program.grammar.Statement) :
+class Command(
+    var text: String,
+    override val statement: GrammarStatement
+) :
     Statement(statement) {
-    constructor(statement: com.erdodif.capsulate.lang.program.grammar.Statement, state: ParserState) : this(
+    constructor(
+        statement: GrammarStatement,
+        state: ParserState
+    ) : this(
         when (statement) {
             is Skip -> "SKIP"
             is Abort -> "ABORT"
@@ -44,25 +54,29 @@ class Command(var text: String, override val statement: com.erdodif.capsulate.la
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) = key(this){
-        var size by remember { mutableStateOf(DpSize.Zero) }
-        val density = LocalDensity.current
-        if (draggable)
-            DraggableArea(Modifier, draggable, size) { dragging ->
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) =
+        key(this) {
+            var size by remember { mutableStateOf(DpSize.Zero) }
+            val density = LocalDensity.current
+            if (draggable)
+                DraggableArea(Modifier, draggable, size) { dragging ->
+                    StatementText(
+                        text,
+                        false,
+                        Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
+                            .padding(Theme.commandPadding)
+                            .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
+                                this == activeStatement
+                            }
+                    )
+                    DropTarget(LocalDraggingStatement.current)
+                }
+            else {
                 StatementText(
                     text,
                     false,
-                    Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
-                        .padding(Theme.commandPadding)
+                    modifier.fillMaxWidth().padding(Theme.commandPadding)
                 )
-                DropTarget(LocalDraggingStatement.current)
             }
-        else {
-            StatementText(
-                text,
-                false,
-                modifier.fillMaxWidth().padding(Theme.commandPadding)
-            )
         }
-    }
 }

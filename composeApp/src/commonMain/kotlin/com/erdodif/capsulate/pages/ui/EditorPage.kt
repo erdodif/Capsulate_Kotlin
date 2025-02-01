@@ -111,7 +111,7 @@ internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             if (state.structogram != null) {
-                state.structogram.content(
+                state.structogram.Content(
                     Modifier.verticalScroll(
                         rememberScrollState()
                     ),

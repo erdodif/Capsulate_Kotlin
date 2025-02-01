@@ -30,16 +30,18 @@ import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
+import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 class ParallelStatement(
-    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement,
+    override val statement: GrammarStatement,
     private vararg var blocks: StatementList
 ) : Statement(statement) {
     constructor(
         blocks: ArrayList<ArrayList<Statement>>,
-        statement: com.erdodif.capsulate.lang.program.grammar.Statement
+        statement: GrammarStatement
     ) : this(
         statement,
         *blocks.map { it.toTypedArray() }.toTypedArray()
@@ -55,7 +57,7 @@ class ParallelStatement(
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
@@ -66,6 +68,8 @@ class ParallelStatement(
                     with(density) {
                         size = DpSize(it.size.width.toDp(), it.size.height.toDp())
                     }
+                }.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
+                    this.statement == activeStatement
                 }
         ) {
             StackWithSeparator(

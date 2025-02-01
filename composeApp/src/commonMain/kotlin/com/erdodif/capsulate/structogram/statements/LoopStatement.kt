@@ -31,6 +31,7 @@ import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @Composable
 private fun Condition(text: String, modifier: Modifier = Modifier) =
@@ -44,7 +45,7 @@ class LoopStatement(
     var condition: String,
     var statements: StatementList = arrayOf(),
     var inOrder: Boolean = true,
-    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement
+    override val statement: GrammarStatement
 ) : Statement(statement) {
     constructor(statement: While, state: ParserState) : this(
         statement.condition.toString(state),
@@ -61,7 +62,7 @@ class LoopStatement(
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }

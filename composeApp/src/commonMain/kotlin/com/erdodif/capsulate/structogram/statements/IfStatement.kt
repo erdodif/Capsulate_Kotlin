@@ -34,16 +34,18 @@ import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
 import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
+import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
 import kotlinx.coroutines.yield
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 open class IfStatement(
     var condition: String,
     var trueBranch: StatementList = arrayOf(),
     var falseBranch: StatementList = arrayOf(),
-    override val statement: com.erdodif.capsulate.lang.program.grammar.Statement
+    override val statement: GrammarStatement
 ) : Statement(statement) {
     constructor(statement: If, state: ParserState) : this(
         statement.condition.toString(state),
@@ -53,7 +55,7 @@ open class IfStatement(
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var conditionHeight by remember { mutableStateOf(0.dp) }
@@ -61,6 +63,9 @@ open class IfStatement(
         Column(
             modifier.dim(dragging).onDpSize(density) { size = it }.clip(RectangleShape)
                 .fillMaxWidth().defaultMinSize(Dp.Unspecified, max(conditionHeight + 10.dp, 50.dp))
+                .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
+                    this == activeStatement
+                }
         ) {
             DraggableArea(Modifier, draggable, size) {
                 dragging = it

@@ -26,18 +26,23 @@ import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.Statement
 import com.erdodif.capsulate.structogram.statements.StatementList
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 import kotlinx.coroutines.yield
 
 @KParcelize
 class Structogram private constructor(var statements: StatementList) : KParcelable {
-    val program: List<com.erdodif.capsulate.lang.program.grammar.Statement>
+    val program: List<GrammarStatement>
         get() = statements.map { it.statement }
 
     private constructor(statements: List<Statement>) : this(statements.toTypedArray())
 
 
     @Composable
-    fun content(modifier: Modifier = Modifier, draggable: Boolean = false) = key(this, draggable) {
+    fun Content(
+        modifier: Modifier = Modifier,
+        draggable: Boolean = false,
+        activeStatement: GrammarStatement? = null
+    ) = key(this, draggable, activeStatement) {
         Column(
             modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)
                 .padding(Theme.borderWidth, 0.dp)
@@ -45,7 +50,7 @@ class Structogram private constructor(var statements: StatementList) : KParcelab
             Spacer(Modifier.height(Theme.borderWidth))
             StackWithSeparator(
                 statements,
-                { it.Show(Modifier.fillMaxWidth(), draggable) }) { HorizontalBorder() }
+                { it.Show(Modifier.fillMaxWidth(), draggable, activeStatement) }) { HorizontalBorder() }
         }
     }
 
@@ -60,7 +65,7 @@ class Structogram private constructor(var statements: StatementList) : KParcelab
                         it as Left<*>
                         Statement.fromStatement(
                             parserState,
-                            it.value as com.erdodif.capsulate.lang.program.grammar.Statement
+                            it.value as GrammarStatement
                         )
                     }?.toTypedArray()
             return if (parsedStatements?.isNotEmpty() == true) {

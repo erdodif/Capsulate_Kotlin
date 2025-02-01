@@ -1,8 +1,12 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.DebugEnv
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
@@ -12,12 +16,16 @@ import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
-import kotlinx.coroutines.runBlocking
 
 @KParcelize
 class DebugScreen(val structogram: Structogram) : Screen {
 
-    data class State(val structogram: Structogram, val env: DebugEnv, val eventHandler: (Event) -> Unit) : CircuitUiState
+    data class State(
+        val structogram: Structogram,
+        val activeStatement: Statement,
+        val env: Env,
+        val eventHandler: (Event) -> Unit
+    ) : CircuitUiState
 
     sealed interface Event : CircuitUiEvent {
         object StepForward : Event
@@ -31,10 +39,16 @@ class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
 
     @Composable
     override fun present(): State {
-        var debugEnv = DebugEnv(Env.empty, screen.structogram.program)
-        return State(screen.structogram,debugEnv) { event ->
+        var head by remember { mutableStateOf(0) }
+        var env by remember { mutableStateOf(Env.empty) }
+        val statement = screen.structogram.program[head]
+        return State(screen.structogram,statement , env) { event ->
             when (event) {
-                is Event.StepForward -> runBlocking {debugEnv = debugEnv.step()}
+                is Event.StepForward -> {
+                    statement.evaluate(env)
+                    env = env.copy()
+                    head = head + 1
+                }
             }
         }
     }

@@ -28,7 +28,6 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
-import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
@@ -45,11 +44,11 @@ import com.mohamedrejeb.compose.dnd.drop.dropTarget
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 typealias StatementList = Array<Statement>
 
-abstract class Statement(open val statement: com.erdodif.capsulate.lang.program.grammar.Statement) :
-    KParcelable {
+abstract class Statement(open val statement: GrammarStatement) : KParcelable {
 
     /**
      * Creates an area where the current statement can be dragged if enabled
@@ -91,7 +90,11 @@ abstract class Statement(open val statement: com.erdodif.capsulate.lang.program.
     } else content(false)
 
     @Composable
-    abstract fun Show(modifier: Modifier, draggable: Boolean)
+    abstract fun Show(
+        modifier: Modifier = Modifier,
+        draggable: Boolean = false,
+        activeStatement: GrammarStatement? = null
+    )
 
     protected val StatementDragState.draggingInProgress
         get() = this.draggedItem != null && this.draggedItem != this@Statement
@@ -127,7 +130,7 @@ abstract class Statement(open val statement: com.erdodif.capsulate.lang.program.
 
     companion object {
         fun fromStatement(
-            state: ParserState, statement: com.erdodif.capsulate.lang.program.grammar.Statement
+            state: ParserState, statement: GrammarStatement
         ): Statement = when (statement) {
             is If -> IfStatement(statement, state)
             is When -> WhenStatement(statement, state)

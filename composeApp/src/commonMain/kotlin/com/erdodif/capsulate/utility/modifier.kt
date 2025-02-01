@@ -13,3 +13,9 @@ fun Modifier.onDpSize(density: Density, onDpSize: (DpSize) -> Unit): Modifier =
     this.onGloballyPositioned {
         with(density) { onDpSize(DpSize(it.size.width.toDp(), it.size.height.toDp())) }
     }
+
+fun Modifier.conditional(modifier: Modifier, condition: () ->  Boolean) = this.let {
+    if(condition())
+        then(modifier)
+    else this
+}
