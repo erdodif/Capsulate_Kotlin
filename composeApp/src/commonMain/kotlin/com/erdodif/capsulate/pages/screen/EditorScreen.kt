@@ -10,6 +10,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Skip
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
@@ -67,7 +68,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var showCode by remember { mutableStateOf(true) }
         var showStructogram by remember { mutableStateOf(true) }
         var structogram: Structogram by remember {
-            mutableStateOf(Structogram.fromStatements(Command("", Skip)))
+            mutableStateOf(Structogram.fromStatements(Command("", Skip.unique())))
         }
         var dragStatements by remember { mutableStateOf(false) }
         var input by remember { mutableStateOf(false) }
@@ -82,7 +83,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                         initStructogram(inputValue.text){
                             structogram = when (it) {
                                 is Left -> it.value
-                                is Right -> Structogram.fromStatements(Command(it.value.reason, Skip))
+                                is Right -> Structogram.fromStatements(Command(it.value.reason, Skip.unique()))
                             }
                         }
                     }

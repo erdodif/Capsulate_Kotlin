@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.program.grammar.operator
 
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Exp
 import com.erdodif.capsulate.lang.program.grammar.VBool
 import com.erdodif.capsulate.lang.program.grammar.VNat
@@ -15,6 +16,7 @@ import com.erdodif.capsulate.lang.util.Operator
 import com.erdodif.capsulate.lang.util.OperatorTable
 import com.erdodif.capsulate.lang.util._char
 
+@KParcelize
 object Add : BinaryOperator(
     14,
     "+",
@@ -41,6 +43,7 @@ object Add : BinaryOperator(
     }
 )
 
+@KParcelize
 object Sub : BinaryOperator(
     12,
     "-",
@@ -67,6 +70,7 @@ object Sub : BinaryOperator(
     }
 )
 
+@KParcelize
 object Mul : BinaryOperator(
     18,
     "*",
@@ -92,6 +96,7 @@ object Mul : BinaryOperator(
     }
 )
 
+@KParcelize
 object Div : BinaryOperator(
     16,
     "/",
@@ -117,6 +122,7 @@ object Div : BinaryOperator(
     }
 )
 
+@KParcelize
 object Equal : BinaryOperator(
     4,
     "=",
@@ -133,6 +139,7 @@ object Equal : BinaryOperator(
     }
 )
 
+@KParcelize
 object And: BinaryOperator(
     6,
     "&",
@@ -153,6 +160,7 @@ object And: BinaryOperator(
     }
 )
 
+@KParcelize
 object Or: BinaryOperator(
     5,
     "|",
@@ -173,6 +181,7 @@ object Or: BinaryOperator(
     }
 )
 
+@KParcelize
 object Sign : UnaryOperator(
     20,
     "-",
@@ -188,6 +197,7 @@ object Sign : UnaryOperator(
     }
 )
 
+@KParcelize
 object Not : UnaryOperator(
     20,
     "!",
@@ -203,6 +213,7 @@ object Not : UnaryOperator(
     }
 )
 
+@KParcelize
 object Factorial : UnaryOperator(
     20,
     "!",

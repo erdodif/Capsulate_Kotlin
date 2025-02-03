@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
@@ -25,23 +28,22 @@ import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.Statement
-import com.erdodif.capsulate.structogram.statements.StatementList
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 import kotlinx.coroutines.yield
 
 @KParcelize
-class Structogram private constructor(var statements: StatementList) : KParcelable {
-    val program: List<GrammarStatement>
+class Structogram private constructor(var statements: Array<Statement<*>>) : KParcelable {
+    val program: List<UniqueStatement<*>>
         get() = statements.map { it.statement }
 
-    private constructor(statements: List<Statement>) : this(statements.toTypedArray())
+    private constructor(statements: List<Statement<*>>) : this(statements.toTypedArray())
 
 
     @Composable
     fun Content(
         modifier: Modifier = Modifier,
         draggable: Boolean = false,
-        activeStatement: GrammarStatement? = null
+        activeStatement: AnyUniqueStatement? = null
     ) = key(this, draggable, activeStatement) {
         Column(
             modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)
@@ -63,9 +65,10 @@ class Structogram private constructor(var statements: StatementList) : KParcelab
                     ?.map {
                         yield()
                         it as Left<*>
+                        val statement: GrammarStatement = it.value as GrammarStatement
                         Statement.fromStatement(
                             parserState,
-                            it.value as GrammarStatement
+                            statement.unique()
                         )
                     }?.toTypedArray()
             return if (parsedStatements?.isNotEmpty() == true) {
@@ -76,7 +79,7 @@ class Structogram private constructor(var statements: StatementList) : KParcelab
         }
 
 
-        fun fromStatements(vararg statements: Statement): Structogram {
+        fun fromStatements(vararg statements: Statement<*>): Structogram {
             return Structogram(statements.asList())
         }
 

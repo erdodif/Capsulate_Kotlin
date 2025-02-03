@@ -30,9 +30,11 @@ import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.Parallel
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
@@ -46,10 +48,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
-typealias StatementList = Array<Statement>
-
-abstract class Statement(open val statement: GrammarStatement) : KParcelable {
-
+abstract class Statement<T: GrammarStatement>(open val statement: UniqueStatement<T>) : KParcelable {
     /**
      * Creates an area where the current statement can be dragged if enabled
      *
@@ -68,7 +67,7 @@ abstract class Statement(open val statement: GrammarStatement) : KParcelable {
             PointerIcon.Hand, true
         ),
             key = this@Statement,
-            state = state.state,
+            state = state.state,// state.state,
             data = this@Statement,
             dragAfterLongPress = onMobile,
             draggableContent = {
@@ -93,7 +92,7 @@ abstract class Statement(open val statement: GrammarStatement) : KParcelable {
     abstract fun Show(
         modifier: Modifier = Modifier,
         draggable: Boolean = false,
-        activeStatement: GrammarStatement? = null
+        activeStatement: AnyUniqueStatement? = null
     )
 
     protected val StatementDragState.draggingInProgress
@@ -130,8 +129,8 @@ abstract class Statement(open val statement: GrammarStatement) : KParcelable {
 
     companion object {
         fun fromStatement(
-            state: ParserState, statement: GrammarStatement
-        ): Statement = when (statement) {
+            state: ParserState, statement: AnyUniqueStatement
+        ): Statement<*> = when (val statement = statement.statement) {
             is If -> IfStatement(statement, state)
             is When -> WhenStatement(statement, state)
             is Wait -> AwaitStatement(statement, state)

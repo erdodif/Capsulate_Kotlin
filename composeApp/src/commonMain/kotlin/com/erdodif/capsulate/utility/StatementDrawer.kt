@@ -8,10 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.KParcelable
-import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.Statement
-import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.AwaitStatement
 import com.erdodif.capsulate.structogram.statements.Block
@@ -21,12 +18,7 @@ import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.WhenStatement
 
-@KParcelize
-object tmpStatement : Statement , KParcelable{
-    override fun evaluate(env: Env) {
-        TODO("Won't be implemented")
-    }
-}
+val tmpStatement = UniqueStatement<Nothing>(TODO())
 
 private val statements = listOf(
     Command("statement", tmpStatement),
@@ -41,13 +33,12 @@ private val statements = listOf(
         ),
         tmpStatement
     ),
-    LoopStatement("while", arrayOf(), true, tmpStatement),
-    LoopStatement("do while", arrayOf(), false, tmpStatement),
+    LoopStatement("while", listOf(), true, tmpStatement),
+    LoopStatement("do while", listOf(), false, tmpStatement),
     AwaitStatement("await", tmpStatement),
     ParallelStatement(
-        arrayListOf(
-            arrayListOf(), arrayListOf()
-        ), tmpStatement
+        tmpStatement,
+        arrayOf()
     )
 )
 

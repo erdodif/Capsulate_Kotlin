@@ -6,7 +6,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.Statement
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.Skip
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
@@ -22,7 +24,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
 
     data class State(
         val structogram: Structogram,
-        val activeStatement: Statement,
+        val activeStatement: AnyUniqueStatement,
         val env: Env,
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
@@ -41,8 +43,9 @@ class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
     override fun present(): State {
         var head by remember { mutableStateOf(0) }
         var env by remember { mutableStateOf(Env.empty) }
-        val statement = screen.structogram.program[head]
-        return State(screen.structogram,statement , env) { event ->
+        val statement =
+            if (head < screen.structogram.statements.size) screen.structogram.program[head] else Skip.unique()
+        return State(screen.structogram, statement, env) { event ->
             when (event) {
                 is Event.StepForward -> {
                     statement.evaluate(env)

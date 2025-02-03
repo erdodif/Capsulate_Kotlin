@@ -23,7 +23,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Parallel
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
@@ -36,28 +39,28 @@ import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 class ParallelStatement(
-    override val statement: GrammarStatement,
-    private vararg var blocks: StatementList
-) : Statement(statement) {
+    override val statement: UniqueStatement<Parallel>,
+    private vararg var blocks: Array<Statement<*>>
+) : Statement<Parallel>(statement) {
     constructor(
-        blocks: ArrayList<ArrayList<Statement>>,
-        statement: GrammarStatement
+        blocks: ArrayList<ArrayList<Statement<*>>>,
+        statement: UniqueStatement<Parallel>
     ) : this(
         statement,
         *blocks.map { it.toTypedArray() }.toTypedArray()
     )
 
     constructor(statement: Parallel, state: ParserState) : this(
-        statement,
+        statement.unique(),
         *statement.blocks.map { block ->
             block.map { statement ->
-                fromStatement(state, statement)
+                fromStatement(state, statement.unique())
             }.toTypedArray()
         }.toTypedArray()
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: AnyUniqueStatement?) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
@@ -69,7 +72,7 @@ class ParallelStatement(
                         size = DpSize(it.size.width.toDp(), it.size.height.toDp())
                     }
                 }.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                    this.statement == activeStatement
+                    statement == activeStatement
                 }
         ) {
             StackWithSeparator(

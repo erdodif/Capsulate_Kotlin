@@ -4,7 +4,7 @@ import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.util.Env
 
-interface Statement: KParcelable {
+interface Statement : KParcelable {
     fun evaluate(env: Env)
 }
 
@@ -79,8 +79,14 @@ data class Return(val value: Exp<*>) : Statement {
     }
 }
 
+abstract class Loop(open val condition: Exp<*>, open val statements: ArrayList<out Statement>) :
+    Statement
+
 @KParcelize
-data class While(val condition: Exp<*>, val statements: ArrayList<out Statement>) : Statement {
+data class While(
+    override val condition: Exp<*>,
+    override val statements: ArrayList<out Statement>
+) : Loop(condition, statements) {
     override fun evaluate(env: Env) {
         var result = condition.evaluate(env)
         while (result is VBool && result.value) {
@@ -94,7 +100,10 @@ data class While(val condition: Exp<*>, val statements: ArrayList<out Statement>
 }
 
 @KParcelize
-data class DoWhile(val condition: Exp<*>, val statements: ArrayList<out Statement>) : Statement {
+data class DoWhile(
+    override val condition: Exp<*>,
+    override val statements: ArrayList<out Statement>
+) : Loop(condition, statements) {
     override fun evaluate(env: Env) {
         var result: Any?
         do {

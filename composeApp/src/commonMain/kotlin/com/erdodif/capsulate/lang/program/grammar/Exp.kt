@@ -29,10 +29,14 @@ open class Token(open val match: MatchPos) : KParcelable {
         parserState.input[match.start, match.end]
 }
 
-class KeyWord(val id: String, match: MatchPos) : Token(match)
-class Symbol(val id: Char, match: MatchPos) : Token(match)
-class LineEnd(val char: Char, match: MatchPos) : Token(match)
-class Comment(val content: String, match: MatchPos) : Token(match)
+@KParcelize
+class KeyWord(val id: String,override val match: MatchPos) : Token(match)
+@KParcelize
+class Symbol(val id: Char,override val match: MatchPos) : Token(match)
+@KParcelize
+class LineEnd(val char: Char,override val match: MatchPos) : Token(match)
+@KParcelize
+class Comment(val content: String,override val match: MatchPos) : Token(match)
 
 val pComment: Parser<Comment> = orEither(
     right(

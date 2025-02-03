@@ -10,6 +10,9 @@ data class MatchPos(val start: Int, val end: Int) : KParcelable
 
 sealed interface Either<out T, out R>
 
+typealias Value<T> = Left<T>
+typealias Error<R> = Right<R>
+
 data class Left<out T>(val value: T) : Either<T, Nothing>
 data class Right<out R>(val value: R) : Either<Nothing, R>
 

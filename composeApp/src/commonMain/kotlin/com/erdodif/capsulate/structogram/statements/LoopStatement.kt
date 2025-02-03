@@ -21,7 +21,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
+import com.erdodif.capsulate.lang.program.grammar.Loop
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -43,32 +47,34 @@ private fun Condition(text: String, modifier: Modifier = Modifier) =
 @KParcelize
 class LoopStatement(
     var condition: String,
-    var statements: StatementList = arrayOf(),
+    var statements: List<Statement<*>> = listOf(),
     var inOrder: Boolean = true,
-    override val statement: GrammarStatement
-) : Statement(statement) {
+    override val statement: UniqueStatement<Loop>
+) : Statement<Loop>(statement) {
     constructor(statement: While, state: ParserState) : this(
         statement.condition.toString(state),
-        statement.statements.map { fromStatement(state, it) }.toTypedArray(),
+        statement.statements.map { fromStatement(state, it.unique()) },
         true,
-        statement
+        statement.unique()
     )
 
     constructor(statement: DoWhile, state: ParserState) : this(
         statement.condition.toString(state),
-        statement.statements.map { fromStatement(state, it) }.toTypedArray(),
+        statement.statements.map { fromStatement(state, it.unique()) },
         false,
-        statement
+        statement.unique()
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: AnyUniqueStatement?) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
+        val backgroundColor = if (statement == activeStatement) MaterialTheme.colorScheme.tertiary
+        else MaterialTheme.colorScheme.primary
         Column(
             modifier.dim(dragging).fillMaxWidth().height(IntrinsicSize.Min)
-                .background(MaterialTheme.colorScheme.primary).onDpSize(density) { size = it }
+                .background(backgroundColor).onDpSize(density) { size = it }
         ) {
             if (inOrder) { // TODO: This does not work
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)

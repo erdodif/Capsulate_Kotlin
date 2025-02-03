@@ -29,6 +29,14 @@ fun <T> StackWithSeparator(
     scope: @Composable (T) -> Unit,
     placeHolder: @Composable () -> Unit = { commandPlaceHolder() },
     separator: @Composable () -> Unit
+) = StackWithSeparator(list.toList(), scope, placeHolder, separator)
+
+@Composable
+fun <T> StackWithSeparator(
+    list: List<T>,
+    scope: @Composable (T) -> Unit,
+    placeHolder: @Composable () -> Unit = { commandPlaceHolder() },
+    separator: @Composable () -> Unit
 ) {
     if (list.isEmpty()) {
         placeHolder()
@@ -42,4 +50,3 @@ fun <T> StackWithSeparator(
         scope(list[list.size - 1])
     }
 }
-

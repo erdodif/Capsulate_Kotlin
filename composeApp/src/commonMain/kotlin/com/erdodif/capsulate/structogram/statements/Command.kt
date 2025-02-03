@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,30 +13,34 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Abort
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
 import com.erdodif.capsulate.lang.program.grammar.ParallelAssign
 import com.erdodif.capsulate.lang.program.grammar.Return
 import com.erdodif.capsulate.lang.program.grammar.Skip
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
+import kotlin.uuid.ExperimentalUuidApi
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 class Command(
     var text: String,
-    override val statement: GrammarStatement
-) :
-    Statement(statement) {
+    override val statement: UniqueStatement<*>
+) : Statement<GrammarStatement>(statement) {
     constructor(
         statement: GrammarStatement,
         state: ParserState
@@ -50,11 +55,16 @@ class Command(
                     statement.assigns.map { it.second.toString(state) }.toString()
 
             else -> "UNSUPPORTED $statement"
-        }, statement
+        }, UniqueStatement<GrammarStatement>(statement)
     )
 
+    @OptIn(ExperimentalUuidApi::class)
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) =
+    override fun Show(
+        modifier: Modifier,
+        draggable: Boolean,
+        activeStatement: AnyUniqueStatement?
+    ) =
         key(this) {
             var size by remember { mutableStateOf(DpSize.Zero) }
             val density = LocalDensity.current
@@ -65,8 +75,11 @@ class Command(
                         false,
                         Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
                             .padding(Theme.commandPadding)
-                            .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                                this == activeStatement
+                            .conditional(
+                                Modifier.background(MaterialTheme.colorScheme.tertiary)
+                                    .border(3.dp, Color.Red)
+                            ) {
+                                statement == activeStatement
                             }
                     )
                     DropTarget(LocalDraggingStatement.current)
@@ -75,7 +88,12 @@ class Command(
                 StatementText(
                     text,
                     false,
-                    modifier.fillMaxWidth().padding(Theme.commandPadding)
+                    modifier.fillMaxWidth().conditional(
+                        Modifier.background(MaterialTheme.colorScheme.tertiary)
+                            .border(3.dp, Color.Red)
+                    ) {
+                        statement == activeStatement
+                    }.padding(Theme.commandPadding)
                 )
             }
         }

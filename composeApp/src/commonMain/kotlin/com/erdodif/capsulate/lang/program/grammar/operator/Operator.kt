@@ -18,13 +18,14 @@ import com.erdodif.capsulate.lang.util.Operator
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.div
+import kotlinx.serialization.Serializable
 
 @KParcelize
 data class UnaryCalculation(
     val param: Exp<Value>,
     val label: String = "∘",
     val fixation: Fixation,
-    val operation: Env.(Exp<Value>) -> Value
+    val operation: @Serializable Env.(Exp<Value>) -> Value
 ) : Calculation<Value, Env>, Exp<Value>  {
     constructor(first: Exp<Value>, operator: UnaryOperator) : this(
         first,
@@ -47,7 +48,7 @@ data class BinaryCalculation(
     val first: Exp<Value>,
     val second: Exp<Value>,
     val label: String = "∘",
-    val operation: Env.(Exp<Value>, Exp<Value>) -> Value
+    val operation: @Serializable Env.(Exp<Value>, Exp<Value>) -> Value
 ) : Calculation<Value, Env> , Exp<Value> , KParcelable{
     constructor(first: Exp<Value>, second: Exp<Value>, operator: BinaryOperator) : this(
         first,
@@ -69,7 +70,7 @@ open class UnaryOperator(
     override val label: String = "~",
     override val operatorParser: Parser<*>,
     val fixation: Fixation,
-    val operation: Env.(Exp<Value>) -> Value
+    val operation: @Serializable Env.(Exp<Value>) -> Value
 ) : Operator<Exp<Value>>(bindingStrength, label, operatorParser), KParcelable{
     override fun parse(strongerParser: Parser<Exp<Value>>): Parser<Exp<Value>> =
         orEither(when (fixation) {
@@ -89,7 +90,7 @@ open class BinaryOperator(
     override val label: String,
     override val operatorParser: Parser<*>,
     val association: Association,
-    val operation: Env.(Exp<Value>, Exp<Value>) -> Value
+    val operation: @Serializable Env.(Exp<Value>, Exp<Value>) -> Value
 ) : Operator<Exp<Value>>(bindingStrength, label, operatorParser), KParcelable {
     override fun parse(strongerParser: Parser<Exp<Value>>): Parser<Exp<Value>> =
         when (association) {

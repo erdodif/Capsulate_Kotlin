@@ -16,6 +16,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
@@ -29,22 +32,22 @@ import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 @KParcelize
 class AwaitStatement(
     var condition: String,
-    override val statement: GrammarStatement
-) : Statement(statement) {
+    override val statement: UniqueStatement<Wait>
+) : Statement<Wait>(statement) {
     constructor(statement: Wait, state: ParserState) : this(
         statement.condition.toString(state),
-        statement
+        statement.unique()
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: GrammarStatement?) {
+    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: AnyUniqueStatement?) {
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
         DraggableArea(Modifier, draggable, size) { dragging ->
             Row(
                 modifier.onDpSize(density) { size = it }.dim(dragging)
                     .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                        this == activeStatement
+                        statement == activeStatement
                     }
             ) {
                 StatementText(
