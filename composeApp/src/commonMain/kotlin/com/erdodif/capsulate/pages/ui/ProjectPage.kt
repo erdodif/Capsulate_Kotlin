@@ -17,6 +17,8 @@ import com.erdodif.capsulate.pages.screen.DebugPresenter
 import com.erdodif.capsulate.pages.screen.EditorPresenter
 import com.erdodif.capsulate.pages.screen.EditorScreen
 import com.erdodif.capsulate.pages.screen.ProjectScreen
+import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
+import com.erdodif.capsulate.pages.screen.ProjectScreen.State
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.close
 import com.erdodif.capsulate.resources.open_folder
@@ -31,20 +33,20 @@ import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import org.jetbrains.compose.resources.stringResource
 
-class ProjectPage : Ui<ProjectScreen.State> {
+class ProjectPage : Ui<State> {
     companion object Factory : Ui.Factory by screenUiFactory<ProjectScreen>(::ProjectPage)
 
     @Composable
     override fun Content(
-        state: ProjectScreen.State,
+        state: State,
         modifier: Modifier
     ) {
         val picker = rememberDirectoryPickerLauncher(stringResource(Res.string.open_folder), ".") {
             if (it != null) {
                 Napier.e { it.path.toString() }
-                state.eventHandler(ProjectScreen.Event.ProjectSelected(it))
+                state.eventHandler(Event.ProjectSelected(it))
             } else {
-                state.eventHandler(ProjectScreen.Event.Close)
+                state.eventHandler(Event.Close)
             }
         }
         if (state.project == null) {
@@ -68,7 +70,7 @@ class ProjectPage : Ui<ProjectScreen.State> {
                     .build()
                 val backStack = rememberSaveableBackStack(root = EditorScreen(""))
                 val navigator = rememberCircuitNavigator(backStack) {
-                    state.eventHandler(ProjectScreen.Event.Close)
+                    state.eventHandler(Event.Close)
                 }
                 CircuitCompositionLocals(circuit) {
                     NavigableCircuitContent(
@@ -78,7 +80,7 @@ class ProjectPage : Ui<ProjectScreen.State> {
                         unavailableRoute = defaultScreenError
                     )
                 }
-                Button({ state.eventHandler(ProjectScreen.Event.Close) }) { Text(stringResource(Res.string.close)) }
+                Button({ state.eventHandler(Event.Close) }) { Text(stringResource(Res.string.close)) }
             }
         }
     }

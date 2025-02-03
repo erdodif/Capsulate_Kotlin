@@ -1,11 +1,13 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +39,11 @@ import com.erdodif.capsulate.resources.ic_logo_foreground_monochrome_paddingless
 import com.erdodif.capsulate.resources.open
 import com.erdodif.capsulate.resources.open_folder
 import com.erdodif.capsulate.resources.open_preset
+import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.screenUiFactory
+import com.slack.circuit.foundation.LocalCircuit
 import com.slack.circuit.runtime.ui.Ui
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -121,7 +127,7 @@ class EmptyPage() : Ui<EmptyScreen.State> {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(it.headerText, color= MaterialTheme.colorScheme.onSurface)
+                    Text(it.headerText, color = MaterialTheme.colorScheme.onSurface)
                     Button(
                         { state.eventHandler(EmptyScreen.Event.SelectPreset(it)) },
                     ) { Text(stringResource(Res.string.open)) }
@@ -129,4 +135,26 @@ class EmptyPage() : Ui<EmptyScreen.State> {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun EmptyPagePreview() = PreviewTheme {
+    EmptyPage().Content(
+        EmptyScreen.State(false, rememberModalBottomSheetState(), { _ -> }),
+        Modifier.fillMaxSize()
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun EmptyPageOpenModelPreview() = PreviewTheme {
+    val state = rememberModalBottomSheetState()
+    runBlocking{state.show() }
+    EmptyPage().Content(
+        EmptyScreen.State(true, state, { _ -> }),
+        Modifier.fillMaxSize()
+    )
 }

@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,21 +34,36 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragProvider
+import com.erdodif.capsulate.defaultScreenError
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.pages.screen.EditorPresenter
 import com.erdodif.capsulate.pages.screen.EditorScreen
+import com.erdodif.capsulate.presets.presets
+import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.CodeEditor
+import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.utility.UnicodeOverlay
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.erdodif.capsulate.utility.max
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
+import com.slack.circuit.backstack.rememberSaveableBackStack
+import com.slack.circuit.foundation.Circuit
+import com.slack.circuit.foundation.LocalCircuit
+import com.slack.circuit.foundation.NavigableCircuitContent
+import com.slack.circuit.foundation.Navigator
+import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.overlay.OverlayEffect
+import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
+import kotlinx.coroutines.runBlocking
 
 
 class EditorPage() : Ui<EditorScreen.State> {
@@ -214,4 +231,21 @@ internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun EditorPagePreview() = PreviewTheme {
+    val code = TextFieldValue(presets[1].demos[2].code)
+    val structorgram =
+        (runBlocking { Structogram.fromString(code.text) } as Left<Structogram>).value
+    EditorPage().Content(EditorScreen.State(
+        code,
+        structorgram,
+        true,
+        false,
+        true,
+        false
+    ) {}, Modifier.fillMaxSize()
+    )
 }

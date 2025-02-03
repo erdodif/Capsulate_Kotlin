@@ -1,8 +1,9 @@
 package com.erdodif.capsulate.utility
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,52 +26,68 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.erdodif.capsulate.structogram.composables.Theme
+import com.slack.circuit.foundation.CircuitPreview
 
-private val theme = ColorScheme(
-    primary = Color(84, 168, 245),
-    onPrimary = Color(32, 32, 32),
-    primaryContainer = Color(29, 30, 33),
-    onPrimaryContainer = Color(84, 168, 245),
-    inversePrimary = Color(84, 168, 245),
-    secondary = Color(178, 173, 95),
-    onSecondary = Color(32, 32, 32),
-    secondaryContainer = Color(178, 173, 95),
-    onSecondaryContainer = Color(32, 32, 32),
-    tertiary = Color(206, 142, 108),
-    onTertiary = Color(32, 32, 32),
-    tertiaryContainer = Color(243, 180, 148),
-    onTertiaryContainer = Color(32, 32, 32),
-    background = Color(42, 45, 48),
-    onBackground = Color(196, 197, 204),
-    surface = Color(29, 30, 33),
-    onSurface = Color(196, 197, 204),
-    surfaceVariant = Color(77, 78, 81),
-    onSurfaceVariant = Color(0, 0, 0),
-    surfaceTint = Color(0, 0, 0),
-    inverseSurface = Color(196, 197, 204),
-    inverseOnSurface = Color(29, 30, 33),
-    error = Color(208, 46, 46),
-    onError = Color(43, 10, 10),
-    errorContainer = Color(112, 61, 61),
-    onErrorContainer = Color(45, 10, 10),
-    outline = Color(0, 0, 0),
-    outlineVariant = Color(32, 32, 32),
-    scrim = Color(0, 0, 0),
-    surfaceBright = Color(255, 255, 255),
-    surfaceDim = Color(0, 0, 0),
-    surfaceContainer = Color(29, 29, 29),
-    surfaceContainerHigh = Color(49, 40, 43),
-    surfaceContainerHighest = Color(69, 60, 63),
-    surfaceContainerLow = Color(19, 20, 23),
-    surfaceContainerLowest = Color(9, 10, 13),
-)
+object Preview {
+
+    val theme = ColorScheme(
+        primary = Color(84, 168, 245),
+        onPrimary = Color(32, 32, 32),
+        primaryContainer = Color(29, 30, 33),
+        onPrimaryContainer = Color(84, 168, 245),
+        inversePrimary = Color(84, 168, 245),
+        secondary = Color(178, 173, 95),
+        onSecondary = Color(32, 32, 32),
+        secondaryContainer = Color(178, 173, 95),
+        onSecondaryContainer = Color(32, 32, 32),
+        tertiary = Color(206, 142, 108),
+        onTertiary = Color(32, 32, 32),
+        tertiaryContainer = Color(243, 180, 148),
+        onTertiaryContainer = Color(32, 32, 32),
+        background = Color(42, 45, 48),
+        onBackground = Color(196, 197, 204),
+        surface = Color(29, 30, 33),
+        onSurface = Color(196, 197, 204),
+        surfaceVariant = Color(77, 78, 81),
+        onSurfaceVariant = Color(0, 0, 0),
+        surfaceTint = Color(0, 0, 0),
+        inverseSurface = Color(196, 197, 204),
+        inverseOnSurface = Color(29, 30, 33),
+        error = Color(208, 46, 46),
+        onError = Color(43, 10, 10),
+        errorContainer = Color(112, 61, 61),
+        onErrorContainer = Color(45, 10, 10),
+        outline = Color(0, 0, 0),
+        outlineVariant = Color(32, 32, 32),
+        scrim = Color(0, 0, 0),
+        surfaceBright = Color(255, 255, 255),
+        surfaceDim = Color(0, 0, 0),
+        surfaceContainer = Color(29, 29, 29),
+        surfaceContainerHigh = Color(49, 40, 43),
+        surfaceContainerHighest = Color(69, 60, 63),
+        surfaceContainerLow = Color(19, 20, 23),
+        surfaceContainerLowest = Color(9, 10, 13),
+    )
+}
+
+@Composable
+fun PreviewTheme(content: @Composable (BoxScope.() -> Unit)) = CircuitPreview {
+    MaterialTheme(Preview.theme) {
+        Box(
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(5.dp),
+            content = content
+        )
+    }
+}
 
 @Composable
 fun PreviewColumn(width: Dp = 250.dp, content: LazyGridScope.() -> Unit) = MaterialTheme(
-    colorScheme = theme
+    colorScheme = Preview.theme
 ) {
     Theme.initialize()
-    BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    BoxWithConstraints(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+    ) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(width),
             modifier = Modifier.verticalScroll(rememberScrollState()).padding(10.dp)
@@ -95,4 +112,3 @@ fun LazyGridScope.labeled(text: String, content: @Composable (ColumnScope.() -> 
         content()
     }
 }
-

@@ -6,7 +6,6 @@ import androidx.annotation.IntRange
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 @OptIn(ExperimentalMultiplatform::class)
 @OptionalExpectation
-@Repeatable
 expect annotation class Preview(
     val name: String = "",
     val group: String = "",
