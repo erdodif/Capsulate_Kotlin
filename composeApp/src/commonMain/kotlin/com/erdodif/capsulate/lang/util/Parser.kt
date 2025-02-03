@@ -6,7 +6,11 @@ import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 
 @KParcelize
-data class MatchPos(val start: Int, val end: Int) : KParcelable
+data class MatchPos(val start: Int, val end: Int) : KParcelable{
+    companion object Constants{
+        val ZERO = MatchPos(0,0)
+    }
+}
 
 sealed interface Either<out T, out R>
 

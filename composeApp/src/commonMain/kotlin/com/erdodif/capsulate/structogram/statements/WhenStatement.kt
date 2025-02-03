@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -27,9 +28,12 @@ import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.BoolLit
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.When
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
@@ -39,10 +43,12 @@ import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
 import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
+import com.erdodif.capsulate.utility.labeled
+import com.erdodif.capsulate.utility.PreviewColumn
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
-import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
+import kotlin.collections.listOf
 
 @KParcelize
 class WhenStatement(
@@ -64,7 +70,11 @@ class WhenStatement(
     }.toTypedArray(), statement.unique())
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: AnyUniqueStatement?) {
+    override fun Show(
+        modifier: Modifier,
+        draggable: Boolean,
+        activeStatement: AnyUniqueStatement?
+    ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
@@ -140,3 +150,13 @@ class Block(
     var condition: String,
     var statements: List<Statement<*>> = listOf()
 ) : KParcelable
+
+@Preview
+@Composable
+fun WhenPreview() = PreviewColumn(width= 400.dp) {
+    val parserState = ParserState("")
+    val statement = WhenStatement(When(listOf(BoolLit(false, MatchPos.ZERO) to listOf(Skip)), listOf()), parserState)
+    labeled("When with else") { statement.Show(Modifier.fillMaxWidth(), false, null) }
+    labeled("When with else active") { statement.Show(Modifier.fillMaxWidth(), false, statement.statement) }
+}
+

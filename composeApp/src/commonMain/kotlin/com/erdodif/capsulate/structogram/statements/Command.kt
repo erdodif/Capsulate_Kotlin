@@ -1,11 +1,13 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -13,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -27,9 +28,12 @@ import com.erdodif.capsulate.lang.program.grammar.ParallelAssign
 import com.erdodif.capsulate.lang.program.grammar.Return
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
+import com.erdodif.capsulate.utility.labeled
+import com.erdodif.capsulate.utility.PreviewColumn
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
@@ -76,8 +80,8 @@ class Command(
                         Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
                             .padding(Theme.commandPadding)
                             .conditional(
-                                Modifier.background(MaterialTheme.colorScheme.tertiary)
-                                    .border(3.dp, Color.Red)
+                                Modifier.background(MaterialTheme.colorScheme.tertiaryContainer)
+                                    .border(3.dp, MaterialTheme.colorScheme.tertiary)
                             ) {
                                 statement == activeStatement
                             }
@@ -89,12 +93,23 @@ class Command(
                     text,
                     false,
                     modifier.fillMaxWidth().conditional(
-                        Modifier.background(MaterialTheme.colorScheme.tertiary)
-                            .border(3.dp, Color.Red)
+                        Modifier.background(MaterialTheme.colorScheme.tertiaryContainer)
+                            .border(3.dp, MaterialTheme.colorScheme.tertiary)
                     ) {
                         statement == activeStatement
                     }.padding(Theme.commandPadding)
                 )
             }
         }
+}
+
+@Preview
+@Composable
+fun CommandPreview() {
+    val command = Command("statement", Skip.unique())
+    val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
+    PreviewColumn {
+        labeled("Regular") { command.Show(modifier, false, null) }
+        labeled("Active") { command.Show(modifier, false, command.statement) }
+    }
 }

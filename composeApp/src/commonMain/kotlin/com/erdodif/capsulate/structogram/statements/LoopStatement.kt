@@ -1,6 +1,8 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -22,26 +24,33 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.Loop
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.While
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
+import com.erdodif.capsulate.utility.labeled
+import com.erdodif.capsulate.utility.PreviewColumn
+import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
-import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @Composable
-private fun Condition(text: String, modifier: Modifier = Modifier) =
+private fun Condition(text: String, modifier: Modifier = Modifier, active: Boolean) =
     StatementText(
         text,
-        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(Theme.commandPadding)
+        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min)
+            .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) { active }
+            .padding(Theme.commandPadding)
     )
 
 @KParcelize
@@ -66,11 +75,16 @@ class LoopStatement(
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: AnyUniqueStatement?) {
+    override fun Show(
+        modifier: Modifier,
+        draggable: Boolean,
+        activeStatement: AnyUniqueStatement?
+    ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
-        val backgroundColor = if (statement == activeStatement) MaterialTheme.colorScheme.tertiary
+        val active = statement == activeStatement
+        val backgroundColor = if (active) MaterialTheme.colorScheme.tertiary
         else MaterialTheme.colorScheme.primary
         Column(
             modifier.dim(dragging).fillMaxWidth().height(IntrinsicSize.Min)
@@ -80,7 +94,7 @@ class LoopStatement(
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)
                 {
                     dragging = it
-                    Condition(condition, Modifier.fillMaxWidth())
+                    Condition(condition, Modifier.fillMaxWidth(), active)
                 }
             }
             Row(Modifier.weight(1f, true)) {
@@ -99,9 +113,31 @@ class LoopStatement(
             if (!inOrder) {
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)
                 {
-                    Condition(condition, Modifier.fillMaxWidth())
+                    Condition(condition, Modifier.fillMaxWidth(), active)
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun LoopPreview() {
+    val tmpWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip))
+    val tmpDoWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip))
+    val statements = listOf(
+        Command("statement 1", Skip.unique()),
+        Command("statement 2", Skip.unique()),
+        Command("...", Skip.unique()),
+        Command("statement n", Skip.unique())
+    )
+    val whileStatement = LoopStatement("condition", statements, true, tmpWhile.unique())
+    val doWhileStatement = LoopStatement("condition", statements, false, tmpDoWhile.unique())
+    val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
+    PreviewColumn {
+        labeled("While regular") { whileStatement.Show(modifier, false, null)}
+        labeled("While active") { whileStatement.Show(modifier, false, whileStatement.statement)}
+        labeled("DoWhile regular") { doWhileStatement.Show(modifier, false, null)}
+        labeled("DoWhile active") { doWhileStatement.Show(modifier, false, doWhileStatement.statement)}
     }
 }

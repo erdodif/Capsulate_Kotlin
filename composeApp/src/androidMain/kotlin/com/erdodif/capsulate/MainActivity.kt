@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.core.view.WindowCompat
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
@@ -64,7 +66,8 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@Preview
+@Preview(wallpaper = Wallpapers.BLUE_DOMINATED_EXAMPLE)
+@PreviewScreenSizes
 @Composable
 fun AppAndroidPreview() {
     App()

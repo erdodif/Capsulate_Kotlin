@@ -1,6 +1,8 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -27,15 +29,18 @@ import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.statement
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
+import com.erdodif.capsulate.utility.labeled
+import com.erdodif.capsulate.utility.PreviewColumn
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
-import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 class ParallelStatement(
@@ -60,7 +65,11 @@ class ParallelStatement(
     )
 
     @Composable
-    override fun Show(modifier: Modifier, draggable: Boolean, activeStatement: AnyUniqueStatement?) {
+    override fun Show(
+        modifier: Modifier,
+        draggable: Boolean,
+        activeStatement: AnyUniqueStatement?
+    ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
@@ -78,7 +87,7 @@ class ParallelStatement(
             StackWithSeparator(
                 blocks,
                 {
-                    Column(Modifier.weight(1f, true)) {
+                    Column(Modifier.weight(1f, true).defaultMinSize(30.dp, Dp.Unspecified)) {
                         StackWithSeparator(
                             it,
                             { statement ->
@@ -106,5 +115,24 @@ class ParallelStatement(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun ParallelPreview() = PreviewColumn {
+    val parserState = ParserState("{ } | { }")
+    val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
+    labeled("From { } | { }") {
+        Statement.fromStatement(
+            parserState,
+            (with(parserState) { statement() } as Pass).value.unique())
+            .Show(modifier, false, null)
+    }
+    labeled("From else") {
+        ParallelStatement(
+            Parallel(arrayListOf()).unique(),
+            arrayOf<Statement<*>>()
+        ).Show(modifier, false, null)
     }
 }

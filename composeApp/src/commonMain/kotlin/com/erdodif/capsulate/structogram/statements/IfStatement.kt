@@ -1,6 +1,8 @@
 package com.erdodif.capsulate.structogram.statements
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -26,9 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.If
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
@@ -38,8 +43,10 @@ import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.composables.caseIndicator
 import com.erdodif.capsulate.structogram.composables.commandPlaceHolder
 import com.erdodif.capsulate.structogram.composables.elseIndicator
+import com.erdodif.capsulate.utility.PreviewColumn
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
+import com.erdodif.capsulate.utility.labeled
 import com.erdodif.capsulate.utility.onDpSize
 
 @KParcelize
@@ -75,10 +82,10 @@ open class IfStatement(
                 dragging = it
                 StatementText(
                     condition,
-                    modifier = Modifier.fillMaxWidth().caseIndicator().elseIndicator()
+                    modifier = Modifier.fillMaxWidth()
                         .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
                             statement == activeStatement
-                        }.padding(Theme.ifPadding)
+                        }.caseIndicator().elseIndicator().padding(Theme.ifPadding)
                 )
             }
             HorizontalBorder()
@@ -124,4 +131,25 @@ open class IfStatement(
 
         }
     }
+}
+
+@Preview
+@Composable
+fun IfPreview() = PreviewColumn(width = 400.dp) {
+    val statement =
+        IfStatement(
+            "condition",
+            listOf(
+                Command("true statement 1", Skip.unique()),
+                Command("true statement 2", Skip.unique())
+            ),
+            listOf(
+                Command("false statement 1", Skip.unique()),
+                Command("false statement 2", Skip.unique())
+            ),
+            If(BoolLit(true, MatchPos.ZERO), arrayListOf(), arrayListOf()).unique()
+        )
+    val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
+    labeled("Regular If") { statement.Show(modifier, false, null) }
+    labeled("Active If") { statement.Show(modifier, false, statement.statement) }
 }

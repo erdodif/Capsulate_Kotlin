@@ -61,6 +61,14 @@ val presets: Array<Preset> = arrayOf(
             Demo(
                 "a := 0\nif a = 1 {\n\tb := 2\n}\nelse {\n\tc := 3\n}\n",
                 "Branching statement when the condition fails the test"
+            ),
+            Demo(
+                "{ a := 1 } | { a := 2 }",
+                "Parallel statements to be executed. Will only end execution when all branches finished"
+            ),
+            Demo(
+                "{ } | { }",
+                "Empty Parallel statement"
             )
         )
     )
