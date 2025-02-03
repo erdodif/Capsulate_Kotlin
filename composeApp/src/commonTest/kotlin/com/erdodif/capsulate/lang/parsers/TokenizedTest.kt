@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.parsers
 
+import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.program.grammar.EOF
 import com.erdodif.capsulate.lang.program.grammar.and
 import com.erdodif.capsulate.lang.program.grammar.char
@@ -15,9 +16,13 @@ class TokenizedTest {
     }
 
     @Test
-    fun `tok fails eof with whitespace`(){
-        tok(EOF) pass "  "
+    fun `tok passes topLevel eof on whitespace`() {
         topLevel(tok(EOF)) pass "  "
+    }
+
+    @Test
+    fun `tok fails eof with whitespace`(){
+        tok(EOF) fail "  "
     }
 
     @Test

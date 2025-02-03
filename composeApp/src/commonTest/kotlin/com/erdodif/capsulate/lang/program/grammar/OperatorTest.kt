@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.assertFail
 import com.erdodif.capsulate.assertPass
 import com.erdodif.capsulate.assertTrue
@@ -33,6 +34,7 @@ class OperatorTest {
             override fun hashCode() = char.hashCode()
         }
 
+        @KParcelize
         private data class TestExp(val matchedChar: Char) : Exp<Value> {
             override fun evaluate(context: Env) = TestValue(matchedChar)
             override fun toString(state: ParserState) = matchedChar.toString()

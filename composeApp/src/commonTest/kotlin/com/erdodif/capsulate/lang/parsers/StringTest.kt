@@ -21,7 +21,7 @@ class StringTest {
 
     @Test
     fun `string fails on mismatched string`() {
-        string("text") fail "texz" at 4
+        string("text") fail "texz" at 3
         string("text") fail "zext" at 0
     }
 
