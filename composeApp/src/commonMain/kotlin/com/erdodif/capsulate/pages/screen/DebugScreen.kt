@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.EvalSequence
@@ -26,8 +25,9 @@ class DebugScreen(val structogram: Structogram) : Screen {
 
     data class State(
         val structogram: Structogram,
-        val activeStatement: AnyUniqueStatement,
+        val activeStatement: AnyUniqueStatement?,
         val env: Env,
+        val stepCount: Int,
         val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
 
@@ -51,15 +51,15 @@ class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
                 )
             )
         }
-        var env by remember { mutableStateOf(Env.empty) }
-        var statement by remember { mutableStateOf(screen.structogram.program.first()) }
+        var envState by remember { mutableStateOf(Env.empty to 0) }
+        var statement: AnyUniqueStatement? by remember { mutableStateOf(screen.structogram.program.first()) }
         println(debug)
-        return State(screen.structogram, statement, debug.env) { event ->
+        return State(screen.structogram, statement, envState.first,envState.second ) { event ->
             when (event) {
                 is Event.StepForward -> {
                     debug.step()
-                    env = debug.env
-                    statement = (debug.head ?: Skip).unique()
+                    envState = debug.env to 1
+                    statement = debug.head?.unique()
                 }
             }
         }

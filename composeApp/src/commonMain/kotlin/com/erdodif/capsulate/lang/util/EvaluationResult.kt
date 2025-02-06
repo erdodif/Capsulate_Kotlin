@@ -54,11 +54,10 @@ data class EvaluationContext(
         get() = atomicOngoing ?: currentStatement
 
     fun step(): EvaluationContext {
-        if(atomicOngoing == null && currentStatement == null){
-            if(entries.isEmpty()){
+        if (atomicOngoing == null && currentStatement == null) {
+            if (entries.isEmpty()) {
                 return this
-            }
-            else{
+            } else {
                 currentStatement = entries.removeAt(random.nextInt(entries.size))
             }
         }
@@ -68,9 +67,7 @@ data class EvaluationContext(
                 atomicOngoing = null
                 oldStatement.evaluate(env)
             } else {
-                val oldStatement = currentStatement!!
-                currentStatement = if(entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
-                oldStatement.evaluate(env)
+                currentStatement!!.evaluate(env)
             }
         when (stack) {
             Finished -> {}
@@ -84,6 +81,8 @@ data class EvaluationContext(
                 }
             }
         }
+        currentStatement =
+            if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
         return this
     }
 }

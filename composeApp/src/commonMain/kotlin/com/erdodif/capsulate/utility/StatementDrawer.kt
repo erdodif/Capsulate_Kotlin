@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
-import com.erdodif.capsulate.lang.program.grammar.Comment
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.IntLit

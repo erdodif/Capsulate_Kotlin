@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,34 +24,38 @@ class DebugPage : Ui<DebugScreen.State> {
     companion object Factory : Ui.Factory by screenUiFactory<DebugScreen>(::DebugPage)
 
     @Composable
-    override fun Content(
-        state: DebugScreen.State,
-        modifier: Modifier
-    ) {
-        Column {
+    override fun Content(state: DebugScreen.State, modifier: Modifier) {
+        Column(Modifier.safeContentPadding(),verticalArrangement = Arrangement.SpaceBetween) {
             state.structogram.Content(
                 modifier = Modifier.fillMaxWidth(),
                 draggable = false,
-                activeStatement = state.activeStatement
+                activeStatement = state.activeStatement,
             )
-            Column(Modifier.border(1.dp, Color.Red).padding(5.dp)) {
-                for (parameter in state.env.parameters) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(parameter.id)
-                        Text(parameter.value.toString())
-                        Text(parameter.type.toString())
+            if (state.env.parameters.isEmpty()) {
+                Text("() : Empty Environment!", color = MaterialTheme.colorScheme.error)
+            } else {
+                Column(Modifier.border(1.dp, Color.Red).padding(5.dp)) {
+                    for (parameter in state.env.parameters) {
+                        Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(parameter.id)
+                            Text(parameter.value.toString())
+                            Text(parameter.type.toString())
+                        }
                     }
                 }
             }
-            Button({
-                println(state.env)
-            }) { Text("Click") }
-            Row {
-                Button(
-                    { state.eventHandler(Event.StepForward) },
-                ) { Text("Step forward") }
+            Column {
+                Row { Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") } }
+                if (state.activeStatement == null) {
+                    Text(
+                        "Finished in ${state.stepCount+1} steps!",
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                } else {
+                    Text("Steps taken: ${state.stepCount+1}", color = MaterialTheme.colorScheme.secondary)
+                }
             }
         }
-        //TODO("Highligted structogram and/or code needed. + The debug controls")
+        // TODO("Highligted structogram and/or code needed. + The debug controls")
     }
 }

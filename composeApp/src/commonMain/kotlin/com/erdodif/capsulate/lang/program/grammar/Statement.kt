@@ -4,9 +4,9 @@ import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.util.AbortEvaluation
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.EvalSequence
 import com.erdodif.capsulate.lang.util.EvaluationResult
 import com.erdodif.capsulate.lang.util.Finished
-import com.erdodif.capsulate.lang.util.EvalSequence
 import com.erdodif.capsulate.lang.util.SingleStatement
 import kotlin.collections.plus
 
@@ -40,7 +40,7 @@ data class When(
     val elseBlock: List<Statement>? = null,
 ) : Statement {
 
-    override fun evaluate(env: Env): EvaluationResult { // TODO: allow non-determinism
+    override fun evaluate(env: Env): EvaluationResult {
         val source =
             if (env.deterministic) blocks.removeFirst()
             else blocks.removeAt(env.random.nextInt(blocks.size))
@@ -138,7 +138,16 @@ data class Parallel(val blocks: ArrayList<out ArrayList<out Statement>>) : State
     override fun evaluate(env: Env): EvaluationResult {
         val newBlocks: MutableList<ArrayDeque<Statement>> =
             blocks.map { ArrayDeque(it) }.toMutableList()
-        val index = env.random.nextInt(newBlocks.size)
+        var index: Int
+        do {
+            index = env.random.nextInt(newBlocks.size)
+            if (blocks[index].isEmpty()) {
+                blocks.removeAt(index)
+            }
+        } while (index < blocks.size && blocks[index].isEmpty())
+        if (blocks.isEmpty()) {
+            return Finished
+        }
         val list = newBlocks[index]
         return when (val result = list.removeFirst().evaluate(env)) {
             Finished -> {
