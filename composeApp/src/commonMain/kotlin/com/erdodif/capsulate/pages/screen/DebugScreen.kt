@@ -1,15 +1,17 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.EvalSequence
+import com.erdodif.capsulate.lang.util.EvaluationContext
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
 import com.erdodif.capsulate.structogram.Structogram
@@ -26,7 +28,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
         val structogram: Structogram,
         val activeStatement: AnyUniqueStatement,
         val env: Env,
-        val eventHandler: (Event) -> Unit
+        val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
 
     sealed interface Event : CircuitUiEvent {
@@ -41,19 +43,25 @@ class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
 
     @Composable
     override fun present(): State {
-        var head by remember { mutableStateOf(0) }
+        var debug by remember {
+            mutableStateOf(
+                EvaluationContext(
+                    Env.empty,
+                    EvalSequence(screen.structogram.program.map { it.statement }),
+                )
+            )
+        }
         var env by remember { mutableStateOf(Env.empty) }
-        val statement =
-            if (head < screen.structogram.statements.size) screen.structogram.program[head] else Skip.unique()
-        return State(screen.structogram, statement, env) { event ->
+        var statement by remember { mutableStateOf(screen.structogram.program.first()) }
+        println(debug)
+        return State(screen.structogram, statement, debug.env) { event ->
             when (event) {
                 is Event.StepForward -> {
-                    statement.evaluate(env)
-                    env = env.copy()
-                    head = head + 1
+                    debug.step()
+                    env = debug.env
+                    statement = (debug.head ?: Skip).unique()
                 }
             }
         }
     }
-
 }

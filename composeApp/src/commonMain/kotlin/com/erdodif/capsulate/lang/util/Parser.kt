@@ -1,4 +1,4 @@
-@file:Suppress("MemberVisibilityCanBePrivate", "UNUSED")
+@file:Suppress("MemberVisibilityCanBePrivate", "UNUSED", "NOTHING_TO_INLINE")
 
 package com.erdodif.capsulate.lang.util
 

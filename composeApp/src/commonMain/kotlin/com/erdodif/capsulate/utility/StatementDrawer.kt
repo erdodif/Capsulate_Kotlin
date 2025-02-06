@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.program.grammar.Assign
+import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Comment
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
@@ -45,11 +46,11 @@ private val statements = listOf(
             Block("case"),
             Block("else")
         ),
-        statement = When(listOf(boolLit to listOf(), boolLit to listOf()), listOf()).unique()
+        statement = When(mutableListOf(boolLit to listOf(), boolLit to listOf()), listOf()).unique()
     ),
     LoopStatement("while", listOf(), true, While(boolLit,arrayListOf()).unique()),
     LoopStatement("do while", listOf(), false, DoWhile(boolLit, arrayListOf()).unique()),
-    AwaitStatement("await", Wait(boolLit).unique()),
+    AwaitStatement("await", Wait(boolLit, Atomic(listOf())).unique()),
     ParallelStatement(
         Parallel(arrayListOf(arrayListOf(assign.statement),arrayListOf(assign.statement))).unique(),
         arrayOf(Command("", Skip.unique()), Command(" ", Skip.unique()))

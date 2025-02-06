@@ -1,6 +1,9 @@
 package com.erdodif.capsulate.lang.program.grammar
 
-interface Value {
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
+
+interface Value: KParcelable {
     override operator fun equals(other: Any?): Boolean
 }
 
@@ -8,14 +11,19 @@ abstract class VNum : Value {
     abstract val value: Int
 }
 
+@KParcelize
 data class VNat(private val _value: UInt) : VNum() {   // ℕ
     override val value: Int
         get() = _value.toInt()
 }
 
+@KParcelize
 data class VWhole(override val value: Int) : VNum()   // ZZ
+@KParcelize
 data class VStr(val value: String) : Value   // 𝕊
+@KParcelize
 data class VBool(val value: Boolean) : Value
+@KParcelize
 data class VCharacter(val value: Char) : Value   // ℂ
 /*TODO:
 class VFile: Value   // sx,dx,x : read

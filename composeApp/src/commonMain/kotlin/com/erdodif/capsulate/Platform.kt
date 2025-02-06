@@ -10,6 +10,11 @@ import androidx.compose.runtime.Composable
 // No `expect` keyword here
 annotation class KParcelize()
 
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.BINARY)
+// No `expect` keyword here
+annotation class RawValue
+
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect interface KParcelable
 

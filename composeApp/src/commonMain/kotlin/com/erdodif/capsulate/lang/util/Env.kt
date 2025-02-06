@@ -1,30 +1,37 @@
 package com.erdodif.capsulate.lang.util
 
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Type
 import com.erdodif.capsulate.lang.program.grammar.Value
 import com.erdodif.capsulate.lang.program.grammar.type
+import kotlin.random.Random
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-data class Parameter(val id: String, val type: Type, var value: Value){
+@KParcelize
+data class Parameter(val id: String, val type: Type, var value: Value): KParcelable {
     override fun toString(): String {
         return "#$id = $value : $type"
     }
 }
 
-class Env(
+@KParcelize
+data class Env(
     private val values: MutableList<Parameter>,
-    val deterministic: Boolean = false
-) {
+    val deterministic: Boolean = false,
+    private val seed: Int = Random.nextInt(),
+): KParcelable {
+    val random = Random(seed)
+
     val parameters: ImmutableList<Parameter>
         get() = values.toImmutableList()
 
-    fun copy(): Env{
+    fun copy(): Env {
         return Env(values.map { it.copy() }.toMutableList(), deterministic)
     }
-    /**
-     * Determines whether the asked variable is defined in this context
-     */
+
+    /** Determines whether the asked variable is defined in this context */
     fun present(id: String): Boolean = values.any { it.id == id }
 
     /**
@@ -38,26 +45,19 @@ class Env(
         return values.find { it.id == id }!!.value
     }
 
-
-    /**
-     * Returns the variable's value
-     */
+    /** Returns the variable's value */
     fun get(id: String): Either<Parameter, Unit> =
         if (present(id)) {
             val pos = values.indexOfFirst { it.id == id }
             Left(Parameter(values[pos].id, values[pos].type, values[pos].value))
         } else Right(Unit)
 
-    /**
-     * Returns the variable's value
-     */
+    /** Returns the variable's value */
     fun getValue(id: String): Either<Value, Unit> =
-        if (present(id)) Left(unSafeGet(id))
-        else Right(Unit)
+        if (present(id)) Left(unSafeGet(id)) else Right(Unit)
 
     fun typeOf(id: String): Type =
-        if (present(id)) values.find { it.id == id }!!.type
-        else Type.NEVER
+        if (present(id)) values.find { it.id == id }!!.type else Type.NEVER
 
     /**
      * Sets the variable's content to the desired value

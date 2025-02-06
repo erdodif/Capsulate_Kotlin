@@ -25,7 +25,6 @@ import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
 import com.erdodif.capsulate.lang.program.grammar.ParallelAssign
-import com.erdodif.capsulate.lang.program.grammar.Return
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
@@ -52,7 +51,6 @@ class Command(
         when (statement) {
             is Skip -> "SKIP"
             is Abort -> "ABORT"
-            is Return -> "RETURN ${statement.value.toString(state)}"
             is Expression -> "EXP: ${statement.expression.toString(state)}"
             is Assign -> "${statement.id} := ${statement.value.toString(state)}"
             is ParallelAssign -> statement.assigns.map { it.first }.toString() + " := " +

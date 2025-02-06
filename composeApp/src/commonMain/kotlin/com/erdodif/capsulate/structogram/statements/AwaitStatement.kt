@@ -20,7 +20,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
+import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.Wait
@@ -34,7 +36,6 @@ import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.labeled
 import com.erdodif.capsulate.utility.onDpSize
-import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @KParcelize
 class AwaitStatement(
@@ -74,9 +75,8 @@ class AwaitStatement(
 @Preview
 @Composable
 fun AwaitPreview() = PreviewColumn {
-    val statement = AwaitStatement("guard",Wait(BoolLit(false, MatchPos.ZERO)).unique())
+    val statement = AwaitStatement("guard",Wait(BoolLit(false, MatchPos.ZERO), Atomic(listOf(Skip))).unique())
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") { statement.Show(modifier, false, null) }
     labeled("Active") { statement.Show(modifier, false, statement.statement) }
-
 }

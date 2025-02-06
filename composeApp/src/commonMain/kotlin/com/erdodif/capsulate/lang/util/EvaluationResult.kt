@@ -1,73 +1,89 @@
 package com.erdodif.capsulate.lang.util
 
+import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Statement
-import io.github.aakira.napier.Napier
+import kotlin.random.Random
 
-sealed interface EvaluationStack {
-    /**
-     * Evaluates the "first" statement from the
-     */
-    fun evaluate(env: Env): EvaluationStack
-}
+sealed interface EvaluationResult : KParcelable
 
-data object EmptyEvaluationStack : EvaluationStack {
-    override fun evaluate(env: Env) = this
-}
+@KParcelize
+data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult, Statement {
+    constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
-data class SingleEvaluationStack(val nextStatement: Statement) : EvaluationStack {
-    override fun evaluate(env: Env) = nextStatement.evaluate(env)
-}
-
-data class AtomicEvaluationStack(private val _statements: ArrayDeque<Statement>) : EvaluationStack {
-
-    val statements: List<Statement>
-        get() = _statements
-
-    override fun evaluate(env: Env): EvaluationStack {
-        val first = _statements.removeFirst()
-        if (_statements.isEmpty()) {
-            return EmptyEvaluationStack
+    override fun evaluate(env: Env): EvaluationResult {
+        val result = statements.removeFirst().evaluate(env)
+        if (statements.isEmpty()) {
+            return result
         }
-        return when (val stack = _statements.first().evaluate(env)) {
-            is EmptyEvaluationStack -> this
-            is SingleEvaluationStack -> {
-                _statements.addFirst(stack.nextStatement)
+        if (statements.size == 1 && result is Finished) {
+            return SingleStatement(statements.first())
+        }
+        return when (result) {
+            is Finished -> this
+            is AbortEvaluation -> result
+            is SingleStatement -> {
+                statements.addFirst(result.next)
                 this
             }
-
-            is AtomicEvaluationStack -> {
-                Napier.d {
-                    "Atomic evaluation on statement $first generated another Atomic "
-                }
-                _statements.addAll(0, stack.statements)
+            is EvalSequence -> {
+                statements.addAll(0, result.statements)
                 this
             }
         }
     }
 }
 
-data class ParallelEvaluationStack(val stacks: ArrayDeque<EvaluationStack>) : EvaluationStack {
+@KParcelize data class SingleStatement(val next: Statement) : EvaluationResult
 
-    override fun evaluate(env: Env): EvaluationStack {
-        if (env.deterministic) {
-            var i = 0
-            while(i < stacks.size){
-                when (val stack = stacks[i]) {
-                    is EmptyEvaluationStack -> {
+@KParcelize data object Finished : EvaluationResult
 
-                    }
-                    is SingleEvaluationStack -> {
-                        stack = stack.nextStatement.evaluate(env)
-                    }
+@KParcelize data class AbortEvaluation(val reason: String = "") : EvaluationResult
+
+@KParcelize
+data class EvaluationContext(
+    val env: Env,
+    private var currentStatement: Statement?,
+    val seed: Int = Random.nextInt(),
+) : KParcelable {
+    val random = Random(seed)
+    val entries: ArrayList<Statement> = arrayListOf()
+    private var atomicOngoing: Atomic? = null
+    val head: Statement?
+        get() = atomicOngoing ?: currentStatement
+
+    fun step(): EvaluationContext {
+        if(atomicOngoing == null && currentStatement == null){
+            if(entries.isEmpty()){
+                return this
+            }
+            else{
+                currentStatement = entries.removeAt(random.nextInt(entries.size))
+            }
+        }
+        val stack =
+            if (atomicOngoing != null) {
+                val oldStatement = atomicOngoing!!
+                atomicOngoing = null
+                oldStatement.evaluate(env)
+            } else {
+                val oldStatement = currentStatement!!
+                currentStatement = if(entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
+                oldStatement.evaluate(env)
+            }
+        when (stack) {
+            Finished -> {}
+            is AbortEvaluation -> TODO()
+            is EvalSequence -> entries.add(stack)
+            is SingleStatement -> {
+                if (stack.next is Atomic) {
+                    atomicOngoing = stack.next
+                } else {
+                    entries.add(stack.next)
                 }
             }
-        } else {
-
         }
+        return this
     }
-
-}
-
-class Stack{
-    val entryPoints: ArrayDeque<Stack>
 }

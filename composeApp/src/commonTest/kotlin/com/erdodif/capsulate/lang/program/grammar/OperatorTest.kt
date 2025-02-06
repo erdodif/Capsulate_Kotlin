@@ -26,6 +26,7 @@ import kotlin.test.Test
 
 class OperatorTest {
     private companion object {
+        @KParcelize
         private data class TestValue(val char: Char) : Value {
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == char) ||
