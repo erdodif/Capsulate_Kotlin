@@ -61,7 +61,7 @@ data class EvaluationContext(
     fun step(): EvaluationContext {
         if (atomicOngoing == null && currentStatement == null) {
             if (entries.isEmpty()) {
-                return this
+                return this.copy()
             } else {
                 currentStatement = entries.removeAt(random.nextInt(entries.size))
             }
@@ -88,6 +88,6 @@ data class EvaluationContext(
         }
         currentStatement =
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
-        return this
+        return this.copy()
     }
 }

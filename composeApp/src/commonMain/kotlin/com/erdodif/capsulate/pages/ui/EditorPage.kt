@@ -64,6 +64,7 @@ import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
 import kotlinx.coroutines.runBlocking
+import kotlin.uuid.ExperimentalUuidApi
 
 
 class EditorPage() : Ui<EditorScreen.State> {
@@ -115,6 +116,7 @@ class EditorPage() : Ui<EditorScreen.State> {
 
 }
 
+@OptIn(ExperimentalUuidApi::class)
 internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
     val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     if (state.showStructogram)

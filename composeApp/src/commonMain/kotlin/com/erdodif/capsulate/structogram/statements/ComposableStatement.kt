@@ -44,8 +44,11 @@ import com.mohamedrejeb.compose.dnd.drop.dropTarget
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
+@OptIn(ExperimentalUuidApi::class)
 abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) : KParcelable {
     /**
      * Creates an area where the current statement can be dragged if enabled
@@ -90,7 +93,7 @@ abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) 
     abstract fun Show(
         modifier: Modifier = Modifier,
         draggable: Boolean = false,
-        activeStatement: GrammarStatement? = null
+        activeStatement: Uuid? = null
     )
 
     protected val StatementDragState.draggingInProgress

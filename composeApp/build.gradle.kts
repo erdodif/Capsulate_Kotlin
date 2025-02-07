@@ -66,6 +66,7 @@ kotlin {
             implementation(libs.adaptive.layout)
             implementation(libs.adaptive.navigation)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.androidx.core.splashscreen)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -28,7 +28,10 @@ import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.ComposableStatement
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 import kotlinx.coroutines.yield
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 @KParcelize
 class Structogram private constructor(var statements: Array<ComposableStatement<*>>) : KParcelable {
     val program: List<Statement>
@@ -41,7 +44,7 @@ class Structogram private constructor(var statements: Array<ComposableStatement<
     fun Content(
         modifier: Modifier = Modifier,
         draggable: Boolean = false,
-        activeStatement: Statement? = null
+        activeStatement: Uuid? = null
     ) = key(this, draggable, activeStatement) {
         Column(
             modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)

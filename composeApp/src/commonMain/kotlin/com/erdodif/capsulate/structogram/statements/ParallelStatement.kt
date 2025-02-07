@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -39,6 +41,8 @@ import com.erdodif.capsulate.utility.labeled
 import com.erdodif.capsulate.utility.PreviewColumn
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @KParcelize
 class ParallelStatement(
@@ -66,7 +70,7 @@ class ParallelStatement(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: Statement?
+        activeStatement: Uuid?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -79,7 +83,7 @@ class ParallelStatement(
                         size = DpSize(it.size.width.toDp(), it.size.height.toDp())
                     }
                 }.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                    statement == activeStatement
+                    statement.id == activeStatement
                 }
         ) {
             StackWithSeparator(

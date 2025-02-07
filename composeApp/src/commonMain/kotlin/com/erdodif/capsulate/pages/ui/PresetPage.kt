@@ -40,12 +40,14 @@ import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
+import kotlin.uuid.ExperimentalUuidApi
 
 class PresetPage(private val preset: Preset) : Ui<State> {
     companion object Factory : Ui.Factory by screenUiFactory<PresetScreen>(
         { screen -> PresetPage(screen.preset) }
     )
 
+    @OptIn(ExperimentalUuidApi::class)
     @Composable
     override fun Content(state: State, modifier: Modifier) {
         Scaffold(

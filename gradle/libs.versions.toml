@@ -15,6 +15,7 @@ androidx-test-junit = "1.2.1"
 circuitFoundation = "0.24.0"
 compose-plugin = "1.7.1"
 composeDnd = "0.3.0"
+coreSplashscreen = "1.0.1"
 filekitCore = "0.8.2"
 junit = "4.13.2"
 kmpfileFilekit = "0.6.0"
@@ -31,6 +32,7 @@ permissions = "0.18.0"
 adaptive = "1.0.1"
 
 [libraries]
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
 compose-dnd = { module = "com.mohamedrejeb.dnd:compose-dnd", version.ref = "composeDnd" }

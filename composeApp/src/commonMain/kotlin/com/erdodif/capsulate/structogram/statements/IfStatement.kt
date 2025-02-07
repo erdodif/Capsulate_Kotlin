@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -46,6 +48,8 @@ import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.labeled
 import com.erdodif.capsulate.utility.onDpSize
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @KParcelize
 open class IfStatement(
@@ -65,7 +69,7 @@ open class IfStatement(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: Statement?
+        activeStatement: Uuid?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -82,7 +86,7 @@ open class IfStatement(
                     condition,
                     modifier = Modifier.fillMaxWidth()
                         .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                            statement == activeStatement
+                            statement.id == activeStatement
                         }.caseIndicator().elseIndicator().padding(Theme.ifPadding)
                 )
             }
@@ -149,5 +153,5 @@ fun IfPreview() = PreviewColumn(width = 400.dp) {
         )
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular If") { statement.Show(modifier, false, null) }
-    labeled("Active If") { statement.Show(modifier, false, statement.statement) }
+    labeled("Active If") { statement.Show(modifier, false, statement.statement.id) }
 }

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -34,6 +36,8 @@ import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.labeled
 import com.erdodif.capsulate.utility.onDpSize
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @KParcelize
 class AwaitStatement(
@@ -49,7 +53,7 @@ class AwaitStatement(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: Statement?
+        activeStatement: Uuid?
     ) {
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
@@ -61,7 +65,7 @@ class AwaitStatement(
                 StatementText(
                     condition,
                     modifier = Modifier.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                        statement == activeStatement
+                        statement.id == activeStatement
                     }.clip(RectangleShape).fillMaxSize().awaitIndicator()
                         .padding(Theme.commandPadding)
                 )
@@ -76,5 +80,5 @@ fun AwaitPreview() = PreviewColumn {
     val statement = AwaitStatement("guard",Wait(BoolLit(false, MatchPos.ZERO), Atomic(listOf(Skip()))))
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") { statement.Show(modifier, false, null) }
-    labeled("Active") { statement.Show(modifier, false, statement.statement) }
+    labeled("Active") { statement.Show(modifier, false, statement.statement.id) }
 }

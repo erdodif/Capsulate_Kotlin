@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -27,7 +29,6 @@ import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.Loop
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
@@ -41,6 +42,8 @@ import com.erdodif.capsulate.utility.PreviewColumn
 import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Composable
 private fun Condition(text: String, modifier: Modifier = Modifier, active: Boolean) =
@@ -76,12 +79,12 @@ class LoopStatement(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: Statement?
+        activeStatement: Uuid?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var dragging by remember { mutableStateOf(false) }
-        val active = statement == activeStatement
+        val active = statement.id == activeStatement
         val backgroundColor = if (active) MaterialTheme.colorScheme.tertiary
         else MaterialTheme.colorScheme.primary
         Column(
@@ -103,7 +106,7 @@ class LoopStatement(
                     StackWithSeparator(
                         statements,
                         {
-                            it.Show(Modifier.fillMaxWidth(), draggable)
+                            it.Show(Modifier.fillMaxWidth(), draggable, activeStatement)
                         }) { HorizontalBorder() }
                     if (!inOrder) HorizontalBorder()
                 }
@@ -134,8 +137,8 @@ fun LoopPreview() {
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     PreviewColumn {
         labeled("While regular") { whileStatement.Show(modifier, false, null)}
-        labeled("While active") { whileStatement.Show(modifier, false, whileStatement.statement)}
+        labeled("While active") { whileStatement.Show(modifier, false, whileStatement.statement.id)}
         labeled("DoWhile regular") { doWhileStatement.Show(modifier, false, null)}
-        labeled("DoWhile active") { doWhileStatement.Show(modifier, false, doWhileStatement.statement)}
+        labeled("DoWhile active") { doWhileStatement.Show(modifier, false, doWhileStatement.statement.id)}
     }
 }

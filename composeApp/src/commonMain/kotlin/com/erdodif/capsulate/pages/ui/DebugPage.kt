@@ -11,6 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,7 @@ class DebugPage : Ui<DebugScreen.State> {
     @OptIn(ExperimentalUuidApi::class)
     @Composable
     override fun Content(state: DebugScreen.State, modifier: Modifier) {
-        Column(Modifier.safeContentPadding() ,verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.safeContentPadding(), verticalArrangement = Arrangement.SpaceBetween) {
             state.structogram.Content(
                 modifier = Modifier.fillMaxWidth(),
                 draggable = false,
@@ -46,16 +47,19 @@ class DebugPage : Ui<DebugScreen.State> {
                     }
                 }
             }
-            Column{
+            Column {
                 if (state.activeStatement == null) {
                     Row { Button({ state.eventHandler(Event.Reset) }) { Text("Reset") } }
                     Text(
-                        "Finished in ${state.stepCount+1} steps!",
+                        "Finished in ${state.stepCount + 1} steps!",
                         color = MaterialTheme.colorScheme.tertiary,
                     )
                 } else {
-                    Text(state.activeStatement.id.toString())
-                    Text("Steps taken: ${state.stepCount+1}", color = MaterialTheme.colorScheme.secondary)
+                    Text(state.activeStatement.toString())
+                    Text(
+                        "Steps taken: ${state.stepCount + 1}",
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                     Row { Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") } }
                 }
             }

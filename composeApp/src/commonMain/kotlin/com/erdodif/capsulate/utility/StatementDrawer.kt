@@ -28,6 +28,7 @@ import com.erdodif.capsulate.structogram.statements.IfStatement
 import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.WhenStatement
+import kotlin.uuid.ExperimentalUuidApi
 
 private val match = MatchPos(0, 1)
 private val boolLit = BoolLit(true, match)
@@ -55,6 +56,7 @@ private val statements = listOf(
     )
 )
 
+@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun StatementDrawer(modifier: Modifier = Modifier) {
     LazyColumn(

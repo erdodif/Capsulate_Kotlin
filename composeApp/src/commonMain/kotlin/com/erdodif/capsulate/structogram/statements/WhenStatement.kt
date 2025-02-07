@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -29,7 +31,6 @@ import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
@@ -47,6 +48,8 @@ import com.erdodif.capsulate.utility.conditional
 import com.erdodif.capsulate.utility.dim
 import com.erdodif.capsulate.utility.onDpSize
 import kotlin.collections.listOf
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @KParcelize
 class WhenStatement(
@@ -71,7 +74,7 @@ class WhenStatement(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: Statement?
+        activeStatement: Uuid?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -82,7 +85,7 @@ class WhenStatement(
         val elseBranch by remember { derivedStateOf { this.blocks.firstOrNull { it.condition == "else" } } }
         Row(modifier.dim(dragging).clip(RectangleShape).fillMaxWidth().height(IntrinsicSize.Min)
             .onDpSize(density) { size = it }
-            .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) { statement == activeStatement }
+            .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) { statement.id == activeStatement }
         ) {
             var maxHeight by remember { mutableStateOf(0.dp) }
             StackWithSeparator(blocks, {
@@ -155,6 +158,6 @@ fun WhenPreview() = PreviewColumn(width= 400.dp) {
     val parserState = ParserState("")
     val statement = WhenStatement(When(mutableListOf(BoolLit(false, MatchPos.ZERO) to listOf(Skip())), listOf()), parserState)
     labeled("When with else") { statement.Show(Modifier.fillMaxWidth(), false, null) }
-    labeled("When with else active") { statement.Show(Modifier.fillMaxWidth(), false, statement.statement) }
+    labeled("When with else active") { statement.Show(Modifier.fillMaxWidth(), false, statement.statement.id) }
 }
 
