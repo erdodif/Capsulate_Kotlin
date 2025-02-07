@@ -3,54 +3,85 @@
     android:height="108dp"
     android:viewportWidth="512"
     android:viewportHeight="512">
-  <group android:scaleX="0.39722222"
-      android:scaleY="0.39722222"
-      android:translateX="154.31111"
-      android:translateY="154.31111">
-    <path
-        android:pathData="m433.69,392.23c-3.08,-10.12 -14.06,-15.92 -24.53,-12.94l-144.14,40.96c5.85,11.13 9.73,23.31 11.12,36.66l144.17,-40.97c10.47,-2.98 16.46,-13.59 13.39,-23.72z"
-        android:fillColor="@color/ic_logo_trolley_color"/>
-    <path
-        android:pathData="M95.09,14.57C92.34,5.09 82.54,-0.33 73.19,2.45l-57.5,17.14c-9.35,2.79 -14.69,12.72 -11.95,22.2 2.75,9.47 12.55,14.89 21.9,12.11l40.58,-12.09 104.67,361.02c9.88,-5.99 21.03,-10.29 33.18,-12.36z"
-        android:fillColor="@color/ic_logo_trolley_color"/>
-    <path
-        android:pathData="m219.12,453.68c-1.57,-5.35 -7.15,-8.31 -12.4,-6.76 -5.28,1.55 -8.32,7.11 -6.76,12.4 1.58,5.37 7.17,8.31 12.4,6.77 5.29,-1.55 8.32,-7.12 6.77,-12.4z"
-        android:fillColor="@color/ic_logo_trolley_color"/>
-    <path
-        android:pathData="m264.42,440.36c-8.65,-29.43 -40.06,-47.86 -71.02,-38.76 -30.26,8.9 -47.65,40.76 -38.75,71.02 8.65,29.43 40.06,47.86 71.02,38.75 30.26,-8.9 47.65,-40.76 38.76,-71.02zM216.19,479.15c-12.87,3.78 -25.76,-3.91 -29.31,-15.99 -3.67,-12.49 3.5,-25.64 15.99,-29.31 12.85,-3.78 25.76,3.89 29.31,15.99 3.67,12.49 -3.5,25.64 -15.99,29.31z"
-        android:fillColor="@color/ic_logo_trolley_color"/>
-    <path
-        android:pathData="M155.04,93.65l265.93,-77.81l86.96,297.72l-265.93,77.81z"
-        android:strokeWidth="7.76173"
-        android:fillColor="@color/ic_logo_struc_fill"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="M222.71,141.32l215.97,-63.19l16.99,58.16l-215.97,63.19z"
-        android:strokeWidth="7.91084"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="M239.74,199.53l216.2,-63.26l35.11,120.21l-216.2,63.26z"
-        android:strokeWidth="7.97297"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="M274.38,317.96l216.28,-63.28l16.99,58.16l-216.28,63.28z"
-        android:strokeWidth="7.9162"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="M257.33,259.06l215.57,-63.07l16.99,58.17l-215.57,63.07z"
-        android:strokeWidth="7.90384"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="M257.21,259.62l105.98,-31.01l16.96,58.04l-105.98,31.01z"
-        android:strokeWidth="7.76364"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="m266.87,192.57c92.14,109.8 0,0 0,0z"
-        android:strokeWidth="7.91084"
-        android:strokeColor="@color/ic_logo_struc_border"/>
-    <path
-        android:pathData="m427.79,145.77c-18.54,142.19 0,0 0,0z"
-        android:strokeWidth="7.91084"
-        android:strokeColor="@color/ic_logo_struc_border"/>
+  <group android:scaleX="0.4461111"
+      android:scaleY="0.4461111"
+      android:translateX="141.79556"
+      android:translateY="141.79556">
+    <group
+        android:name="trolley">
+      <path
+          android:name="trolley_leg"
+          android:pathData="m430.67,390.51c-3.08,-10.12 -14.06,-15.92 -24.53,-12.94l-144.14,40.96c5.85,11.13 9.73,23.31 11.12,36.66l144.17,-40.97c10.47,-2.98 16.46,-13.59 13.39,-23.72z"
+          android:fillColor="#131313"/>
+      <path
+          android:name="trolley_handle"
+          android:pathData="m92.07,12.85c-2.75,-9.48 -12.55,-14.9 -21.9,-12.12l-57.5,17.14c-9.35,2.79 -14.69,12.72 -11.95,22.2 2.75,9.47 12.55,14.89 21.9,12.11l40.58,-12.09 104.67,361.02c9.88,-5.99 21.03,-10.29 33.18,-12.36z"
+          android:fillColor="#131313"/>
+      <path
+          android:name="trolley_wheel_pivot"
+          android:pathData="m216.1,451.96c-1.57,-5.35 -7.15,-8.31 -12.4,-6.76 -5.28,1.55 -8.32,7.11 -6.76,12.4 1.58,5.37 7.17,8.31 12.4,6.77 5.29,-1.55 8.32,-7.12 6.77,-12.4z"
+          android:fillColor="#131313"/>
+      <path
+          android:name="trolley_wheel"
+          android:pathData="m261.4,438.64c-8.65,-29.43 -40.06,-47.86 -71.02,-38.76 -30.26,8.9 -47.65,40.76 -38.75,71.02 8.65,29.43 40.06,47.86 71.02,38.75 30.26,-8.9 47.65,-40.76 38.76,-71.02zM213.17,477.43c-12.87,3.78 -25.76,-3.91 -29.31,-15.99 -3.67,-12.49 3.5,-25.64 15.99,-29.31 12.85,-3.78 25.76,3.89 29.31,15.99 3.67,12.49 -3.5,25.64 -15.99,29.31z"
+          android:fillColor="#131313"/>
+    </group>
+    <group
+        android:name="structogram">
+      <path
+          android:name="statement_6"
+          android:pathData="m267.01,307.48 l220.62,-66.04 17.24,57.53 -220.62,66.04z"
+          android:strokeWidth="7.9487"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_5"
+          android:pathData="m251.34,255.18 l110.78,-33.16 15.19,52.45 -110.31,33.02z"
+          android:strokeWidth="7.86409"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_4"
+          android:pathData="m361.65,222.16 l110.31,-33.02 15.67,52.3 -110.31,33.02z"
+          android:strokeWidth="7.86409"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_3"
+          android:pathData="m235.67,202.88 l220.62,-66.04 15.67,52.3 -220.62,66.04z"
+          android:strokeWidth="7.94851"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_3_1"
+          android:pathData="m265.57,192.72c28.09,31.55 38.8,43.59 40.2,45.16 3.12,3.5 -40.2,-45.16 -40.2,-45.16z"
+          android:strokeWidth="7.46682"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_3_2"
+          android:pathData="m426.48,145.38c-5.73,38.26 -8.23,55 -8.88,59.29 -1.64,10.96 8.88,-59.29 8.88,-59.29z"
+          android:strokeWidth="7.4944"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_2"
+          android:pathData="M216.09,137.5 L436.7,71.45 456.29,136.83 235.67,202.88Z"
+          android:strokeWidth="7.9487"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_2_1"
+          android:pathData="M216.09,137.5 L436.7,71.45 456.29,136.83C402.56,62.17 242.94,104.16 235.67,202.88Z"
+          android:strokeWidth="7.94867"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+      <path
+          android:name="statement_1"
+          android:pathData="m239.03,378.55 l-68.16,-227.52L152.49,89.72l265.84,-79.58l18.37,61.32l-220.62,66.04l68.16,227.52z"
+          android:strokeWidth="7.9487"
+          android:fillColor="#2099cf"
+          android:strokeColor="#000d40"/>
+    </group>
   </group>
 </vector>
