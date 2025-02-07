@@ -35,7 +35,7 @@ object Add : BinaryOperator(
         if (resultFirst.type() != resultSecond.type()) {
             throw RuntimeException("Operands must have the same type ('${resultFirst.type()}' + '${resultSecond.type()}' is not allowed by design)")
         }
-        if (resultFirst !is VNat) {
+        if (resultFirst is VNat) {
             VNat((resultFirst.value + resultSecond.value).toUInt())
         } else {
             VWhole(resultFirst.value + resultSecond.value)

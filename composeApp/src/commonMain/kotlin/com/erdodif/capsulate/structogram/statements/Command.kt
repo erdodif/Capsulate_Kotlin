@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -21,13 +20,11 @@ import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Abort
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
 import com.erdodif.capsulate.lang.program.grammar.ParallelAssign
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -42,8 +39,8 @@ import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 @KParcelize
 class Command(
     var text: String,
-    override val statement: UniqueStatement<*>
-) : Statement<GrammarStatement>(statement) {
+    override val statement: GrammarStatement
+) : ComposableStatement<GrammarStatement>(statement) {
     constructor(
         statement: GrammarStatement,
         state: ParserState
@@ -52,12 +49,12 @@ class Command(
             is Skip -> "SKIP"
             is Abort -> "ABORT"
             is Expression -> "EXP: ${statement.expression.toString(state)}"
-            is Assign -> "${statement.id} := ${statement.value.toString(state)}"
+            is Assign -> "${statement.label} := ${statement.value.toString(state)}"
             is ParallelAssign -> statement.assigns.map { it.first }.toString() + " := " +
                     statement.assigns.map { it.second.toString(state) }.toString()
 
             else -> "UNSUPPORTED $statement"
-        }, UniqueStatement<GrammarStatement>(statement)
+        }, statement
     )
 
     @OptIn(ExperimentalUuidApi::class)
@@ -65,7 +62,7 @@ class Command(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: AnyUniqueStatement?
+        activeStatement: Statement?
     ) =
         key(this) {
             var size by remember { mutableStateOf(DpSize.Zero) }
@@ -104,7 +101,7 @@ class Command(
 @Preview
 @Composable
 fun CommandPreview() {
-    val command = Command("statement", Skip.unique())
+    val command = Command("statement", Skip())
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     PreviewColumn {
         labeled("Regular") { command.Show(modifier, false, null) }

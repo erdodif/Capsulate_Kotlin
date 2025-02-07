@@ -19,12 +19,10 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
@@ -40,18 +38,18 @@ import com.erdodif.capsulate.utility.onDpSize
 @KParcelize
 class AwaitStatement(
     var condition: String,
-    override val statement: UniqueStatement<Wait>
-) : Statement<Wait>(statement) {
+    override val statement: Wait
+) : ComposableStatement<Wait>(statement) {
     constructor(statement: Wait, state: ParserState) : this(
         statement.condition.toString(state),
-        statement.unique()
+        statement
     )
 
     @Composable
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: AnyUniqueStatement?
+        activeStatement: Statement?
     ) {
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
@@ -75,7 +73,7 @@ class AwaitStatement(
 @Preview
 @Composable
 fun AwaitPreview() = PreviewColumn {
-    val statement = AwaitStatement("guard",Wait(BoolLit(false, MatchPos.ZERO), Atomic(listOf(Skip))).unique())
+    val statement = AwaitStatement("guard",Wait(BoolLit(false, MatchPos.ZERO), Atomic(listOf(Skip()))))
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") { statement.Show(modifier, false, null) }
     labeled("Active") { statement.Show(modifier, false, statement.statement) }

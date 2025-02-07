@@ -8,12 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
-import com.erdodif.capsulate.structogram.statements.Statement
+import com.erdodif.capsulate.structogram.statements.ComposableStatement
 import com.mohamedrejeb.compose.dnd.DragAndDropState
 import com.mohamedrejeb.compose.dnd.drag.DraggedItemState
 
 class StatementDragState(
-    val state: DragAndDropState<Statement<*>> = DragAndDropState(),
+    val state: DragAndDropState<ComposableStatement<*>> = DragAndDropState(),
     preview: Boolean = false,
     private val onPreviewChange: (Boolean) -> Unit = {}
 ) {
@@ -22,13 +22,13 @@ class StatementDragState(
 
     fun changePreview(preview: Boolean) = onPreviewChange(preview)
 
-    val draggedItem: DraggedItemState<Statement<*>>?
+    val draggedItem: DraggedItemState<ComposableStatement<*>>?
         get() = state.draggedItem
 
     val dragAmount: Offset?
         get() = state.draggedItem?.dragAmount
 
-    val data: Statement<*>?
+    val data: ComposableStatement<*>?
         get() = state.draggedItem?.data
 }
 
@@ -36,7 +36,7 @@ val LocalDraggingStatement = compositionLocalOf { StatementDragState() }
 
 @Composable
 fun StatementDragProvider(block: @Composable () -> Unit) {
-    val state by remember { mutableStateOf(DragAndDropState<Statement<*>>()) }
+    val state by remember { mutableStateOf(DragAndDropState<ComposableStatement<*>>()) }
     var preview by remember { mutableStateOf(false) }
     val statementDragState = StatementDragState(state, preview) { preview = it }
     CompositionLocalProvider(LocalDraggingStatement provides statementDragState) {

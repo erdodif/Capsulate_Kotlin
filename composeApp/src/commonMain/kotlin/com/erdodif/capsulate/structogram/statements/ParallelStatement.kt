@@ -25,10 +25,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Parallel
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.statement
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
@@ -44,22 +42,22 @@ import com.erdodif.capsulate.utility.dim
 
 @KParcelize
 class ParallelStatement(
-    override val statement: UniqueStatement<Parallel>,
-    private vararg var blocks: Array<Statement<*>>
-) : Statement<Parallel>(statement) {
+    override val statement: Parallel,
+    private vararg var blocks: Array<ComposableStatement<*>>
+) : ComposableStatement<Parallel>(statement) {
     constructor(
-        blocks: ArrayList<ArrayList<Statement<*>>>,
-        statement: UniqueStatement<Parallel>
+        blocks: ArrayList<ArrayList<ComposableStatement<*>>>,
+        statement: Parallel
     ) : this(
         statement,
         *blocks.map { it.toTypedArray() }.toTypedArray()
     )
 
     constructor(statement: Parallel, state: ParserState) : this(
-        statement.unique(),
+        statement,
         *statement.blocks.map { block ->
             block.map { statement ->
-                fromStatement(state, statement.unique())
+                fromStatement(state, statement)
             }.toTypedArray()
         }.toTypedArray()
     )
@@ -68,7 +66,7 @@ class ParallelStatement(
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: AnyUniqueStatement?
+        activeStatement: Statement?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -124,15 +122,15 @@ private fun ParallelPreview() = PreviewColumn {
     val parserState = ParserState("{ } | { }")
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("From { } | { }") {
-        Statement.fromStatement(
+        ComposableStatement.fromStatement(
             parserState,
-            (with(parserState) { statement() } as Pass).value.unique())
+            (with(parserState) { statement() } as Pass).value)
             .Show(modifier, false, null)
     }
     labeled("From else") {
         ParallelStatement(
-            Parallel(arrayListOf()).unique(),
-            arrayOf<Statement<*>>()
+            Parallel(arrayListOf()),
+            arrayOf<ComposableStatement<*>>()
         ).Show(modifier, false, null)
     }
 }

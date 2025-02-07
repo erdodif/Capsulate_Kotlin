@@ -16,7 +16,6 @@ import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.IntLit
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
@@ -32,12 +31,12 @@ import com.erdodif.capsulate.structogram.statements.WhenStatement
 
 private val match = MatchPos(0, 1)
 private val boolLit = BoolLit(true, match)
-private val assign = Assign("a", IntLit(0, match)).unique()
+private val assign = Assign("a", IntLit(0, match))
 
 private val statements = listOf(
     Command("statement",assign),
     IfStatement(
-        "if", statement = If(boolLit, arrayListOf(), arrayListOf()).unique()
+        "if", statement = If(boolLit, arrayListOf(), arrayListOf())
     ),
     WhenStatement(
         arrayOf(
@@ -45,14 +44,14 @@ private val statements = listOf(
             Block("case"),
             Block("else")
         ),
-        statement = When(mutableListOf(boolLit to listOf(), boolLit to listOf()), listOf()).unique()
+        statement = When(mutableListOf(boolLit to listOf(), boolLit to listOf()), listOf())
     ),
-    LoopStatement("while", listOf(), true, While(boolLit,arrayListOf()).unique()),
-    LoopStatement("do while", listOf(), false, DoWhile(boolLit, arrayListOf()).unique()),
-    AwaitStatement("await", Wait(boolLit, Atomic(listOf())).unique()),
+    LoopStatement("while", listOf(), true, While(boolLit,arrayListOf())),
+    LoopStatement("do while", listOf(), false, DoWhile(boolLit, arrayListOf())),
+    AwaitStatement("await", Wait(boolLit, Atomic(listOf()))),
     ParallelStatement(
-        Parallel(arrayListOf(arrayListOf(assign.statement),arrayListOf(assign.statement))).unique(),
-        arrayOf(Command("", Skip.unique()), Command(" ", Skip.unique()))
+        Parallel(arrayListOf(arrayListOf(assign),arrayListOf(assign))),
+        arrayOf(Command("", Skip()), Command(" ", Skip()))
     )
 )
 

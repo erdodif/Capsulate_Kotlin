@@ -5,11 +5,16 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 sealed interface EvaluationResult : KParcelable
 
+@OptIn(ExperimentalUuidApi::class)
 @KParcelize
-data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult, Statement {
+data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult, Statement() {
+    override val id: Uuid
+        get() = statements.first().id
     constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
     override fun evaluate(env: Env): EvaluationResult {

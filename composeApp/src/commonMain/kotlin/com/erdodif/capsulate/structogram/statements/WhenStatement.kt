@@ -27,11 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
@@ -52,28 +50,28 @@ import kotlin.collections.listOf
 
 @KParcelize
 class WhenStatement(
-    val blocks: Array<Block>, override val statement: UniqueStatement<When>
-) : Statement<When>(statement) {
+    val blocks: Array<Block>, override val statement: When
+) : ComposableStatement<When>(statement) {
     constructor(statement: When, state: ParserState) : this(statement.blocks.map { block ->
         Block(
             block.first.toString(state),
-            block.second.map { fromStatement(state, it.unique()) }
+            block.second.map { fromStatement(state, it) }
         )
     }.toMutableList().also { blocks ->
         if (statement.elseBlock != null) blocks.add(
             Block(
                 "else", statement.elseBlock.map {
-                    fromStatement(state, it.unique())
+                    fromStatement(state, it)
                 }
             )
         )
-    }.toTypedArray(), statement.unique())
+    }.toTypedArray(), statement)
 
     @Composable
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: AnyUniqueStatement?
+        activeStatement: Statement?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -148,14 +146,14 @@ class WhenStatement(
 @KParcelize
 class Block(
     var condition: String,
-    var statements: List<Statement<*>> = listOf()
+    var statements: List<ComposableStatement<*>> = listOf()
 ) : KParcelable
 
 @Preview
 @Composable
 fun WhenPreview() = PreviewColumn(width= 400.dp) {
     val parserState = ParserState("")
-    val statement = WhenStatement(When(mutableListOf(BoolLit(false, MatchPos.ZERO) to listOf(Skip)), listOf()), parserState)
+    val statement = WhenStatement(When(mutableListOf(BoolLit(false, MatchPos.ZERO) to listOf(Skip())), listOf()), parserState)
     labeled("When with else") { statement.Show(Modifier.fillMaxWidth(), false, null) }
     labeled("When with else active") { statement.Show(Modifier.fillMaxWidth(), false, statement.statement) }
 }

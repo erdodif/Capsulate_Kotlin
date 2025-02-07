@@ -30,11 +30,9 @@ import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.Parallel
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
@@ -48,7 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
-abstract class Statement<T: GrammarStatement>(open val statement: UniqueStatement<T>) : KParcelable {
+abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) : KParcelable {
     /**
      * Creates an area where the current statement can be dragged if enabled
      *
@@ -66,9 +64,9 @@ abstract class Statement<T: GrammarStatement>(open val statement: UniqueStatemen
         DraggableItem(if (draggable) modifier else modifier.pointerHoverIcon(
             PointerIcon.Hand, true
         ),
-            key = this@Statement,
+            key = this@ComposableStatement,
             state = state.state,// state.state,
-            data = this@Statement,
+            data = this@ComposableStatement,
             dragAfterLongPress = onMobile,
             draggableContent = {
                 val active = remember { MutableTransitionState(false).apply { targetState = true } }
@@ -79,7 +77,7 @@ abstract class Statement<T: GrammarStatement>(open val statement: UniqueStatemen
                         .alpha(if (state.preview) 0.15f else 1f),
                     enter = scaleIn(animationSpec as FiniteAnimationSpec<Float>, .5f)
                 ) {
-                    this@Statement.Show(
+                    this@ComposableStatement.Show(
                         Modifier.fillMaxSize().shadow(10.dp, clip = false)
                             .border(Theme.borderWidth, Theme.borderColor), false
                     )
@@ -92,11 +90,11 @@ abstract class Statement<T: GrammarStatement>(open val statement: UniqueStatemen
     abstract fun Show(
         modifier: Modifier = Modifier,
         draggable: Boolean = false,
-        activeStatement: AnyUniqueStatement? = null
+        activeStatement: GrammarStatement? = null
     )
 
     protected val StatementDragState.draggingInProgress
-        get() = this.draggedItem != null && this.draggedItem != this@Statement
+        get() = this.draggedItem != null && this.draggedItem != this@ComposableStatement
 
     @Composable
     protected fun DropTarget(state: StatementDragState) {
@@ -128,16 +126,15 @@ abstract class Statement<T: GrammarStatement>(open val statement: UniqueStatemen
     }
 
     companion object {
-        fun fromStatement(
-            state: ParserState, statement: AnyUniqueStatement
-        ): Statement<*> = when (val statement = statement.statement) {
-            is If -> IfStatement(statement, state)
-            is When -> WhenStatement(statement, state)
-            is Wait -> AwaitStatement(statement, state)
-            is While -> LoopStatement(statement, state)
-            is DoWhile -> LoopStatement(statement, state)
-            is Parallel -> ParallelStatement(statement, state)
-            else -> Command(statement, state)
-        }
+        fun fromStatement(state: ParserState, statement: GrammarStatement): ComposableStatement<*> =
+            when (statement) {
+                is If -> IfStatement(statement, state)
+                is When -> WhenStatement(statement, state)
+                is Wait -> AwaitStatement(statement, state)
+                is While -> LoopStatement(statement, state)
+                is DoWhile -> LoopStatement(statement, state)
+                is Parallel -> ParallelStatement(statement, state)
+                else -> Command(statement, state)
+            }
     }
 }

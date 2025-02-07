@@ -54,6 +54,7 @@ fun CodeEditor(
                 visualTransformation(text, tokenStream)
             }
         }
+
         BasicTextField( //Prepare for BasicTextField2
             value = code,
             readOnly = onValueChange == null,
@@ -64,8 +65,10 @@ fun CodeEditor(
                     ) && it.selection.start > 0 && it.text[it.selection.start - 1] == '\\'
                 ) {
                     onBackSlashEntered()
+                } else if (onValueChange == null) {
+                    code.copy(selection = it.selection)
                 } else {
-                    onValueChange?.invoke(it)
+                    onValueChange.invoke(it)
                 }
             },
             textStyle = textStyle,

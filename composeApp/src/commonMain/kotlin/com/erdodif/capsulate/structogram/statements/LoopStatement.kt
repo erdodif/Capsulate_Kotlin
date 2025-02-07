@@ -23,13 +23,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.Loop
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
@@ -56,29 +54,29 @@ private fun Condition(text: String, modifier: Modifier = Modifier, active: Boole
 @KParcelize
 class LoopStatement(
     var condition: String,
-    var statements: List<Statement<*>> = listOf(),
+    var statements: List<ComposableStatement<*>> = listOf(),
     var inOrder: Boolean = true,
-    override val statement: UniqueStatement<Loop>
-) : Statement<Loop>(statement) {
+    override val statement: Loop
+) : ComposableStatement<Loop>(statement) {
     constructor(statement: While, state: ParserState) : this(
         statement.condition.toString(state),
-        statement.statements.map { fromStatement(state, it.unique()) },
+        statement.statements.map { fromStatement(state, it) },
         true,
-        statement.unique()
+        statement
     )
 
     constructor(statement: DoWhile, state: ParserState) : this(
         statement.condition.toString(state),
-        statement.statements.map { fromStatement(state, it.unique()) },
+        statement.statements.map { fromStatement(state, it) },
         false,
-        statement.unique()
+        statement
     )
 
     @Composable
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: AnyUniqueStatement?
+        activeStatement: Statement?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -123,16 +121,16 @@ class LoopStatement(
 @Preview
 @Composable
 fun LoopPreview() {
-    val tmpWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip))
-    val tmpDoWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip))
+    val tmpWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip()))
+    val tmpDoWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip()))
     val statements = listOf(
-        Command("statement 1", Skip.unique()),
-        Command("statement 2", Skip.unique()),
-        Command("...", Skip.unique()),
-        Command("statement n", Skip.unique())
+        Command("statement 1", Skip()),
+        Command("statement 2", Skip()),
+        Command("...", Skip()),
+        Command("statement n", Skip())
     )
-    val whileStatement = LoopStatement("condition", statements, true, tmpWhile.unique())
-    val doWhileStatement = LoopStatement("condition", statements, false, tmpDoWhile.unique())
+    val whileStatement = LoopStatement("condition", statements, true, tmpWhile)
+    val doWhileStatement = LoopStatement("condition", statements, false, tmpDoWhile)
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     PreviewColumn {
         labeled("While regular") { whileStatement.Show(modifier, false, null)}

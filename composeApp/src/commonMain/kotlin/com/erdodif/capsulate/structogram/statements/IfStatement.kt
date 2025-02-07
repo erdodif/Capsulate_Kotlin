@@ -27,12 +27,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.AnyUniqueStatement
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement
-import com.erdodif.capsulate.lang.program.grammar.UniqueStatement.Companion.unique
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -52,22 +50,22 @@ import com.erdodif.capsulate.utility.onDpSize
 @KParcelize
 open class IfStatement(
     var condition: String,
-    var trueBranch: List<Statement<*>> = listOf(),
-    var falseBranch: List<Statement<*>> = listOf(),
-    override val statement: UniqueStatement<If>
-) : Statement<If>(statement) {
+    var trueBranch: List<ComposableStatement<*>> = listOf(),
+    var falseBranch: List<ComposableStatement<*>> = listOf(),
+    override val statement: If
+) : ComposableStatement<If>(statement) {
     constructor(statement: If, state: ParserState) : this(
         statement.condition.toString(state),
-        statement.statementsTrue.map { fromStatement(state, it.unique()) },
-        statement.statementsFalse.map { fromStatement(state, it.unique()) },
-        statement.unique()
+        statement.statementsTrue.map { fromStatement(state, it) },
+        statement.statementsFalse.map { fromStatement(state, it) },
+        statement
     )
 
     @Composable
     override fun Show(
         modifier: Modifier,
         draggable: Boolean,
-        activeStatement: AnyUniqueStatement?
+        activeStatement: Statement?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -140,14 +138,14 @@ fun IfPreview() = PreviewColumn(width = 400.dp) {
         IfStatement(
             "condition",
             listOf(
-                Command("true statement 1", Skip.unique()),
-                Command("true statement 2", Skip.unique())
+                Command("true statement 1", Skip()),
+                Command("true statement 2", Skip())
             ),
             listOf(
-                Command("false statement 1", Skip.unique()),
-                Command("false statement 2", Skip.unique())
+                Command("false statement 1", Skip()),
+                Command("false statement 2", Skip())
             ),
-            If(BoolLit(true, MatchPos.ZERO), arrayListOf(), arrayListOf()).unique()
+            If(BoolLit(true, MatchPos.ZERO), arrayListOf(), arrayListOf())
         )
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular If") { statement.Show(modifier, false, null) }

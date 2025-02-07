@@ -18,14 +18,16 @@ import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
+import kotlin.uuid.ExperimentalUuidApi
 
 class DebugPage : Ui<DebugScreen.State> {
 
     companion object Factory : Ui.Factory by screenUiFactory<DebugScreen>(::DebugPage)
 
+    @OptIn(ExperimentalUuidApi::class)
     @Composable
     override fun Content(state: DebugScreen.State, modifier: Modifier) {
-        Column(Modifier.safeContentPadding(),verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.safeContentPadding() ,verticalArrangement = Arrangement.SpaceBetween) {
             state.structogram.Content(
                 modifier = Modifier.fillMaxWidth(),
                 draggable = false,
@@ -44,15 +46,17 @@ class DebugPage : Ui<DebugScreen.State> {
                     }
                 }
             }
-            Column {
-                Row { Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") } }
+            Column{
                 if (state.activeStatement == null) {
+                    Row { Button({ state.eventHandler(Event.Reset) }) { Text("Reset") } }
                     Text(
                         "Finished in ${state.stepCount+1} steps!",
                         color = MaterialTheme.colorScheme.tertiary,
                     )
                 } else {
+                    Text(state.activeStatement.id.toString())
                     Text("Steps taken: ${state.stepCount+1}", color = MaterialTheme.colorScheme.secondary)
+                    Row { Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") } }
                 }
             }
         }

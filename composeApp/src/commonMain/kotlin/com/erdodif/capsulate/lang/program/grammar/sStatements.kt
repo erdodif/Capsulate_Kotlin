@@ -66,8 +66,8 @@ val program: Parser<ArrayList<Statement>> = {
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
 
-val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip }
-val sAbort: Parser<Statement> = delimit(_keyword("abort") / { Abort })
+val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
+val sAbort: Parser<Statement> = delimit(_keyword("abort") / { Abort() })
 
 val sAtom: Parser<Statement> = delimit(middle(_keyword("["), program , _keyword("]"))) / { Atomic(it) }
 val sWait: Parser<Statement> =
@@ -100,7 +100,7 @@ val sWhen: Parser<Statement> =
     )) /
         {
             if (it.first.second != null) it.first.first.add(it.first.second!!)
-            When(it.first.first.toMutableList(), it.second)
+            When(it.first.first, it.second)
         }
 
 val sWhile: Parser<Statement> =
