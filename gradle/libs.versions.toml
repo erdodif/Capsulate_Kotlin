@@ -31,6 +31,7 @@ napier = "2.7.1"
 okio = "3.9.1"
 permissions = "0.18.0"
 adaptive = "1.0.1"
+slf4j = "2.0.16"
 
 [libraries]
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
@@ -68,6 +69,8 @@ okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 permissions = { module = "dev.icerock.moko:permissions", version.ref = "permissions" }
 permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "permissions" }
 permissions-test = { module = "dev.icerock.moko:permissions-test", version.ref = "permissions" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref= "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref= "slf4j" }
 adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }

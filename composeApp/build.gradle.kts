@@ -68,6 +68,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.androidx.core.splashscreen)
             implementation(libs.kotlinx.io.core)
+            implementation(libs.slf4j.api)
+            implementation(libs.slf4j.simple)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
