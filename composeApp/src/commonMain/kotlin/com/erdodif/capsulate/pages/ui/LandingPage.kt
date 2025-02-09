@@ -5,12 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +30,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -60,67 +65,93 @@ class LandingPage() : Ui<LandingScreen.State> {
 
     @Composable
     override fun Content(state: LandingScreen.State, modifier: Modifier) {
-        Column(
-            modifier = modifier.background(MaterialTheme.colorScheme.surface),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        val windowSize = currentWindowAdaptiveInfo()
+        if (windowSize.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH) {
+            Column(
+                modifier = modifier.background(MaterialTheme.colorScheme.surface),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Logo()
+                Selector(state)
+            }
+        } else {
+            Row(
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Selector(state)
+                Logo()
+            }
+        }
+    }
+
+    @Composable
+    private fun Logo() {
+        Column {
             Icon(
                 painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
                 stringResource(Res.string.app_name),
-                Modifier.size(160.dp).padding(10.dp),
+                Modifier.size(160.dp).padding(0.dp,10.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
                 stringResource(Res.string.app_name),
                 Modifier.padding(20.dp),
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = 24.sp
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold
             )
-            Column(
-                Modifier.defaultMinSize(10.dp, 300.dp).fillMaxWidth().padding(40.dp, 10.dp)
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainer,
-                        RoundedCornerShape(10.dp)
-                    )
-                    .padding(30.dp)
-            ) {
-                Button(
-                    { state.eventHandler(LandingScreen.Event.OpenFile) },
-                    Modifier.align(Alignment.CenterHorizontally)
-                ) { Text(stringResource(Res.string.open_file)) }
-                Button(
-                    { state.eventHandler(LandingScreen.Event.OpenFolder) },
-                    Modifier.align(Alignment.CenterHorizontally)
-                ) { Text(stringResource(Res.string.open_folder)) }
-                Button(
-                    { state.eventHandler(LandingScreen.Event.ToEmptyProject) },
-                    Modifier.align(Alignment.CenterHorizontally)
-                ) { Text(stringResource(Res.string.start_empty)) }
-                Button(
-                    { state.eventHandler(LandingScreen.Event.OpenPresetModal) },
-                    Modifier.align(Alignment.CenterHorizontally)
-                ) { Text(stringResource(Res.string.open_preset)) }
-                if (state.presetVisible) {
-                    val windowSize = currentWindowAdaptiveInfo()
-                    if (windowSize.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH ||
-                        windowSize.windowSizeClass.windowHeightSizeClass == COMPACT_HEIGHT
+        }
+    }
+
+    @Composable
+    private fun Selector(state: LandingScreen.State) {
+        Column(
+            Modifier.defaultMinSize(10.dp, 150.dp).padding(80.dp, 20.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainer,
+                    RoundedCornerShape(10.dp)
+                )
+                .padding(30.dp)
+                .widthIn(25.dp, 150.dp)
+        ) {
+            Button(
+                { state.eventHandler(LandingScreen.Event.OpenFile) },
+                Modifier.fillMaxWidth().padding(2.dp)
+            ) { Text(stringResource(Res.string.open_file)) }
+            Button(
+                { state.eventHandler(LandingScreen.Event.OpenFolder) },
+                Modifier.fillMaxWidth().padding(2.dp)
+            ) { Text(stringResource(Res.string.open_folder)) }
+            Button(
+                { state.eventHandler(LandingScreen.Event.ToEmptyProject) },
+                Modifier.fillMaxWidth().padding(2.dp)
+            ) { Text(stringResource(Res.string.start_empty)) }
+            Button(
+                { state.eventHandler(LandingScreen.Event.OpenPresetModal) },
+                Modifier.fillMaxWidth().padding(2.dp)
+            ) { Text(stringResource(Res.string.open_preset)) }
+            if (state.presetVisible) {
+                val windowSize = currentWindowAdaptiveInfo()
+                if (windowSize.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH ||
+                    windowSize.windowSizeClass.windowHeightSizeClass == COMPACT_HEIGHT
+                ) {
+                    ModalBottomSheet(
+                        onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
+                        sheetState = state.bottomSheetState,
+                        sheetMaxWidth = 400.dp
                     ) {
-                        ModalBottomSheet(
-                            onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
-                            sheetState = state.bottomSheetState,
-                            sheetMaxWidth = 400.dp
-                        ) {
+                        ModalContent(state)
+                    }
+                } else {
+                    Dialog(
+                        onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
+                        properties = DialogProperties()
+                    ) {
+                        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
                             ModalContent(state)
-                        }
-                    } else {
-                        Dialog(
-                            onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
-                            properties = DialogProperties()
-                        ) {
-                            Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
-                                ModalContent(state)
-                            }
                         }
                     }
                 }
@@ -129,7 +160,7 @@ class LandingPage() : Ui<LandingScreen.State> {
     }
 
     @Composable
-    protected fun ModalContent(state: LandingScreen.State) {
+    private fun ModalContent(state: LandingScreen.State) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth().padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

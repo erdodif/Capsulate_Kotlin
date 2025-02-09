@@ -3,7 +3,7 @@
     <string name="open_preset">Open Preset</string>
     <string name="open_folder">Open Folder</string>
     <string name="open_file">Open File</string>
-    <string name="start_empty">Start From Scratch</string>
+    <string name="start_empty">Empty File</string>
     <string name="open">Open</string>
     <string name="close">Close</string>
     <string name="folder_open_failed">Failed to open folder</string>
