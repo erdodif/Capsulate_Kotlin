@@ -39,7 +39,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.trace
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragProvider
 import com.erdodif.capsulate.lang.util.Left
@@ -60,7 +59,6 @@ import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
-
 
 class EditorPage() : Ui<EditorScreen.State> {
 

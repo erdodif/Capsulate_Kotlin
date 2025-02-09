@@ -1,18 +1,18 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -30,7 +29,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +37,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.window.core.layout.WindowWidthSizeClass.Companion.COMPACT as COMPACT_WIDTH
 import androidx.window.core.layout.WindowHeightSizeClass.Companion.COMPACT as COMPACT_HEIGHT
 import com.erdodif.capsulate.pages.screen.LandingScreen
-import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.presets.presets
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.app_name
@@ -52,8 +49,6 @@ import com.erdodif.capsulate.resources.start_empty
 import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
-import io.github.aakira.napier.Napier
-import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -93,7 +88,7 @@ class LandingPage() : Ui<LandingScreen.State> {
             Icon(
                 painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
                 stringResource(Res.string.app_name),
-                Modifier.size(160.dp).padding(0.dp,10.dp),
+                Modifier.size(160.dp).padding(0.dp, 10.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
@@ -150,8 +145,15 @@ class LandingPage() : Ui<LandingScreen.State> {
                         onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
                         properties = DialogProperties()
                     ) {
-                        Box(Modifier.background(MaterialTheme.colorScheme.surface)) {
-                            ModalContent(state)
+                        AnimatedVisibility(true, enter = scaleIn()) {
+                            Box(
+                                Modifier.background(
+                                    MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    RoundedCornerShape(10.dp)
+                                )
+                            ) {
+                                ModalContent(state)
+                            }
                         }
                     }
                 }

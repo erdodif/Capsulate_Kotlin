@@ -10,7 +10,6 @@ import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
 import com.erdodif.capsulate.utility.screenPresenterFactory
-import com.slack.circuit.runtime.CircuitContext
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
