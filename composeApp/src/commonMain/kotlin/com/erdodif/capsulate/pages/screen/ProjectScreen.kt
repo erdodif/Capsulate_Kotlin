@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
+import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitContext
@@ -17,35 +19,42 @@ import com.slack.circuit.runtime.screen.Screen
 import io.github.vinceglb.filekit.core.PlatformDirectory
 
 @KParcelize
-data object ProjectScreen : Screen {
+data class ProjectScreen(val project: Project) : Screen {
     class State(
-        val project: Project? = null,
+        val project: Project,
+        val opened: OpenFile,
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
     sealed interface Event : CircuitUiEvent {
         data class ProjectSelected(val path: PlatformDirectory) : Event
         data object Close : Event
+        data class OpenAFile(val name: String): Event
+        data object New : Event
     }
 }
 
 class ProjectPresenter(
     private val screen: ProjectScreen,
-    private val navigator: Navigator,
-    private var project: Project? = null
+    private val navigator: Navigator
 ) : Presenter<ProjectScreen.State> {
-    object Factory :
-        Presenter.Factory by screenPresenterFactory<ProjectScreen>({ screen, navigator ->
-            ProjectPresenter(screen, navigator, null)
-        })
+    object Factory : Presenter.Factory by screenPresenterFactory<ProjectScreen>(::ProjectPresenter)
 
     @Composable
     override fun present(): ProjectScreen.State {
-        var project by remember { mutableStateOf(project) }
-        return ProjectScreen.State(project) { event ->
+        var project by remember { mutableStateOf(screen.project) }
+        var opened by remember { mutableStateOf(screen.project.openFiles.firstOrNull() ?: OpenFile()) }
+        return ProjectScreen.State(project, opened) { event ->
             when (event) {
-                is ProjectScreen.Event.ProjectSelected -> project = Project(event.path)
-                is ProjectScreen.Event.Close -> navigator.pop()
+                is Event.ProjectSelected -> project = Project(event.path)
+                is Event.Close -> navigator.pop()
+                is Event.OpenAFile -> project.getFile(event.name).apply {
+                    opened = this
+                }
+                is Event.New ->{
+                    opened = OpenFile()
+                    project.openFiles.add(opened)
+                }
             }
         }
     }

@@ -24,7 +24,7 @@ interface Exp<T : Value>: KParcelable {
 }
 
 @KParcelize
-open class Token(open val match: MatchPos) : KParcelable {
+open class Token(open val match: MatchPos): KParcelable {
     inline fun matchedToken(parserState: ParserState): String =
         parserState.input[match.start, match.end]
 }

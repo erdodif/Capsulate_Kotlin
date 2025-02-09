@@ -13,11 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.pages.screen.EmptyScreen
-import com.erdodif.capsulate.pages.screen.EmptyScreenPresenter
+import com.erdodif.capsulate.pages.screen.LandingScreen
+import com.erdodif.capsulate.pages.screen.LandingScreenPresenter
 import com.erdodif.capsulate.pages.screen.PresetPresenter
 import com.erdodif.capsulate.pages.screen.ProjectPresenter
-import com.erdodif.capsulate.pages.ui.EmptyPage
+import com.erdodif.capsulate.pages.ui.LandingPage
 import com.erdodif.capsulate.pages.ui.PresetPage
 import com.erdodif.capsulate.pages.ui.ProjectPage
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -29,8 +29,6 @@ import com.slack.circuit.foundation.internal.BackHandler
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.screen.Screen
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modifier ->
@@ -51,14 +49,14 @@ val applicationExitJob = Job()
 @Composable
 @Preview
 fun App() {
-    val backStack = rememberSaveableBackStack(root = EmptyScreen)
+    val backStack = rememberSaveableBackStack(root = LandingScreen)
     val navigator = rememberCircuitNavigator(backStack) {
         applicationExitJob.complete()
     }
     BackHandler(true, navigator::pop)
     val circuit = Circuit.Builder()
-        .addPresenterFactory(EmptyScreenPresenter.Factory)
-        .addUiFactory(EmptyPage.Factory)
+        .addPresenterFactory(LandingScreenPresenter.Factory)
+        .addUiFactory(LandingPage.Factory)
         .addPresenterFactory(ProjectPresenter.Factory)
         .addUiFactory(ProjectPage.Factory)
         .addPresenterFactory(PresetPresenter.Factory)

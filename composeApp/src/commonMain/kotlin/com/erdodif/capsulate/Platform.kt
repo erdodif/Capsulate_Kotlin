@@ -1,7 +1,10 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package com.erdodif.capsulate
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import dev.zwander.kotlin.file.IPlatformFile
 
 @Composable expect fun resolveColors(): ColorScheme
 
@@ -10,18 +13,23 @@ import androidx.compose.runtime.Composable
 // No `expect` keyword here
 annotation class KParcelize()
 
-@Target(AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.TYPE)
 @Retention(AnnotationRetention.BINARY)
 // No `expect` keyword here
 annotation class RawValue
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect interface KParcelable
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 expect annotation class KIgnoredOnParcel()
+
+expect interface KParceler<T>
+@Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
+@Retention(value = AnnotationRetention.SOURCE)
+@Repeatable
+expect annotation class KTypeParceler<T, R: KParceler<in T>>
+expect class FileParceler : KParceler<IPlatformFile?>
 
 @Composable
 expect fun locateSetting()

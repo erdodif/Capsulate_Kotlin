@@ -2,6 +2,8 @@ package com.erdodif.capsulate
 
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -13,23 +15,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.core.view.WindowCompat
+import dev.zwander.kotlin.file.IPlatformFile
+import dev.zwander.kotlin.file.PlatformFile
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.TypeParceler
 import kotlin.system.exitProcess
 
 class MainActivity : ComponentActivity() {
     private val scope = MainScope()
 
-    override fun onCreate(savedInstanceState: Bundle?){
+    override fun onCreate(savedInstanceState: Bundle?) {
         FileKit.init(this)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Napier.base(DebugAntilog())
         hideSystemUI()
-        scope.launch{
+        scope.launch {
             applicationExitJob.join()
             exitProcess(0)
         }
@@ -64,4 +71,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppAndroidPreview() {
     App()
+}
+
+object xd : Parceler<IPlatformFile>{
+    override fun IPlatformFile.write(
+        parcel: Parcel,
+        flags: Int
+    ) {
+        parcel.writeString(this.getPath())
+    }
+
+    override fun create(parcel: Parcel): IPlatformFile {
+        return PlatformFile(parcel.readString()!!)
+    }
+
+}
+
+
+@Parcelize
+class XD(@TypeParceler<IPlatformFile, xd> val d:  IPlatformFile) : Parcelable {
+
 }

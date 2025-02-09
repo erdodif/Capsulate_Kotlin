@@ -1,6 +1,8 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -8,12 +10,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.RawValue
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.pages.screen.EditorScreen.Event
+import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.utility.screenPresenterFactory
@@ -22,13 +28,16 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.time.measureTime
 
 @KParcelize
-data class EditorScreen(val initialText: String) : Screen {
+data class EditorScreen(val file: OpenFile) : Screen {
     data class State(
         val code: TextFieldValue,
         val structogram: Structogram?,
@@ -36,12 +45,15 @@ data class EditorScreen(val initialText: String) : Screen {
         val input: Boolean,
         val showStructogram: Boolean,
         val dragStatements: Boolean,
+        val openFile: OpenFile,
+        val loading: Boolean,
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
     sealed interface Event : CircuitUiEvent {
         data class TextInput(val code: TextFieldValue) : Event
         data object Close : Event
+        data object Save : Event
         data object Run : Event
         data object ToggleCode : Event
         data object ToggleStructogram : Event
@@ -59,42 +71,68 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
 
     @Composable
     override fun present(): EditorScreen.State {
-        var inputValue by remember {
-            mutableStateOf(
-                TextFieldValue(screen.initialText, TextRange.Zero)
-            )
-        }
-        var showCode by remember { mutableStateOf(true) }
-        var showStructogram by remember { mutableStateOf(true) }
+        val coroutineScope = rememberCoroutineScope()
+        val file by remember { mutableStateOf(screen.file) }
+        var inputValue by remember { mutableStateOf(TextFieldValue("", TextRange.Zero)) }
         var structogram: Structogram by remember {
             mutableStateOf(Structogram.fromStatements(Command("", Skip())))
         }
+        var showCode by remember { mutableStateOf(true) }
+        var showStructogram by remember { mutableStateOf(true) }
         var dragStatements by remember { mutableStateOf(false) }
         var input by remember { mutableStateOf(false) }
-        val coroutineScope = rememberCoroutineScope()
+        var loading by remember { mutableStateOf(true) }
+        if (loading) {
+            LaunchedEffect(Unit){
+                inputValue = inputValue.copy(text= file.load() ?: "")
+                initStructogram(inputValue.text) {
+                    structogram = when (it) {
+                        is Left -> it.value
+                        is Right -> Structogram.fromStatements(
+                            Command(
+                                it.value.reason,
+                                Skip()
+                            )
+                        )
+                    }
+                }
+                loading = false
+            }
+        }
         return EditorScreen.State(
-            inputValue, structogram, showCode, input, showStructogram, dragStatements
+            inputValue, structogram, showCode, input, showStructogram, dragStatements, file, loading
         ) { event ->
             when (event) {
-                is EditorScreen.Event.TextInput -> {
+                is Event.TextInput -> {
                     inputValue = event.code
-                    coroutineScope.launch{
-                        initStructogram(inputValue.text){
+                    coroutineScope.launch {
+                        initStructogram(inputValue.text) {
                             structogram = when (it) {
                                 is Left -> it.value
-                                is Right -> Structogram.fromStatements(Command(it.value.reason, Skip()))
+                                is Right -> Structogram.fromStatements(
+                                    Command(
+                                        it.value.reason,
+                                        Skip()
+                                    )
+                                )
                             }
                         }
                     }
                 }
 
-                is EditorScreen.Event.ToggleCode -> showCode = !showCode
-                is EditorScreen.Event.ToggleStructogram -> showStructogram = !showStructogram
-                is EditorScreen.Event.Close -> navigator.pop()
-                is EditorScreen.Event.Run -> navigator.goTo(DebugScreen(structogram))
-                is EditorScreen.Event.ToggleStatementDrag -> dragStatements = !dragStatements
-                is EditorScreen.Event.OpenUnicodeInput -> input = true
-                is EditorScreen.Event.CloseUnicodeInput -> input = false
+                is Event.Save -> {
+                    coroutineScope.launch {
+                        file.save(inputValue.text)
+                    }
+                }
+
+                is Event.ToggleCode -> showCode = !showCode
+                is Event.ToggleStructogram -> showStructogram = !showStructogram
+                is Event.Close -> navigator.pop()
+                is Event.Run -> navigator.goTo(DebugScreen(structogram))
+                is Event.ToggleStatementDrag -> dragStatements = !dragStatements
+                is Event.OpenUnicodeInput -> input = true
+                is Event.CloseUnicodeInput -> input = false
             }
         }
     }
