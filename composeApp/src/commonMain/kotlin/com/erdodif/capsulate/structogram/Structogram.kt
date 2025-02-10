@@ -47,7 +47,7 @@ class Structogram private constructor(var statements: Array<ComposableStatement<
         activeStatement: Uuid? = null
     ) = key(this, draggable, activeStatement) {
         Column(
-            modifier.width(IntrinsicSize.Min).border(Theme.borderWidth, Theme.borderColor)
+            modifier.fillMaxWidth().width(IntrinsicSize.Max).border(Theme.borderWidth, Theme.borderColor)
                 .padding(Theme.borderWidth, 0.dp)
         ) {
             Spacer(Modifier.height(Theme.borderWidth))

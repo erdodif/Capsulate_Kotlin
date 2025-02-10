@@ -103,7 +103,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                                             .background(MaterialTheme.colorScheme.surface)
                                             .height(3.dp)
                                     )
-                                structogram().Content(state, Modifier.weight(2f, false))
+                                structogram().Content(state, Modifier.weight(2f))
                                 if (keyboardUp && !state.input) {
                                     Row(Modifier.fillMaxWidth()) {
                                         Button({
@@ -127,16 +127,16 @@ internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
     if (state.showStructogram)
         Column(
             modifier.fillMaxWidth()
-                .heightIn(
+                /*.heightIn(
                     10.dp,
                     if (state.showCode) 1200.dp else Dp.Unspecified
-                ),
+                )*/.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Center
         ) {
             if (state.structogram != null) {
                 state.structogram.Content(
-                    Modifier.verticalScroll(
+                    Modifier.horizontalScroll(
                         rememberScrollState()
                     ),
                     state.dragStatements

@@ -75,7 +75,7 @@ class Command(
             var size by remember { mutableStateOf(DpSize.Zero) }
             val density = LocalDensity.current
             if (draggable)
-                DraggableArea(Modifier, draggable, size) { dragging ->
+                DraggableArea(modifier, draggable, size) { dragging ->
                     StatementText(
                         text,
                         false,
@@ -90,11 +90,11 @@ class Command(
                     DropTarget(LocalDraggingStatement.current)
                 }
             else {
-                Column {
+                Column(modifier) {
                     StatementText(
                         text,
                         false,
-                        modifier.fillMaxWidth().conditional(
+                        Modifier.fillMaxWidth().conditional(
                             Modifier.background(MaterialTheme.colorScheme.tertiary)
                                 .border(3.dp, MaterialTheme.colorScheme.tertiaryContainer)
                         ) {

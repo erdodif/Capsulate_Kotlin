@@ -20,8 +20,9 @@ class Project(@KIgnoredOnParcel val directory: PlatformDirectory? = null) : KPar
 
     fun listFiles(): List<IPlatformFile> =
         (directory?.toKmpFile()?.listFiles() ?: arrayOf()).filter {
-            it.isFile() && it !in openFiles.map { it.file } && it.getName().split(".")
-                .lastOrNull() in (supportedExtensions ?: listOf())
+            it.isFile() && it !in openFiles.map { it.file } && (
+                    supportedExtensions == null || it.getName().split(".")
+                        .lastOrNull() in supportedExtensions!!)
         }.toList() + openFiles.map { it.file }.filterNotNull()
 
     fun getFile(name: String): OpenFile {
