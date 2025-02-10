@@ -45,7 +45,7 @@ data class If(
             if (result.value) {
                 EvalSequence(statementsTrue)
             } else {
-                EvalSequence(statementsTrue)
+                EvalSequence(statementsFalse)
             }
         } else {
             AbortEvaluation("Condition must be a logical expression")
