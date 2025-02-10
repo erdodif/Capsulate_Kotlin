@@ -54,13 +54,13 @@ data object LandingScreen : Screen {
     }
 }
 
-class LandingScreenPresenter(
+class LandingPresenter(
     private val screen: LandingScreen,
     private val navigator: Navigator
 ) : Presenter<LandingScreen.State> {
 
     companion object Factory :
-        Presenter.Factory by screenPresenterFactory<LandingScreen>(::LandingScreenPresenter)
+        Presenter.Factory by screenPresenterFactory<LandingScreen>(::LandingPresenter)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -69,19 +69,20 @@ class LandingScreenPresenter(
         var sheetState = rememberModalBottomSheetState()
         val coroutineScope = rememberCoroutineScope()
         val snackBarHostState = remember { SnackbarHostState() }
-        val failFolderMessage =stringResource(Res.string.folder_open_failed)
+        val failFolderMessage = stringResource(Res.string.folder_open_failed)
         val failFileMessage = stringResource(Res.string.file_open_failed)
-        val directoryPicker =
-            rememberDirectoryPickerLauncher(stringResource(Res.string.open_folder), ".") {
-                if (it != null) {
-                    Napier.d { it.path.toString() }
-                    navigator.goTo(ProjectScreen(Project(it)))
-                } else {
-                    coroutineScope.launch {
-                        snackBarHostState.showSnackbar(failFolderMessage)
-                    }
+        val directoryPicker = rememberDirectoryPickerLauncher(
+            stringResource(Res.string.open_folder), "."
+        ) {
+            if (it != null) {
+                Napier.d { it.path.toString() }
+                navigator.goTo(ProjectScreen(Project(it)))
+            } else {
+                coroutineScope.launch {
+                    snackBarHostState.showSnackbar(failFolderMessage)
                 }
             }
+        }
         val filePicker = rememberFilePickerLauncher(
             PickerType.File(extensions.toList()),
             stringResource(Res.string.open_file)

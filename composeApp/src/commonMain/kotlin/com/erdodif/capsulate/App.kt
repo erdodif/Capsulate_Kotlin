@@ -13,10 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.pages.screen.DebugPresenter
+import com.erdodif.capsulate.pages.screen.EditorPresenter
 import com.erdodif.capsulate.pages.screen.LandingScreen
-import com.erdodif.capsulate.pages.screen.LandingScreenPresenter
+import com.erdodif.capsulate.pages.screen.LandingPresenter
 import com.erdodif.capsulate.pages.screen.PresetPresenter
 import com.erdodif.capsulate.pages.screen.ProjectPresenter
+import com.erdodif.capsulate.pages.ui.DebugPage
+import com.erdodif.capsulate.pages.ui.EditorPage
 import com.erdodif.capsulate.pages.ui.LandingPage
 import com.erdodif.capsulate.pages.ui.PresetPage
 import com.erdodif.capsulate.pages.ui.ProjectPage
@@ -55,12 +59,16 @@ fun App() {
     }
     BackHandler(true, navigator::pop)
     val circuit = Circuit.Builder()
-        .addPresenterFactory(LandingScreenPresenter.Factory)
+        .addPresenterFactory(LandingPresenter.Factory)
         .addUiFactory(LandingPage.Factory)
         .addPresenterFactory(ProjectPresenter.Factory)
         .addUiFactory(ProjectPage.Factory)
         .addPresenterFactory(PresetPresenter.Factory)
         .addUiFactory(PresetPage.Factory)
+        .addPresenterFactory(EditorPresenter.Factory)
+        .addUiFactory(EditorPage.Factory)
+        .addPresenterFactory(DebugPresenter.Factory)
+        .addUiFactory(DebugPage.Factory)
         .build()
     MaterialTheme(colorScheme = resolveColors()) {
         Theme.initialize()

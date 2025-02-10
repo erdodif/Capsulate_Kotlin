@@ -92,30 +92,19 @@ class ProjectPage : Ui<State> {
                         Text(it.getName(), Modifier.padding(1.dp, 2.dp))
                     }
                 }
-                if (state.opened.file == null) {
-                    item {
-                        IconButton({state.eventHandler(Event.New)}){
-                            Icon(Icons.Filled.Add, "")
-                        }
+                item {
+                    IconButton({ state.eventHandler(Event.New) }) {
+                        Icon(Icons.Filled.Add, "")
                     }
                 }
             }
             Column(Modifier.fillMaxSize()) {
-                val circuit = Circuit.Builder().addPresenterFactory(EditorPresenter.Factory)
-                    .addUiFactory(EditorPage.Factory).addPresenterFactory(DebugPresenter.Factory)
-                    .addUiFactory(DebugPage.Factory).build()
-                val backStack = rememberSaveableBackStack(root = EditorScreen(state.opened))
-                val navigator = rememberCircuitNavigator(backStack) {
-                    state.eventHandler(Event.Close)
-                }
-                CircuitCompositionLocals(circuit) {
-                    NavigableCircuitContent(
-                        navigator = navigator,
-                        backStack = backStack,
-                        modifier = Modifier.fillMaxSize(),
-                        unavailableRoute = defaultScreenError
-                    )
-                }
+                NavigableCircuitContent(
+                    navigator = state.editorNavigator,
+                    backStack = state.editorBackStack,
+                    modifier = Modifier.fillMaxSize(),
+                    unavailableRoute = defaultScreenError
+                )
                 Button({ state.eventHandler(Event.Close) }) { Text(stringResource(Res.string.close)) }
             }
         }

@@ -3,6 +3,7 @@
 package com.erdodif.capsulate
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Parcel
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -14,8 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
+import io.github.vinceglb.filekit.core.PlatformDirectory
 import kotlinx.parcelize.Parceler
-import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
 
 @Composable
@@ -50,24 +51,36 @@ actual class FileParceler : KParceler<IPlatformFile?> {
         parcel: Parcel,
         flags: Int
     ) {
-        if (this != null){
+        if (this != null) {
             parcel.writeString(this.getPath())
         }
     }
 
-    override fun create(parcel: Parcel): IPlatformFile?{
+    override fun create(parcel: Parcel): IPlatformFile? {
         val path: String? = parcel.readString()
-        if(path != null){
+        if (path != null) {
             return PlatformFile(path)
         }
         return null
     }
-
 }
 
-@TypeParceler<IPlatformFile?, Parceler<IPlatformFile>>
-@Parcelize
-class OpenFile(
-    var file: IPlatformFile? = null,
-    var newState: String? = null
-): KParcelable {}
+class DirectoryParceler : KParceler<PlatformDirectory?> {
+    override fun PlatformDirectory?.write(
+        parcel: Parcel,
+        flags: Int
+    ) {
+        if (this != null) {
+            parcel.writeString(this.uri.toString())
+        }
+    }
+
+    override fun create(parcel: Parcel): PlatformDirectory? {
+        val path = parcel.readString()
+        if (path == null) {
+            return null
+        }
+        return PlatformDirectory(Uri.parse(path))
+    }
+
+}

@@ -25,6 +25,7 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -123,7 +124,10 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 is Event.ToggleCode -> showCode = !showCode
                 is Event.ToggleStructogram -> showStructogram = !showStructogram
                 is Event.Close -> navigator.pop()
-                is Event.Run -> navigator.goTo(DebugScreen(structogram))
+                is Event.Run -> {
+                    Napier.d{"Navigating"}
+                    navigator.resetRoot(DebugScreen(structogram))
+                }
                 is Event.ToggleStatementDrag -> dragStatements = !dragStatements
                 is Event.OpenUnicodeInput -> input = true
                 is Event.CloseUnicodeInput -> input = false

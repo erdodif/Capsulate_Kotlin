@@ -16,6 +16,7 @@ import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
+import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import kotlin.uuid.ExperimentalUuidApi
@@ -35,10 +36,11 @@ class DebugScreen(val structogram: Structogram) : Screen {
     sealed interface Event : CircuitUiEvent {
         object StepForward : Event
         object Reset : Event
+        object Close : Event
     }
 }
 
-class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
+class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presenter<State> {
 
     companion object Factory :
         Presenter.Factory by screenPresenterFactory<DebugScreen>(::DebugPresenter)
@@ -55,8 +57,8 @@ class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
                 )
             )
         }
-        val envState by remember(step) { derivedStateOf{debug.env} }
-        val statement : Uuid? by remember(step) { derivedStateOf { debug.head?.id } }
+        val envState by remember(step) { derivedStateOf { debug.env } }
+        val statement: Uuid? by remember(step) { derivedStateOf { debug.head?.id } }
         return State(screen.structogram, statement, envState, step) { event ->
             when (event) {
                 is Event.StepForward -> {
@@ -70,6 +72,7 @@ class DebugPresenter(val screen: DebugScreen) : Presenter<State> {
                     debug = EvaluationContext(Env.empty, EvalSequence(screen.structogram.program))
                     step = 0
                 }
+                is Event.Close -> navigator.pop()
             }
         }
     }

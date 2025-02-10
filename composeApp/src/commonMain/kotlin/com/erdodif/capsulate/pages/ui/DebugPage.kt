@@ -19,14 +19,15 @@ import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
 import kotlin.uuid.ExperimentalUuidApi
+import com.erdodif.capsulate.pages.screen.DebugScreen.State
 
-class DebugPage : Ui<DebugScreen.State> {
+class DebugPage : Ui<State> {
 
     companion object Factory : Ui.Factory by screenUiFactory<DebugScreen>(::DebugPage)
 
     @OptIn(ExperimentalUuidApi::class)
     @Composable
-    override fun Content(state: DebugScreen.State, modifier: Modifier) {
+    override fun Content(state: State, modifier: Modifier) {
         Column(Modifier.safeContentPadding(), verticalArrangement = Arrangement.SpaceBetween) {
             state.structogram.Content(
                 modifier = Modifier.fillMaxWidth(),
@@ -48,7 +49,10 @@ class DebugPage : Ui<DebugScreen.State> {
             }
             Column {
                 if (state.activeStatement == null) {
-                    Row { Button({ state.eventHandler(Event.Reset) }) { Text("Reset") } }
+                    Row {
+                        Button({ state.eventHandler(Event.Reset) }) { Text("Reset") }
+                        Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                    }
                     Text(
                         "Finished in ${state.stepCount + 1} steps!",
                         color = MaterialTheme.colorScheme.tertiary,
@@ -59,7 +63,10 @@ class DebugPage : Ui<DebugScreen.State> {
                         "Steps taken: ${state.stepCount + 1}",
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    Row { Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") } }
+                    Row {
+                        Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
+                        Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                    }
                 }
             }
         }
