@@ -3,13 +3,12 @@ package com.erdodif.capsulate.project
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.supportedExtensions
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.filekit.toKmpFile
 import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.core.PlatformDirectory
 import kotlin.arrayOf
-
-val extensions = arrayOf("txt", "struk")
 
 @KParcelize
 class Project(@KIgnoredOnParcel val directory: PlatformDirectory? = null) : KParcelable {
@@ -22,7 +21,7 @@ class Project(@KIgnoredOnParcel val directory: PlatformDirectory? = null) : KPar
     fun listFiles(): List<IPlatformFile> =
         (directory?.toKmpFile()?.listFiles() ?: arrayOf()).filter {
             it.isFile() && it !in openFiles.map { it.file } && it.getName().split(".")
-                .lastOrNull() in extensions
+                .lastOrNull() in (supportedExtensions ?: listOf())
         }.toList() + openFiles.map { it.file }.filterNotNull()
 
     fun getFile(name: String): OpenFile {

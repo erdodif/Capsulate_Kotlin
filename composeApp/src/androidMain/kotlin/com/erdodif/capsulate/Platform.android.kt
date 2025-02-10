@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
+import io.github.vinceglb.filekit.core.PickerType
 import io.github.vinceglb.filekit.core.PlatformDirectory
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.TypeParceler
@@ -84,3 +85,6 @@ class DirectoryParceler : KParceler<PlatformDirectory?> {
     }
 
 }
+
+actual val supportedExtensions: List<String>? = null
+

@@ -27,3 +27,5 @@ actual fun locateSetting() {
 
 actual val onMobile: Boolean = false
 
+actual val supportedExtensions: List<String>? = listOf("struk", "stk", "txt")
+

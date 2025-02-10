@@ -16,3 +16,5 @@ actual class FileParceler : KParceler<IPlatformFile?>
 
 @Composable
 actual fun locateSetting() {}
+
+actual val supportedExtensions: List<String>? = listOf("struk", "stk", "txt")

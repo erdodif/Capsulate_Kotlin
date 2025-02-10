@@ -14,12 +14,12 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.presets.Preset
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
-import com.erdodif.capsulate.project.extensions
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.file_open_failed
 import com.erdodif.capsulate.resources.folder_open_failed
 import com.erdodif.capsulate.resources.open_file
 import com.erdodif.capsulate.resources.open_folder
+import com.erdodif.capsulate.supportedExtensions
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -84,7 +84,7 @@ class LandingPresenter(
             }
         }
         val filePicker = rememberFilePickerLauncher(
-            PickerType.File(extensions.toList()),
+            PickerType.File(supportedExtensions),
             stringResource(Res.string.open_file)
         ) {
             if (it != null) {
