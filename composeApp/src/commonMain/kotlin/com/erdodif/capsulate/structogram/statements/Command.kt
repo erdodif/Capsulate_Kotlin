@@ -60,7 +60,6 @@ class Command(
             is Assign -> "${statement.label} := ${statement.value.toString(state)}"
             is ParallelAssign -> statement.assigns.map { it.first }.toString() + " := " +
                     statement.assigns.map { it.second.toString(state) }.toString()
-
             else -> "UNSUPPORTED $statement"
         }, statement
     )

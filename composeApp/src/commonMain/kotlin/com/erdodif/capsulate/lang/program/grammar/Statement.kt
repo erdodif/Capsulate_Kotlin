@@ -5,10 +5,12 @@ package com.erdodif.capsulate.lang.program.grammar
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.util.AbortEvaluation
+import com.erdodif.capsulate.lang.util.AtomicEvaluation
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.EvalSequence
 import com.erdodif.capsulate.lang.util.EvaluationResult
 import com.erdodif.capsulate.lang.util.Finished
+import com.erdodif.capsulate.lang.util.ParallelEvaluation
 import com.erdodif.capsulate.lang.util.SingleStatement
 import kotlin.collections.plus
 import kotlin.uuid.ExperimentalUuidApi
@@ -31,13 +33,13 @@ data class If(
         condition: Exp<*>,
         statementsTrue: List<Statement>,
         statementsFalse: List<Statement>
-    ): this(condition, ArrayList(statementsTrue), ArrayList(statementsFalse), Uuid.random())
+    ) : this(condition, ArrayList(statementsTrue), ArrayList(statementsFalse), Uuid.random())
 
     constructor(
         condition: Exp<*>,
         statementsTrue: ArrayList<Statement>,
         statementsFalse: ArrayList<Statement>
-    ): this(condition, statementsTrue, statementsFalse, Uuid.random())
+    ) : this(condition, statementsTrue, statementsFalse, Uuid.random())
 
     override fun evaluate(env: Env): EvaluationResult {
         val result = condition.evaluate(env)
@@ -196,40 +198,8 @@ data class Parallel(
 ) : Statement(id) {
     constructor(blocks: ArrayList<out ArrayList<out Statement>>) : this(blocks, Uuid.random())
 
-    override fun evaluate(env: Env): EvaluationResult {
-        val newBlocks: MutableList<ArrayDeque<Statement>> =
-            blocks.map { ArrayDeque(it) }.toMutableList()
-        var index: Int
-        do {
-            index = env.random.nextInt(newBlocks.size)
-            if (blocks[index].isEmpty()) {
-                blocks.removeAt(index)
-            }
-        } while (index < blocks.size && blocks[index].isEmpty())
-        if (blocks.isEmpty()) {
-            return Finished
-        }
-        val list = newBlocks[index]
-        return when (val result = list.removeFirst().evaluate(env)) {
-            Finished -> {
-                if (list.isEmpty()) {
-                    newBlocks.removeAt(index)
-                }
-                SingleStatement(this)
-            }
-
-            is AbortEvaluation -> result
-            is SingleStatement -> {
-                list.addFirst(result.next)
-                SingleStatement(this)
-            }
-
-            is EvalSequence -> {
-                list.addAll(0, result.statements)
-                SingleStatement(this)
-            }
-        }
-    }
+    override fun evaluate(env: Env): EvaluationResult =
+        ParallelEvaluation(blocks.map { EvalSequence(it) })
 }
 
 @KParcelize
@@ -239,20 +209,7 @@ data class Atomic(
 ) : Statement(id) {
     constructor(statements: List<Statement>) : this(ArrayDeque(statements), Uuid.random())
 
-    override fun evaluate(env: Env): EvaluationResult =
-        when (val result = statements.removeFirst().evaluate(env)) {
-            is Finished -> SingleStatement(this)
-            is AbortEvaluation -> result
-            is SingleStatement -> {
-                statements.addFirst(result.next)
-                SingleStatement(this)
-            }
-
-            is EvalSequence -> {
-                statements.addAll(0, result.statements)
-                SingleStatement(this)
-            }
-        }
+    override fun evaluate(env: Env): EvaluationResult = AtomicEvaluation(this.statements)
 }
 
 @KParcelize

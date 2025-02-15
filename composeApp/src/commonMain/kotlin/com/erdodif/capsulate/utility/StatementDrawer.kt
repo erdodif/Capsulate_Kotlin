@@ -21,6 +21,7 @@ import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.structogram.composables.Theme
+import com.erdodif.capsulate.structogram.statements.AtomicStatement
 import com.erdodif.capsulate.structogram.statements.AwaitStatement
 import com.erdodif.capsulate.structogram.statements.Block
 import com.erdodif.capsulate.structogram.statements.Command
@@ -35,7 +36,7 @@ private val boolLit = BoolLit(true, match)
 private val assign = Assign("a", IntLit(0, match))
 
 private val statements = listOf(
-    Command("statement",assign),
+    Command("statement", assign),
     IfStatement(
         "if", statement = If(boolLit, arrayListOf(), arrayListOf())
     ),
@@ -47,11 +48,15 @@ private val statements = listOf(
         ),
         statement = When(mutableListOf(boolLit to listOf(), boolLit to listOf()), listOf())
     ),
-    LoopStatement("while", listOf(), true, While(boolLit,arrayListOf())),
+    LoopStatement("while", listOf(), true, While(boolLit, arrayListOf())),
     LoopStatement("do while", listOf(), false, DoWhile(boolLit, arrayListOf())),
-    AwaitStatement("await", Wait(boolLit, Atomic(listOf()))),
+    AwaitStatement(
+        "await",
+        AtomicStatement(listOf(), Atomic(listOf())),
+        Wait(boolLit, Atomic(listOf()))
+    ),
     ParallelStatement(
-        Parallel(arrayListOf(arrayListOf(assign),arrayListOf(assign))),
+        Parallel(arrayListOf(arrayListOf(assign), arrayListOf(assign))),
         arrayOf(Command("", Skip()), Command(" ", Skip()))
     )
 )

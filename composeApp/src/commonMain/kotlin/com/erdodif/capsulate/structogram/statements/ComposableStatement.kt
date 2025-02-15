@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
+import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.Parallel
@@ -131,6 +132,7 @@ abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) 
     companion object {
         fun fromStatement(state: ParserState, statement: GrammarStatement): ComposableStatement<*> =
             when (statement) {
+                is Atomic -> AtomicStatement(statement, state)
                 is If -> IfStatement(statement, state)
                 is When -> WhenStatement(statement, state)
                 is Wait -> AwaitStatement(statement, state)

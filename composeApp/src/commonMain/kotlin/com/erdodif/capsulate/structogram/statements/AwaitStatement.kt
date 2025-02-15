@@ -5,6 +5,7 @@ package com.erdodif.capsulate.structogram.statements
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,10 +25,10 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.composables.awaitIndicator
@@ -42,10 +43,12 @@ import kotlin.uuid.Uuid
 @KParcelize
 class AwaitStatement(
     var condition: String,
+    val atomic: ComposableStatement<*>,
     override val statement: Wait
 ) : ComposableStatement<Wait>(statement) {
     constructor(statement: Wait, state: ParserState) : this(
         statement.condition.toString(state),
+        fromStatement(state, statement.atomic),
         statement
     )
 
@@ -58,17 +61,18 @@ class AwaitStatement(
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
         DraggableArea(Modifier, draggable, size) { dragging ->
-            Row(
-                modifier.onDpSize(density) { size = it }.dim(dragging)
-
-            ) {
-                StatementText(
-                    condition,
-                    modifier = Modifier.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                        statement.id == activeStatement
-                    }.clip(RectangleShape).fillMaxSize().awaitIndicator()
-                        .padding(Theme.commandPadding)
-                )
+            Column(modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)) {
+                Row {
+                    StatementText(
+                        condition,
+                        modifier = Modifier.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
+                            statement.id == activeStatement
+                        }.clip(RectangleShape).fillMaxWidth().awaitIndicator()
+                            .padding(Theme.commandPadding)
+                    )
+                }
+                HorizontalBorder()
+                atomic.Show(Modifier, draggable, activeStatement)
             }
         }
     }
@@ -77,8 +81,16 @@ class AwaitStatement(
 @Preview
 @Composable
 fun AwaitPreview() = PreviewColumn {
-    val statement = AwaitStatement("guard",Wait(BoolLit(false, MatchPos.ZERO), Atomic(listOf(Skip()))))
+    val atom = Atomic(listOf(Skip()))
+    val inner = Command("A", Skip())
+    val statement = AwaitStatement(
+        "guard",
+        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), atom),
+        Wait(BoolLit(false, MatchPos.ZERO), atom)
+    )
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") { statement.Show(modifier, false, null) }
     labeled("Active") { statement.Show(modifier, false, statement.statement.id) }
+    labeled("Active await") { statement.Show(modifier, false, atom.id) }
+    labeled("Active inner") { statement.Show(modifier, false, inner.statement.id) }
 }

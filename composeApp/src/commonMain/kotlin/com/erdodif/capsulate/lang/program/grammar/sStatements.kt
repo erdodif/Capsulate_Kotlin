@@ -2,9 +2,11 @@ package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._anyKeyword
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
@@ -69,64 +71,70 @@ val sError: Parser<LineError> =
 val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
 val sAbort: Parser<Statement> = delimit(_keyword("abort") / { Abort() })
 
-val sAtom: Parser<Statement> = delimit(middle(_keyword("["), program , _keyword("]"))) / { Atomic(it) }
-val sWait: Parser<Statement> =
-    delimit(
-        right(_keyword("wait"), pExp + sAtom) / { Wait(it.first, it.second as Atomic) }
-    ) // TODO - wait ... then
+val sAtom: Parser<Statement> =
+    delimit(middle(_keyword("["), blockOrParallel, _keyword("]"))) / { Atomic(it) }
+val sWait: Parser<Statement> = delimit(
+    right(_keyword("await"), delimit(pExp) + or(sAtom, blockOrParallel)) / {
+        Wait(
+            it.first,
+            when (val inner = it.second) {
+                is Left -> inner.value as Atomic
+                is Right -> Atomic(inner.value)
+            }
+        )
+    }
+)
 
 val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 
 val sIf: Parser<Statement> =
     (right(_keyword("if"), delimit(pExp) + blockOrParallel) +
-        right(delimit(_keyword("else")), blockOrParallel)) /
-        {
-            If(it.first.first, it.first.second, it.second)
-        }
+            right(delimit(_keyword("else")), blockOrParallel)) /
+            {
+                If(it.first.first, it.first.second, it.second)
+            }
 
 val sWhen: Parser<Statement> =
     (middle(
         newLined(_keyword("when")) + newLined(_char('{')),
         (many(left(left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(',')))) +
-            optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
-            optional(
-                middle(
-                    newLined(_keyword("else") + _char(':')),
-                    statementOrBlock,
-                    optional(newLined(_char(','))),
-                )
-            ),
+                optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
+                optional(
+                    middle(
+                        newLined(_keyword("else") + _char(':')),
+                        statementOrBlock,
+                        optional(newLined(_char(','))),
+                    )
+                ),
         newLined(_char('}')),
-    )) /
-        {
-            if (it.first.second != null) it.first.first.add(it.first.second!!)
-            When(it.first.first, it.second)
-        }
+    )) / {
+        if (it.first.second != null) it.first.first.add(it.first.second!!)
+        When(it.first.first, it.second)
+    }
 
 val sWhile: Parser<Statement> =
-    (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) /
-        {
-            While(it.first, it.second)
-        }
+    (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) / {
+        While(it.first, it.second)
+    }
 
-val sDoWhile: Parser<Statement> =
-    right(
-        _keyword("do") + many(_char('\n')),
-        blockOrParallel + delimit(right(_keyword("while"), pExp)),
-    ) / { DoWhile(it.second, it.first) }
+val sDoWhile: Parser<Statement> = right(
+    _keyword("do") + many(_char('\n')),
+    blockOrParallel + delimit(right(_keyword("while"), pExp)),
+) / { DoWhile(it.second, it.first) }
 
 val sParallelAssign: Parser<Statement> =
-    (delimited(_nonKeyword, _char(',')) +
-        right(tok(string(":=")), delimit(delimited(pExp, _char(',')))))[
-        {
-            if (it.value.second.size != it.value.first.size) {
-                fail("The number of parameters does not match the number of values to assign.")
-            } else
-                pass(
-                    it.match.start,
-                    ParallelAssign(it.value.first.zip(it.value.second) as ArrayList),
-                )
-        }]
+    (delimited(_nonKeyword, _char(',')) + right(
+        tok(string(":=")),
+        delimit(delimited(pExp, _char(',')))
+    ))[{
+        if (it.value.second.size != it.value.first.size)
+            fail("The number of parameters does not match the number of values to assign.")
+        else
+            pass(
+                it.match.start,
+                ParallelAssign(it.value.first.zip(it.value.second) as ArrayList),
+            )
+    }]
 
 val sAssign: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":="), pExp)) / { Assign(it.first, it.second) }
