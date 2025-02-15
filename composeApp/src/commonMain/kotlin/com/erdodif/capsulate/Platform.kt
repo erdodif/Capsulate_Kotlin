@@ -4,8 +4,8 @@ package com.erdodif.capsulate
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
 import dev.zwander.kotlin.file.IPlatformFile
-import io.github.vinceglb.filekit.core.PickerType
 
 @Composable expect fun resolveColors(): ColorScheme
 
@@ -38,3 +38,5 @@ expect fun locateSetting()
 expect val onMobile: Boolean
 
 expect val supportedExtensions: List<String>?
+
+expect fun ImageBitmap.toPngByteArray() : ByteArray

@@ -3,6 +3,7 @@
 package com.erdodif.capsulate
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Parcel
@@ -12,13 +13,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
-import io.github.vinceglb.filekit.core.PickerType
 import io.github.vinceglb.filekit.core.PlatformDirectory
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.TypeParceler
+import java.io.ByteArrayOutputStream
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Composable
 actual fun resolveColors(): ColorScheme {
@@ -87,4 +91,12 @@ class DirectoryParceler : KParceler<PlatformDirectory?> {
 }
 
 actual val supportedExtensions: List<String>? = null
+
+
+@OptIn(ExperimentalEncodingApi::class)
+actual fun ImageBitmap.toPngByteArray(): ByteArray =
+    ByteArrayOutputStream().use {
+        this.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+        return@use it.toByteArray()
+    }
 

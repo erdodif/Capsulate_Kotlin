@@ -70,6 +70,7 @@ kotlin {
             implementation(libs.kotlinx.io.core)
             implementation(libs.slf4j.api)
             implementation(libs.slf4j.simple)
+            implementation("com.github.nwillc.ksvg:ksvg:master-SNAPSHOT")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -5,8 +5,13 @@ package com.erdodif.capsulate
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asSkiaBitmap
 import com.materialkolor.dynamicColorScheme
 import dev.zwander.kotlin.file.IPlatformFile
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Image
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Composable
 actual fun resolveColors(): ColorScheme = dynamicColorScheme(Color(106,56,193), true, false)
@@ -29,3 +34,6 @@ actual val onMobile: Boolean = false
 
 actual val supportedExtensions: List<String>? = listOf("struk", "stk", "txt")
 
+@OptIn(ExperimentalEncodingApi::class)
+actual fun ImageBitmap.toPngByteArray(): ByteArray =
+    Image.makeFromBitmap(this.asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG, 100)!!.bytes
