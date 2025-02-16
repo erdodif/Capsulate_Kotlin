@@ -82,8 +82,6 @@ class ParallelStatement(
                     with(density) {
                         size = DpSize(it.size.width.toDp(), it.size.height.toDp())
                     }
-                }.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
-                    statement.id == activeStatement
                 }
         ) {
             StackWithSeparator(
@@ -98,7 +96,14 @@ class ParallelStatement(
                                     draggable
                                 )
                             }, {
-                                commandPlaceHolder()
+                                commandPlaceHolder(
+                                    Modifier.conditional(
+                                        Modifier.background(
+                                            MaterialTheme.colorScheme.tertiary
+                                        )
+                                    ) {
+                                        statement.id == activeStatement
+                                    })
                             }) {
                             HorizontalBorder()
                         }

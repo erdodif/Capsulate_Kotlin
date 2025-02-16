@@ -85,8 +85,8 @@ fun Modifier.awaitIndicator(): Modifier = this.drawBehind {
     val width = drawContext.size.width
     val borderWidth = Theme.borderWidth.toPx()
     path.moveTo(-borderWidth / 2f, height)
-    path.quadraticBezierTo(0f, borderWidth / 4f, width / 2f, borderWidth / 4f)
-    path.quadraticBezierTo(width, borderWidth / 4f, width + borderWidth / 2f, height)
+    path.quadraticTo(0f, borderWidth / 4f, width / 2f, borderWidth / 4f)
+    path.quadraticTo(width, borderWidth / 4f, width + borderWidth / 2f, height)
     drawPath(
         path,
         Theme.borderColor,
