@@ -3,6 +3,7 @@ package com.erdodif.capsulate.structogram.composables
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ object Theme {
     var borderWidth: Dp = 4.dp
     val commandModifier
         @Composable get() = Modifier.background(MaterialTheme.colorScheme.primary)
+            .defaultMinSize(100.dp, 25.dp)
     val commandPadding = PaddingValues(10.dp, 6.dp)
     val casePadding = PaddingValues(28.dp, 6.dp, 10.dp, 6.dp)
     val elsePadding = PaddingValues(10.dp, 6.dp, 28.dp, 6.dp)
