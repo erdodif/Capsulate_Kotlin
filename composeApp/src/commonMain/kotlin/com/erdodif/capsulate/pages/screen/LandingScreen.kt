@@ -44,13 +44,13 @@ data object LandingScreen : Screen {
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
-    sealed class Event : CircuitUiEvent {
-        data object OpenFile : Event()
-        data object OpenFolder : Event()
-        data object ToEmptyProject : Event()
-        data object OpenPresetModal : Event()
-        data object ClosePresetModal : Event()
-        data class SelectPreset(val preset: Preset) : Event()
+    sealed interface Event : CircuitUiEvent {
+        data object OpenFile : Event
+        data object OpenFolder : Event
+        data object ToEmptyProject : Event
+        data object OpenPresetModal : Event
+        data object ClosePresetModal : Event
+        data class SelectPreset(val preset: Preset) : Event
     }
 }
 

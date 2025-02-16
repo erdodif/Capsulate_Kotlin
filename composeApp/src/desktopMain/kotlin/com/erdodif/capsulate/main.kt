@@ -10,6 +10,7 @@ import io.github.aakira.napier.LogLevel
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.coroutineScope
 import org.jetbrains.compose.resources.stringResource
+import java.awt.Dimension
 
 fun main() = application {
     val appName = stringResource(Res.string.app_name)
@@ -23,6 +24,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = appName,
     ) {
+        window.minimumSize = Dimension(450,400)
         Napier.base(object :Antilog(){
             override fun performLog(
                 priority: LogLevel,

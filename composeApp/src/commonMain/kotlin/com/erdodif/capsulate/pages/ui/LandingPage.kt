@@ -84,11 +84,20 @@ class LandingPage() : Ui<LandingScreen.State> {
 
     @Composable
     private fun Logo() {
-        Column {
+        val info = currentWindowAdaptiveInfo()
+        val logoSize = if (
+            info.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH &&
+            info.windowSizeClass.windowHeightSizeClass == COMPACT_HEIGHT
+        ) {
+            70.dp
+        } else {
+            160.dp
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
                 stringResource(Res.string.app_name),
-                Modifier.size(160.dp).padding(0.dp, 10.dp),
+                Modifier.size(logoSize).padding(0.dp, 10.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
@@ -103,7 +112,8 @@ class LandingPage() : Ui<LandingScreen.State> {
 
     @Composable
     private fun Selector(state: LandingScreen.State) {
-        Column(
+        val windowSize = currentWindowAdaptiveInfo()
+        LazyColumn(
             Modifier.defaultMinSize(10.dp, 150.dp).padding(80.dp, 20.dp)
                 .background(
                     MaterialTheme.colorScheme.surfaceContainer,
@@ -112,47 +122,56 @@ class LandingPage() : Ui<LandingScreen.State> {
                 .padding(30.dp)
                 .widthIn(25.dp, 150.dp)
         ) {
-            Button(
-                { state.eventHandler(LandingScreen.Event.OpenFile) },
-                Modifier.fillMaxWidth().padding(2.dp)
-            ) { Text(stringResource(Res.string.open_file)) }
-            Button(
-                { state.eventHandler(LandingScreen.Event.OpenFolder) },
-                Modifier.fillMaxWidth().padding(2.dp)
-            ) { Text(stringResource(Res.string.open_folder)) }
-            Button(
-                { state.eventHandler(LandingScreen.Event.ToEmptyProject) },
-                Modifier.fillMaxWidth().padding(2.dp)
-            ) { Text(stringResource(Res.string.start_empty)) }
-            Button(
-                { state.eventHandler(LandingScreen.Event.OpenPresetModal) },
-                Modifier.fillMaxWidth().padding(2.dp)
-            ) { Text(stringResource(Res.string.open_preset)) }
-            if (state.presetVisible) {
-                val windowSize = currentWindowAdaptiveInfo()
-                if (windowSize.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH ||
-                    windowSize.windowSizeClass.windowHeightSizeClass == COMPACT_HEIGHT
-                ) {
-                    ModalBottomSheet(
-                        onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
-                        sheetState = state.bottomSheetState,
-                        sheetMaxWidth = 400.dp
+            item {
+                Button(
+                    { state.eventHandler(LandingScreen.Event.OpenFile) },
+                    Modifier.fillMaxWidth().padding(2.dp)
+                ) { Text(stringResource(Res.string.open_file)) }
+            }
+            item {
+                Button(
+                    { state.eventHandler(LandingScreen.Event.OpenFolder) },
+                    Modifier.fillMaxWidth().padding(2.dp)
+                ) { Text(stringResource(Res.string.open_folder)) }
+            }
+            item {
+                Button(
+                    { state.eventHandler(LandingScreen.Event.ToEmptyProject) },
+                    Modifier.fillMaxWidth().padding(2.dp)
+                ) { Text(stringResource(Res.string.start_empty)) }
+            }
+            item {
+                Button(
+                    { state.eventHandler(LandingScreen.Event.OpenPresetModal) },
+                    Modifier.fillMaxWidth().padding(2.dp)
+                ) { Text(stringResource(Res.string.open_preset)) }
+            }
+            item {
+                if (state.presetVisible) {
+                    if (windowSize.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH ||
+                        windowSize.windowSizeClass.windowHeightSizeClass == COMPACT_HEIGHT
                     ) {
-                        ModalContent(state)
-                    }
-                } else {
-                    Dialog(
-                        onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
-                        properties = DialogProperties()
-                    ) {
-                        AnimatedVisibility(true, enter = scaleIn()) {
-                            Box(
-                                Modifier.background(
-                                    MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    RoundedCornerShape(10.dp)
-                                )
-                            ) {
-                                ModalContent(state)
+                        ModalBottomSheet(
+                            onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
+                            sheetState = state.bottomSheetState,
+                            sheetMaxWidth = 400.dp
+                        ) {
+                            ModalContent(state)
+                        }
+                    } else {
+                        Dialog(
+                            onDismissRequest = { state.eventHandler(LandingScreen.Event.ClosePresetModal) },
+                            properties = DialogProperties()
+                        ) {
+                            AnimatedVisibility(true, enter = scaleIn()) {
+                                Box(
+                                    Modifier.background(
+                                        MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                ) {
+                                    ModalContent(state)
+                                }
                             }
                         }
                     }
