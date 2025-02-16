@@ -13,9 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.readString
 
 @KParcelize
-class OpenFile(
-    @KIgnoredOnParcel var file: IPlatformFile? = null
-) : KParcelable {
+data class OpenFile(@KIgnoredOnParcel var file: IPlatformFile? = null) : KParcelable {
 
     suspend fun save(content: String): Boolean = withContext(Dispatchers.IO) {
         if (file == null) {

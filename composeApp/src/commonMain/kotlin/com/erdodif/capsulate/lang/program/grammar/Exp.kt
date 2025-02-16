@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.KParcelable

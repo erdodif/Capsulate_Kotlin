@@ -1,25 +1,18 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
-import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.erdodif.capsulate.utility.stateListSaver
-import com.slack.circuit.backstack.BackStack
 import com.slack.circuit.backstack.SaveableBackStack
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
@@ -29,7 +22,6 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import io.github.vinceglb.filekit.core.PlatformDirectory
-import kotlinx.coroutines.runBlocking
 
 @KParcelize
 data class ProjectScreen(val project: Project) : Screen {

@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.util
 
+import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
@@ -69,6 +70,7 @@ data class EvaluationContext(
     private var currentStatement: Statement?,
     val seed: Int = Random.nextInt(),
 ) : KParcelable {
+    @KIgnoredOnParcel
     val random = Random(seed)
     val entries: ArrayList<Statement> = arrayListOf()
     private var atomicOngoing: EvaluationContext? = null

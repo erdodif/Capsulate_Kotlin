@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.erdodif.capsulate.lang.util
 
 fun ArrayList<Char>.asString(): String{
