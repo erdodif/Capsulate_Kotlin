@@ -89,6 +89,7 @@ data class EvaluationContext(
         if (atomicOngoing != null) {
             atomicOngoing!!.step()
             env = atomicOngoing!!.env
+            return this.copy()
         } else
             if (currentStatement is EvalSequence) {
                 val next = (currentStatement as EvalSequence).statements[0]

@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Expect-Actual" pattern="file:kotlin/com/erdodif/capsulate/Platform.android.kt||file:kotlin/com/erdodif/capsulate/Platform.apple.kt||file:com/erdodif/capsulate/Platform.kt||file:kotlin/com/erdodif/capsulate/Platform.desktop.kt||file:kotlin/com/erdodif/capsulate/Platform.ios.kt||file:kotlin/com/erdodif/capsulate/Platform.native.kt" />
+</component>
