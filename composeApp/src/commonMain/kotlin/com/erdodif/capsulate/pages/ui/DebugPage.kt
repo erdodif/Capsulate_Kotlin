@@ -48,9 +48,11 @@ class DebugPage : Ui<State> {
                 }
             }
             Column {
+                Text("Seed: ${state.seed}")
                 if (state.activeStatement == null) {
                     Row {
                         Button({ state.eventHandler(Event.Reset) }) { Text("Reset") }
+                        Button({ state.eventHandler(Event.ResetRenew) }) { Text("Reset with new seed") }
                         Button({ state.eventHandler(Event.Close) }) { Text("Close") }
                     }
                     Text(

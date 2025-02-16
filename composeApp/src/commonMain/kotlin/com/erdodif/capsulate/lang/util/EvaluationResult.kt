@@ -79,19 +79,18 @@ data class EvaluationContext(
         if (atomicOngoing?.head == null) {
             atomicOngoing = null
         }
-        if (atomicOngoing == null && currentStatement == null) {
-            if (entries.isEmpty()) {
-                return this.copy()
-            } else {
-                currentStatement = entries.removeAt(random.nextInt(entries.size))
-            }
-        }
         if (atomicOngoing != null) {
             atomicOngoing!!.step()
             env = atomicOngoing!!.env
             return this.copy()
         } else
-            if (currentStatement is EvalSequence) {
+            if (currentStatement == null) {
+                if (entries.isEmpty()) {
+                    return this.copy()
+                } else {
+                    currentStatement = entries.removeAt(random.nextInt(entries.size))
+                }
+            } else if (currentStatement is EvalSequence) {
                 val next = (currentStatement as EvalSequence).statements[0]
                 if (next is Parallel || next is Atomic) {
                     (currentStatement as EvalSequence).evaluate(env)

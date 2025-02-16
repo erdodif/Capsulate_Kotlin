@@ -60,7 +60,7 @@ data class BinaryCalculation(
     override fun evaluate(context: Env): Value = context.operation(first, second)
 
     override fun toString(state: ParserState): String =
-        "(${first.toString(state)} $label ${second.toString(state)})"
+        "${first.toString(state)} $label ${second.toString(state)}"
 }
 
 
