@@ -2,10 +2,13 @@ package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._anyKeyword
 import com.erdodif.capsulate.lang.util._char
@@ -181,6 +184,33 @@ fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> =
                 )
             )
         )
+
+fun reTokenizeProgram(
+    input: String,
+    previousState: ParserResult<ArrayList<Token>>
+): ParserResult<ArrayList<Token>> = when (previousState) {
+    is Pass -> {
+        //Only single caret is supported
+        val tokens = previousState.value
+        val pairs = input.zip(previousState.state.input)
+        val start = pairs.indexOfFirst { it.first != it.second }
+        val end = pairs.reversed().indexOfFirst { it.first != it.second }
+        val startIndex = tokens.indexOfFirst { it.match.start >= start }
+        tokens.removeAll { it.match.start >= start && it.match.end <= end }
+        when (val result = tokenizeProgram(input.substring(start..end))){
+            is Pass -> {
+                tokens.addAll(startIndex, result.value)
+                Pass(
+                    tokens,
+                    result.state,
+                    MatchPos(0, input.length)
+                )
+            }
+            is Fail -> tokenizeProgram(input) // retry on whole program
+        }
+    }
+    is Fail -> tokenizeProgram(input)
+}
 
 fun Env.runProgram(statements: List<Statement>) {
     for (statement in statements) statement.evaluate(this)
