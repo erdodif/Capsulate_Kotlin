@@ -1,4 +1,4 @@
-package com.erdodif.capsulate.utility
+package com.erdodif.capsulate.utility.saver
 
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.snapshots.SnapshotStateList

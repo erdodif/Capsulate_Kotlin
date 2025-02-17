@@ -28,11 +28,13 @@ import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.ComposableStatement
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 import kotlinx.coroutines.yield
+import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
+@Serializable
 class Structogram private constructor(var statements: Array<ComposableStatement<*>>) : KParcelable {
     val program: List<Statement>
         get() = statements.map { it.statement }

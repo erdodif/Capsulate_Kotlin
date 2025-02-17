@@ -2,10 +2,11 @@ package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -19,6 +20,8 @@ import com.erdodif.capsulate.pages.screen.EditorScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Command
+import com.erdodif.capsulate.utility.saver.TextFieldValueSaver
+import com.erdodif.capsulate.utility.saver.mutableSaverOf
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -67,9 +70,11 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
     @Composable
     override fun present(): EditorScreen.State {
         val coroutineScope = rememberCoroutineScope()
-        val file by remember { mutableStateOf(screen.file) }
-        var inputValue by remember { mutableStateOf(TextFieldValue("", TextRange.Zero)) }
-        var structogram: Structogram by remember {
+        val file = remember { screen.file }
+        var inputValue by rememberSaveable(saver = mutableSaverOf(TextFieldValueSaver)) {
+            mutableStateOf(TextFieldValue("", TextRange.Zero))
+        }
+        var structogram: Structogram by rememberSaveable {
             mutableStateOf(Structogram.fromStatements(Command("", Skip())))
         }
         var showCode by remember { mutableStateOf(true) }
@@ -78,8 +83,8 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var input by remember { mutableStateOf(false) }
         var loading by remember { mutableStateOf(true) }
         if (loading) {
-            LaunchedEffect(Unit){
-                inputValue = inputValue.copy(text= file.load() ?: "")
+            LaunchedEffect(Unit) {
+                inputValue = inputValue.copy(text = file.load() ?: "")
                 initStructogram(inputValue.text) {
                     structogram = when (it) {
                         is Left -> it.value
@@ -125,9 +130,10 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 is Event.ToggleStructogram -> showStructogram = !showStructogram
                 is Event.Close -> navigator.pop()
                 is Event.Run -> {
-                    Napier.d{"Navigating"}
-                    navigator.resetRoot(DebugScreen(structogram))
+                    Napier.d { "Navigating" }
+                    navigator.goTo(DebugScreen(structogram))
                 }
+
                 is Event.ToggleStatementDrag -> dragStatements = !dragStatements
                 is Event.OpenUnicodeInput -> input = true
                 is Event.CloseUnicodeInput -> input = false

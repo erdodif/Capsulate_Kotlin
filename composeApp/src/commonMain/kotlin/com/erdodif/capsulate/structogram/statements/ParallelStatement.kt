@@ -93,7 +93,8 @@ class ParallelStatement(
                             { statement ->
                                 statement.Show(
                                     Modifier.fillMaxWidth(),
-                                    draggable
+                                    draggable,
+                                    activeStatement
                                 )
                             }, {
                                 commandPlaceHolder(

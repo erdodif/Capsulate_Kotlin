@@ -11,11 +11,14 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
+import com.erdodif.capsulate.utility.saver.mutableSaverOf
 import com.erdodif.capsulate.utility.screenPresenterFactory
-import com.erdodif.capsulate.utility.stateListSaver
+import com.erdodif.capsulate.utility.saver.stateListSaver
+import com.erdodif.capsulate.utility.saver.OpenFileSaver
 import com.slack.circuit.backstack.SaveableBackStack
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
+import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
@@ -52,8 +55,8 @@ class ProjectPresenter(
     override fun present(): ProjectScreen.State {
         // the backstack and the state must point to the same object or else the navigation breaks
         val init = remember { screen.project.openFiles.firstOrNull() ?: OpenFile() }
-        var path by rememberSaveable { mutableStateOf(screen.project.directory) }
-        var opened by rememberSaveable { mutableStateOf(init) }
+        var path by rememberRetained { mutableStateOf(screen.project.directory) }
+        var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) { mutableStateOf(init) }
         val openFiles = rememberSaveable(saver = stateListSaver<OpenFile>()) { mutableStateListOf<OpenFile>() }
         val backStack = rememberSaveableBackStack(root = EditorScreen(init))
         val editorNavigator = rememberCircuitNavigator(backStack, navigator::pop)
@@ -64,7 +67,7 @@ class ProjectPresenter(
                 is Event.Close -> navigator.pop()
                 is Event.OpenAFile -> {
                     opened = project.getFile(event.name)
-                    editorNavigator.goTo(EditorScreen(project.getFile(event.name)))
+                    editorNavigator.resetRoot(EditorScreen(project.getFile(event.name)))
                 }
 
                 is Event.New -> {
