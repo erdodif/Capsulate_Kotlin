@@ -23,6 +23,7 @@ import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.utility.saver.TextFieldValueSaver
 import com.erdodif.capsulate.utility.saver.mutableSaverOf
 import com.erdodif.capsulate.utility.screenPresenterFactory
+import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
@@ -74,7 +75,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var inputValue by rememberSaveable(saver = mutableSaverOf(TextFieldValueSaver)) {
             mutableStateOf(TextFieldValue("", TextRange.Zero))
         }
-        var structogram: Structogram by rememberSaveable {
+        var structogram: Structogram by rememberRetained{
             mutableStateOf(Structogram.fromStatements(Command("", Skip())))
         }
         var showCode by remember { mutableStateOf(true) }

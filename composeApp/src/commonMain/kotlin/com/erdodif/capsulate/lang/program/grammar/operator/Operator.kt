@@ -21,6 +21,7 @@ import com.erdodif.capsulate.lang.util.div
 import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 data class UnaryCalculation(
     val param: Exp<Value>,
     val label: String = "∘",
@@ -44,6 +45,7 @@ data class UnaryCalculation(
 }
 
 @KParcelize
+@Serializable
 data class BinaryCalculation(
     val first: Exp<Value>,
     val second: Exp<Value>,
@@ -65,6 +67,7 @@ data class BinaryCalculation(
 
 
 @KParcelize
+@Serializable
 open class UnaryOperator(
     override val bindingStrength: Int,
     override val label: String = "~",
@@ -85,6 +88,7 @@ open class UnaryOperator(
 }
 
 @KParcelize
+@Serializable
 open class BinaryOperator(
     override val bindingStrength: Int,
     override val label: String,

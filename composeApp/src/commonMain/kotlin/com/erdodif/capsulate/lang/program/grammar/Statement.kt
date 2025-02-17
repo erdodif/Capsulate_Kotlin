@@ -224,7 +224,7 @@ data class Wait(
         when (val result = condition.evaluate(env)) {
             is VBool -> {
                 if (result.value) {
-                    SingleStatement(atomic)
+                    AtomicEvaluation(atomic.statements)
                 } else {
                     SingleStatement(this)
                 }

@@ -15,8 +15,10 @@ import com.erdodif.capsulate.lang.util.Fixation
 import com.erdodif.capsulate.lang.util.Operator
 import com.erdodif.capsulate.lang.util.OperatorTable
 import com.erdodif.capsulate.lang.util._char
+import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 object Add : BinaryOperator(
     14,
     "+",
@@ -44,6 +46,7 @@ object Add : BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Sub : BinaryOperator(
     12,
     "-",
@@ -71,6 +74,7 @@ object Sub : BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Mul : BinaryOperator(
     18,
     "*",
@@ -97,6 +101,7 @@ object Mul : BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Div : BinaryOperator(
     16,
     "/",
@@ -123,6 +128,7 @@ object Div : BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Equal : BinaryOperator(
     4,
     "=",
@@ -140,6 +146,7 @@ object Equal : BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object And: BinaryOperator(
     6,
     "&",
@@ -161,6 +168,7 @@ object And: BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Or: BinaryOperator(
     5,
     "|",
@@ -182,6 +190,7 @@ object Or: BinaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Sign : UnaryOperator(
     20,
     "-",
@@ -198,6 +207,7 @@ object Sign : UnaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Not : UnaryOperator(
     20,
     "!",
@@ -214,6 +224,7 @@ object Not : UnaryOperator(
 )
 
 @KParcelize
+@Serializable
 object Factorial : UnaryOperator(
     20,
     "!",
