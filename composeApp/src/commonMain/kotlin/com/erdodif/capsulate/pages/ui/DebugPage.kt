@@ -1,13 +1,22 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +34,7 @@ class DebugPage : Ui<State> {
 
     companion object Factory : Ui.Factory by screenUiFactory<DebugScreen>(::DebugPage)
 
-    @OptIn(ExperimentalUuidApi::class)
+    @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content(state: State, modifier: Modifier) {
         Column(Modifier.safeContentPadding(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -68,6 +77,50 @@ class DebugPage : Ui<State> {
                     Row {
                         Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
                         Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                    }
+                }
+            }
+        }
+        if (state.error != null) {
+            val scrollState = rememberScrollState(0)
+            BasicAlertDialog({ state.eventHandler(Event.Close) }, Modifier) {
+                Column(
+                    Modifier.padding(50.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
+                            RoundedCornerShape(10.dp)
+                        )
+                        .padding(15.dp)
+                ) {
+                    Text(
+                        "Evaluation aborted with reason:",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        state.error,
+                        modifier = Modifier
+                            .padding(2.dp,15.dp)
+                            .fillMaxWidth()
+                            .heightIn(25.dp, 125.dp)
+                            .scrollable(scrollState, Orientation.Vertical)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerLow,
+                                RoundedCornerShape(5.dp)
+                            )
+                            .border(
+                                2.dp,
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                RoundedCornerShape(5.dp)
+                            ).padding(10.dp),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Button({ state.eventHandler(Event.Close) }) {
+                            Text("Close")
+                        }
+                        Button({ state.eventHandler(Event.Reset) }) {
+                            Text("Rerun")
+                        }
                     }
                 }
             }

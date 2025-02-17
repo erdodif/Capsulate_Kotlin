@@ -3,6 +3,7 @@ package com.erdodif.capsulate.lang.util
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Statement
@@ -77,6 +78,8 @@ data class EvaluationContext(
     val head: Statement?
         get() = atomicOngoing?.head ?: currentStatement
 
+    var error: String? = null
+
     fun step(): EvaluationContext {
         if (atomicOngoing?.head == null) {
             atomicOngoing = null
@@ -104,7 +107,12 @@ data class EvaluationContext(
             }
         when (val stack = currentStatement!!.evaluate(env)) {
             Finished -> {}
-            is AbortEvaluation -> TODO()
+            is AbortEvaluation -> {
+                error = stack.reason
+                entries.clear()
+                atomicOngoing = null
+                currentStatement = null
+            }
             is EvalSequence -> entries.add(stack)
             is AtomicEvaluation -> atomicOngoing =
                 EvaluationContext(env, EvalSequence(stack.statements), seed)

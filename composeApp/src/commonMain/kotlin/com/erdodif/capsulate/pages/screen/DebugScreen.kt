@@ -31,14 +31,15 @@ class DebugScreen(val structogram: Structogram) : Screen {
         val env: Env,
         val stepCount: Int,
         val seed: Int,
+        val error: String?,
         val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
 
     sealed interface Event : CircuitUiEvent {
-        object StepForward : Event
-        object Reset : Event
-        object ResetRenew : Event
-        object Close : Event
+        data object StepForward : Event
+        data object Reset : Event
+        data object ResetRenew : Event
+        data object Close : Event
     }
 }
 
@@ -59,25 +60,31 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                 )
             )
         }
+        var error: String? by remember { mutableStateOf(null) }
         val envState by remember(step) { derivedStateOf { debug.env } }
         val statement: Uuid? by remember(step) { derivedStateOf { debug.head?.id } }
-        return State(screen.structogram, statement, envState, step, debug.seed) { event ->
+        return State(screen.structogram, statement, envState, step, debug.seed, error) { event ->
             when (event) {
                 is Event.StepForward -> {
                     if (debug.head != null) {
                         debug = debug.step()
                         step = step + 1
+                        if(debug.error != null){
+                            error = debug.error
+                        }
                     }
                 }
 
                 is Event.Reset -> {
                     debug = EvaluationContext(Env.empty, EvalSequence(screen.structogram.program), debug.seed)
                     step = 0
+                    error = null
                 }
 
                 is Event.ResetRenew -> {
                     debug = EvaluationContext(Env.empty, EvalSequence(screen.structogram.program))
                     step = 0
+                    error = null
                 }
 
                 is Event.Close -> navigator.pop()
