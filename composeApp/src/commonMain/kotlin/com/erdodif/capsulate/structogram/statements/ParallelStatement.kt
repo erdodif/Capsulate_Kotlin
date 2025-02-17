@@ -27,7 +27,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Parallel
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.statement
 import com.erdodif.capsulate.lang.util.ParserState
@@ -97,14 +99,7 @@ class ParallelStatement(
                                     activeStatement
                                 )
                             }, {
-                                commandPlaceHolder(
-                                    Modifier.conditional(
-                                        Modifier.background(
-                                            MaterialTheme.colorScheme.tertiary
-                                        )
-                                    ) {
-                                        statement.id == activeStatement
-                                    })
+                                commandPlaceHolder(Modifier)
                             }) {
                             HorizontalBorder()
                         }
@@ -113,7 +108,13 @@ class ParallelStatement(
                 DraggableArea(Modifier.width(Theme.borderWidth * 4), draggable, size) {
                     dragging = it
                     Row(
-                        Modifier.width(Theme.borderWidth * 4),
+                        Modifier.width(Theme.borderWidth * 4).conditional(
+                            Modifier.background(
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        ) {
+                            statement.id == activeStatement
+                        },
                         horizontalArrangement = Arrangement.Center
                     ) {
                         VerticalBorder()
@@ -137,10 +138,26 @@ private fun ParallelPreview() = PreviewColumn {
             (with(parserState) { statement() } as Pass).value)
             .Show(modifier, false, null)
     }
-    labeled("From else") {
+    val inner = Skip()
+    val statement = Parallel(arrayListOf(arrayListOf(inner), arrayListOf(Abort())))
+    labeled("Raw") {
         ParallelStatement(
-            Parallel(arrayListOf()),
+            statement,
             arrayOf<ComposableStatement<*>>()
         ).Show(modifier, false, null)
+    }
+    labeled("Active") {
+        ParallelStatement(
+            statement,
+            arrayOf<ComposableStatement<*>>(Command("S_1", inner)),
+            arrayOf<ComposableStatement<*>>(Command("S_2", Abort())),
+        ).Show(modifier, false, statement.id)
+    }
+    labeled("Active inner") {
+        ParallelStatement(
+            statement,
+            arrayOf<ComposableStatement<*>>(Command("S_1", inner)),
+            arrayOf<ComposableStatement<*>>(Command("S_2", Abort())),
+        ).Show(modifier, false, inner.id)
     }
 }
