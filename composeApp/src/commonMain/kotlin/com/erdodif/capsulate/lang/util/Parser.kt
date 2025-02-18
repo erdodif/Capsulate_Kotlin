@@ -2,13 +2,15 @@
 
 package com.erdodif.capsulate.lang.util
 
+import androidx.compose.runtime.mutableStateOf
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.function.Pattern
 
 @KParcelize
-data class MatchPos(val start: Int, val end: Int) : KParcelable{
-    companion object Constants{
-        val ZERO = MatchPos(0,0)
+data class MatchPos(val start: Int, val end: Int) : KParcelable {
+    companion object Constants {
+        val ZERO = MatchPos(0, 0)
     }
 }
 
@@ -29,6 +31,7 @@ inline operator fun <T, R, S> Either<T, R>.get(
 }
 
 open class ParserState(val input: String) {
+    var patterns: MutableList<Pattern> = mutableListOf()
     var position: Int = 0
 
     /**
@@ -143,11 +146,30 @@ inline fun <T, R> Parser<T>.fMapPos(crossinline lambda: ParserState.(T, MatchPos
         }
     }
 
-inline operator fun <T, R> Parser<T>.times(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R> =
+inline operator fun <A, R> Parser<A>.times(crossinline lambda: ParserState.(A, MatchPos) -> R): Parser<R> =
     fMapPos(lambda)
 
-inline operator fun <T, R> Parser<T>.div(crossinline lambda: ParserState.(T) -> R): Parser<R> =
+inline operator fun <A, R> Parser<A>.div(crossinline lambda: ParserState.(A) -> R): Parser<R> =
     fMap(lambda)
+
+inline operator fun <A, B, R> Parser<Pair<A, B>>.div(crossinline lambda: ParserState.(A, B) -> R): Parser<R> =
+    fMap { lambda(it.first, it.second) }
+
+inline operator fun <A, B, C, R> Parser<Pair<Pair<A, B>, C>>.div(crossinline lambda: ParserState.(A, B, C) -> R): Parser<R> =
+    fMap { lambda(it.first.first, it.first.second, it.second) }
+
+inline operator fun <A, B, C, D, R> Parser<Pair<Pair<Pair<A, B>, C>, D>>.div(crossinline lambda: ParserState.(A, B, C, D) -> R): Parser<R> =
+    fMap { lambda(it.first.first.first, it.first.first.second, it.first.second, it.second) }
+
+// Until nested destructuring is supported by kotlin
+inline operator fun <A, B, C, D, E, R> Parser<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>>.div(crossinline lambda: ParserState.(A, B, C, D, E) -> R): Parser<R> =
+    fMap {
+        lambda(
+            it.first.first.first.first, it.first.first.first.second, it.first.first.second,
+            it.first.second,
+            it.second
+        )
+    }
 
 inline operator fun <T, R> Parser<T>.get(
     crossinline onPass: ParserState.(Pass<out T>) -> ParserResult<R>,

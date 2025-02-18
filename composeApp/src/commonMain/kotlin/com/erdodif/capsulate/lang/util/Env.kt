@@ -2,15 +2,18 @@ package com.erdodif.capsulate.lang.util
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.Type
 import com.erdodif.capsulate.lang.program.grammar.Value
+import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.function.Pattern
 import com.erdodif.capsulate.lang.program.grammar.type
 import kotlin.random.Random
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @KParcelize
-data class Parameter(val id: String, val type: Type, var value: Value): KParcelable {
+data class Parameter(val id: String, val type: Type, var value: Value) : KParcelable {
     override fun toString(): String {
         return "#$id = $value : $type"
     }
@@ -18,17 +21,25 @@ data class Parameter(val id: String, val type: Type, var value: Value): KParcela
 
 @KParcelize
 data class Env(
+    val functions: Map<String, Array<Statement>>,
+    val methods: Map<Pattern, Array<Statement>>,
     private val values: MutableList<Parameter>,
     val deterministic: Boolean = false,
     private val seed: Int = Random.nextInt(),
-): KParcelable {
+) : KParcelable {
     val random = Random(seed)
 
     val parameters: ImmutableList<Parameter>
         get() = values.toImmutableList()
 
     fun copy(): Env {
-        return Env(values.map { it.copy() }.toMutableList(), deterministic)
+        return Env(
+            functions,
+            methods,
+            values.map { it.copy() }.toMutableList(),
+            deterministic,
+            seed
+        )
     }
 
     /** Determines whether the asked variable is defined in this context */
@@ -71,7 +82,7 @@ data class Env(
 
     companion object {
         val empty: Env
-            get() = Env(mutableListOf())
+            get() = Env(mapOf(), mapOf(), mutableListOf())
     }
 
     override fun toString(): String {

@@ -77,10 +77,10 @@ val sAbort: Parser<Statement> = delimit(_keyword("abort") / { Abort() })
 val sAtom: Parser<Statement> =
     delimit(middle(_keyword("["), blockOrParallel, _keyword("]"))) / { Atomic(it) }
 val sWait: Parser<Statement> = delimit(
-    right(_keyword("await"), delimit(pExp) + or(sAtom, blockOrParallel)) / {
+    right(_keyword("await"), delimit(pExp) + or(sAtom, blockOrParallel)) / { condition, atomic ->
         Wait(
-            it.first,
-            when (val inner = it.second) {
+            condition,
+            when (val inner = atomic) {
                 is Left -> inner.value as Atomic
                 is Right -> Atomic(inner.value)
             }
@@ -93,8 +93,8 @@ val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
 val sIf: Parser<Statement> =
     (right(_keyword("if"), delimit(pExp) + blockOrParallel) +
             right(delimit(_keyword("else")), blockOrParallel)) /
-            {
-                If(it.first.first, it.first.second, it.second)
+            { condition, trueBranch, falseBranch ->
+                If(condition, trueBranch, falseBranch)
             }
 
 val sWhen: Parser<Statement> =
@@ -110,9 +110,9 @@ val sWhen: Parser<Statement> =
                     )
                 ),
         newLined(_char('}')),
-    )) / {
-        if (it.first.second != null) it.first.first.add(it.first.second!!)
-        When(it.first.first, it.second)
+    )) / { blocks , trailing, elseBlock ->
+        if (trailing != null) blocks.add(trailing)
+        When(blocks, elseBlock)
     }
 
 val sWhile: Parser<Statement> =
