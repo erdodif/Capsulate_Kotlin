@@ -27,11 +27,10 @@ class AtomicStatement(
     override val statement: Atomic
 ) : ComposableStatement<Atomic>(statement) {
 
-    constructor(statement: Atomic, parserState: ParserState) :
-            this(
-                statement.statements.map { fromStatement(parserState, it) }.toList(),
-                statement
-            )
+    constructor(statement: Atomic, parserState: ParserState) : this(
+        statement.statements.map { fromStatement(parserState, it) }.toList(),
+        statement
+    )
 
     @Composable
     override fun Show(
@@ -39,9 +38,9 @@ class AtomicStatement(
         draggable: Boolean,
         activeStatement: Uuid?
     ) {
-        val background = if(activeStatement == statement.id){
+        val background = if (activeStatement == statement.id) {
             MaterialTheme.colorScheme.tertiary
-        } else{
+        } else {
             MaterialTheme.colorScheme.primary
         }
         val innerModifier = Modifier.fillMaxWidth().border(Theme.borderWidth / 2, Theme.borderColor)
@@ -51,7 +50,7 @@ class AtomicStatement(
                 .padding(Theme.borderWidth * 3)
                 .border(Theme.borderWidth, Theme.borderColor)
         ) {
-            if(statements.isEmpty()) Command("", Skip()).Show(innerModifier)
+            if (statements.isEmpty()) Command("", Skip()).Show(innerModifier)
             for (statement in statements) {
                 statement.Show(
                     innerModifier,
@@ -71,7 +70,9 @@ fun AtomicPreview() = PreviewColumn {
     val inner = Command("A", Skip())
     val modifier = Modifier.border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") {
-        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), stmt).Show(modifier)
+        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), stmt).Show(
+            modifier
+        )
     }
     labeled("Outer active") {
         AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), stmt).Show(

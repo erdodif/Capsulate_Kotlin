@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.core.view.WindowCompat
+import com.erdodif.capsulate.utility.preview.ParserTester
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
 import io.github.aakira.napier.DebugAntilog
@@ -71,6 +72,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppAndroidPreview() {
     App()
+}
+
+@Preview
+@Composable
+private fun Tester(){
+    ParserTester()
 }
 
 object xd : Parceler<IPlatformFile>{

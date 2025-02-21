@@ -5,7 +5,7 @@ const val whiteSpaceChars = " \t"
 const val lineBreak = "\n\r"
 const val lineEnd = "\n\r;"
 
-const val reservedChars = "()[]{}|&,.:?=+-*/\"\'"
+const val reservedChars = "$()[]{}|&,.:?=+-*/\"\'"
 
 val keywords = arrayOf(
     "true",
@@ -20,6 +20,8 @@ val keywords = arrayOf(
     "skip",
     "abort",
     "await",
-    "return"
+    "return",
+    "function",
+    "method"
 )
 

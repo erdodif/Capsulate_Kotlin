@@ -7,11 +7,22 @@ import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Statement
+import com.erdodif.capsulate.lang.program.grammar.Value
+import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.function.Method
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 sealed interface EvaluationResult : KParcelable
+
+@KParcelize
+data class FunctionEvaluation(val function: Function<*>): EvaluationResult, Statement(){
+    override fun evaluate(env: Env): EvaluationResult {
+        TODO("Not yet implemented")
+    }
+
+}
 
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
@@ -119,6 +130,7 @@ data class EvaluationContext(
 
             is SingleStatement -> entries.add(stack.next)
             is ParallelEvaluation -> entries.addAll(stack.entries)
+            is FunctionEvaluation -> TODO()
         }
 
         currentStatement =

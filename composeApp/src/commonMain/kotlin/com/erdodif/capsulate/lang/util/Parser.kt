@@ -2,10 +2,11 @@
 
 package com.erdodif.capsulate.lang.util
 
-import androidx.compose.runtime.mutableStateOf
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.function.Pattern
+import com.erdodif.capsulate.lang.program.grammar.Value
+import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.function.Method
 
 @KParcelize
 data class MatchPos(val start: Int, val end: Int) : KParcelable {
@@ -30,8 +31,11 @@ inline operator fun <T, R, S> Either<T, R>.get(
     is Right<R> -> right(this)
 }
 
-open class ParserState(val input: String) {
-    var patterns: MutableList<Pattern> = mutableListOf()
+open class ParserState(
+    val input: String,
+    val functions: MutableList<Function<Value>> = mutableListOf(),
+    val methods: MutableList<Method> = mutableListOf()
+) {
     var position: Int = 0
 
     /**

@@ -1,5 +1,8 @@
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.lang.program.grammar.function.sFunction
+import com.erdodif.capsulate.lang.program.grammar.function.sMethod
+import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Env
 import com.erdodif.capsulate.lang.util.Fail
@@ -32,6 +35,7 @@ fun <T> newLined(parser: Parser<T>): Parser<T> = left(parser, many(_lineBreak))
 
 val nonParallel: Parser<Statement> = {
     asum(
+        sMethodCall,
         sSkip,
         sAbort,
         sWait,
@@ -43,6 +47,7 @@ val nonParallel: Parser<Statement> = {
         sWhile,
         sDoWhile,
         sExpression,
+        sAtom,
     )()
 }
 
@@ -63,8 +68,10 @@ val statementOrBlock: Parser<ArrayList<out Statement>> =
 
 val program: Parser<ArrayList<Statement>> = {
     right(
-        many(_lineEnd),
-        orEither(delimited(statement, some(_lineBreak)), newLined(statement) / { arrayListOf(it) }),
+        many(asum(_lineEnd, sMethod, sFunction)),
+        orEither(
+            delimited(statement, some(_lineBreak) + asum(sMethod, sFunction)),
+            newLined(statement) / { arrayListOf(it) }),
     )()
 }
 
@@ -110,7 +117,7 @@ val sWhen: Parser<Statement> =
                     )
                 ),
         newLined(_char('}')),
-    )) / { blocks , trailing, elseBlock ->
+    )) / { blocks, trailing, elseBlock ->
         if (trailing != null) blocks.add(trailing)
         When(blocks, elseBlock)
     }
@@ -148,8 +155,8 @@ val sSelect: Parser<Statement> =
 
 val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
     orEither(
-        topLevel(many(right(many(_lineEnd), or(statement, sError)))),
-        topLevel(many(_lineEnd) / { arrayListOf() }),
+        topLevel(many(right(many(_lineEnd), or(right(optional(or(sMethod,sFunction)),statement), sError)))),
+        topLevel(many(asum(_lineEnd, sMethod, sFunction)) / { arrayListOf() }),
     )()
 }
 
@@ -197,7 +204,7 @@ fun reTokenizeProgram(
         val end = pairs.reversed().indexOfFirst { it.first != it.second }
         val startIndex = tokens.indexOfFirst { it.match.start >= start }
         tokens.removeAll { it.match.start >= start && it.match.end <= end }
-        when (val result = tokenizeProgram(input.substring(start..end))){
+        when (val result = tokenizeProgram(input.substring(start..end))) {
             is Pass -> {
                 tokens.addAll(startIndex, result.value)
                 Pass(
@@ -206,9 +213,11 @@ fun reTokenizeProgram(
                     MatchPos(0, input.length)
                 )
             }
+
             is Fail -> tokenizeProgram(input) // retry on whole program
         }
     }
+
     is Fail -> tokenizeProgram(input)
 }
 

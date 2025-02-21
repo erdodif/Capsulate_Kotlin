@@ -37,6 +37,7 @@ import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
+import com.erdodif.capsulate.lang.program.grammar.function.MethodCall
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.onMobile
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -139,6 +140,7 @@ abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) 
                 is While -> LoopStatement(statement, state)
                 is DoWhile -> LoopStatement(statement, state)
                 is Parallel -> ParallelStatement(statement, state)
+                is MethodCall -> MethodCallStatement(statement, state)
                 else -> Command(statement, state)
             }
     }
