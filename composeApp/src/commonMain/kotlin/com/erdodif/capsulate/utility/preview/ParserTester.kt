@@ -29,8 +29,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Skip
-import com.erdodif.capsulate.lang.program.grammar.Value
-import com.erdodif.capsulate.lang.program.grammar.Variable
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.expression.Variable
 import com.erdodif.capsulate.lang.program.grammar.blockOrParallel
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
@@ -42,12 +42,13 @@ import com.erdodif.capsulate.lang.program.grammar.function.sMethod
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.program.grammar.function.sPattern
 import com.erdodif.capsulate.lang.program.grammar.nonParallel
-import com.erdodif.capsulate.lang.program.grammar.pBoolLit
-import com.erdodif.capsulate.lang.program.grammar.pComment
-import com.erdodif.capsulate.lang.program.grammar.pExp
-import com.erdodif.capsulate.lang.program.grammar.pIntLit
-import com.erdodif.capsulate.lang.program.grammar.pStrLit
-import com.erdodif.capsulate.lang.program.grammar.pVariable
+import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pComment
+import com.erdodif.capsulate.lang.program.grammar.expression.pExp
+import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
+import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.program.grammar.program
 import com.erdodif.capsulate.lang.program.grammar.sAbort
 import com.erdodif.capsulate.lang.program.grammar.sAssign
@@ -113,6 +114,7 @@ private val methods: List<Method> = listOf(
 private val parsers: List<Pair<Parser<*>, String>> = listOf(
     pVariable to "variable",
     program to "program",
+    halfProgram to "half program",
     pExp to "expression",
     pBoolLit to "boolean literal",
     pIntLit to "integer literal",

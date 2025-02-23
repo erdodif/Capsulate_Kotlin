@@ -1,4 +1,9 @@
-package com.erdodif.capsulate.lang.util
+package com.erdodif.capsulate.lang.program.grammar.expression.operator
+
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.Parser
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.Pass
 
 abstract class Operator<T>(
     open val bindingStrength: Int,

@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.BoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.util.MatchPos

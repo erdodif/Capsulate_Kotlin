@@ -2,12 +2,12 @@ package com.erdodif.capsulate.lang.program.grammar.function
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.Variable
+import com.erdodif.capsulate.lang.program.grammar.expression.Variable
 import com.erdodif.capsulate.lang.program.grammar.anyChar
 import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.program.grammar.not
-import com.erdodif.capsulate.lang.program.grammar.pVariable
+import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace

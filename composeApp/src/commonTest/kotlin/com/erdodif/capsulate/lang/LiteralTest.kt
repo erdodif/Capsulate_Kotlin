@@ -1,6 +1,6 @@
 package com.erdodif.capsulate.lang
 
-import com.erdodif.capsulate.lang.program.grammar.pStrLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
 import com.erdodif.capsulate.match
 import com.erdodif.capsulate.pass
 import kotlin.test.Test

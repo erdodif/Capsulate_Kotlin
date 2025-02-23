@@ -1,10 +1,22 @@
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.lang.program.grammar.expression.KeyWord
+import com.erdodif.capsulate.lang.program.grammar.expression.LineEnd
+import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
+import com.erdodif.capsulate.lang.program.grammar.expression.Token
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
+import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pComment
+import com.erdodif.capsulate.lang.program.grammar.expression.pExp
+import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.lang.program.grammar.function.sFunction
 import com.erdodif.capsulate.lang.program.grammar.function.sMethod
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.util.Either
-import com.erdodif.capsulate.lang.util.Env
+import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.grammar.function.sReturn
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -36,6 +48,7 @@ fun <T> newLined(parser: Parser<T>): Parser<T> = left(parser, many(_lineBreak))
 val nonParallel: Parser<Statement> = {
     asum(
         sMethodCall,
+        sReturn,
         sSkip,
         sAbort,
         sWait,
@@ -154,10 +167,11 @@ val sSelect: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":∈"), pType)) / { Select(it.first, it.second.toString()) }
 
 val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
+    right(many(or(sMethod,sFunction)),
     orEither(
-        topLevel(many(right(many(_lineEnd), or(right(optional(or(sMethod,sFunction)),statement), sError)))),
-        topLevel(many(asum(_lineEnd, sMethod, sFunction)) / { arrayListOf() }),
-    )()
+        topLevel(many(right(many(_lineEnd), or(statement, sError)))),
+        topLevel(many(_lineEnd) / { arrayListOf() }),
+    ))()
 }
 
 val sParallel: Parser<Statement> = {

@@ -10,10 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Atomic
-import com.erdodif.capsulate.lang.program.grammar.BoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.If
-import com.erdodif.capsulate.lang.program.grammar.IntLit
+import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Wait

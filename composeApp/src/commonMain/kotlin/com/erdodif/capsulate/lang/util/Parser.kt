@@ -4,7 +4,7 @@ package com.erdodif.capsulate.lang.util
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.Value
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 

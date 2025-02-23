@@ -1,6 +1,6 @@
 package com.erdodif.capsulate.lang.specification.grammar
 
-import com.erdodif.capsulate.lang.program.grammar.Token
+import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.left
 import com.erdodif.capsulate.lang.program.grammar.middle
 import com.erdodif.capsulate.lang.program.grammar.orEither

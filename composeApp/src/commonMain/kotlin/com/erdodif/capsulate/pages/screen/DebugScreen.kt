@@ -7,9 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.util.Env
-import com.erdodif.capsulate.lang.util.EvalSequence
-import com.erdodif.capsulate.lang.util.EvaluationContext
+import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
+import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
 import com.erdodif.capsulate.structogram.Structogram

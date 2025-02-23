@@ -2,6 +2,8 @@ package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.at
+import com.erdodif.capsulate.lang.program.grammar.expression.pComment
+import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.pass
 import kotlin.test.Test
 

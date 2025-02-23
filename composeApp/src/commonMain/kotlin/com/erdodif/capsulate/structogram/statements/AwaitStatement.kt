@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
-import com.erdodif.capsulate.lang.program.grammar.BoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.util.MatchPos

@@ -1,16 +1,18 @@
-package com.erdodif.capsulate.lang.util
+package com.erdodif.capsulate.lang.program.evaluation
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Statement
-import com.erdodif.capsulate.lang.program.grammar.Type
-import com.erdodif.capsulate.lang.program.grammar.Value
-import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.function.Pattern
-import com.erdodif.capsulate.lang.program.grammar.type
-import kotlin.random.Random
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.Right
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.random.Random
 
 @KParcelize
 data class Parameter(val id: String, val type: Type, var value: Value) : KParcelable {
@@ -24,8 +26,7 @@ data class Env(
     val functions: Map<String, Array<Statement>>,
     val methods: Map<Pattern, Array<Statement>>,
     private val values: MutableList<Parameter>,
-    val deterministic: Boolean = false,
-    private val seed: Int = Random.nextInt(),
+    val seed: Int = Random.Default.nextInt(),
 ) : KParcelable {
     val random = Random(seed)
 
@@ -37,7 +38,6 @@ data class Env(
             functions,
             methods,
             values.map { it.copy() }.toMutableList(),
-            deterministic,
             seed
         )
     }

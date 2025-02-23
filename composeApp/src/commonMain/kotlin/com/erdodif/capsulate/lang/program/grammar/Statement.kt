@@ -4,14 +4,20 @@ package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.util.AbortEvaluation
-import com.erdodif.capsulate.lang.util.AtomicEvaluation
-import com.erdodif.capsulate.lang.util.Env
-import com.erdodif.capsulate.lang.util.EvalSequence
-import com.erdodif.capsulate.lang.util.EvaluationResult
-import com.erdodif.capsulate.lang.util.Finished
-import com.erdodif.capsulate.lang.util.ParallelEvaluation
-import com.erdodif.capsulate.lang.util.SingleStatement
+import com.erdodif.capsulate.lang.program.grammar.expression.Exp
+import com.erdodif.capsulate.lang.program.grammar.expression.VBool
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.evaluation.AbortEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.AtomicEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.DependentEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
+import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
+import com.erdodif.capsulate.lang.program.evaluation.Finished
+import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.Right
 import kotlin.collections.plus
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -20,6 +26,25 @@ abstract class Statement(open val id: Uuid = Uuid.random()) : KParcelable {
     abstract fun evaluate(env: Env): EvaluationResult
     override fun equals(other: Any?): Boolean = other is Statement && other.id == id
     override fun hashCode(): Int = id.hashCode()
+
+    fun <R : Value> Exp<R>.join(
+        context: Env,
+        onValue: Env.(R) -> EvaluationResult
+    ): EvaluationResult =
+        when (val result = evaluate(context)) {
+            is Left -> onValue(context, result.value)
+            is Right -> DependentEvaluation(result.value, onValue)
+        }
+
+    fun List<Exp<Value>>.joinAll(
+        context: Env,
+        onEvery: Env.(List<Value>) -> EvaluationResult
+    ): EvaluationResult = if (isEmpty()) onEvery(context, emptyList()) else
+        this[0].join(context) {
+            this@joinAll.drop(1).joinAll(context) { values ->
+                onEvery(this, buildList { add(it); addAll(values) })
+            }
+        }
 }
 
 @KParcelize
@@ -41,16 +66,11 @@ data class If(
         statementsFalse: ArrayList<Statement>
     ) : this(condition, statementsTrue, statementsFalse, Uuid.random())
 
-    override fun evaluate(env: Env): EvaluationResult {
-        val result = condition.evaluate(env)
-        return if (result is VBool) {
-            if (result.value) {
-                EvalSequence(statementsTrue)
-            } else {
-                EvalSequence(statementsFalse)
-            }
-        } else {
-            AbortEvaluation("Condition must be a logical expression")
+    override fun evaluate(env: Env): EvaluationResult = condition.join(env) {
+        when {
+            it is VBool && it.value -> EvalSequence(statementsTrue)
+            it is VBool -> EvalSequence(statementsFalse)
+            else -> AbortEvaluation("Condition must be a logical expression")
         }
     }
 }
@@ -65,21 +85,17 @@ data class When(
             this(block.toMutableList(), elseBlock, Uuid.random())
 
     override fun evaluate(env: Env): EvaluationResult {
-        val source =
-            if (env.deterministic) blocks.removeFirst()
-            else blocks.removeAt(env.random.nextInt(blocks.size))
-        return when (val result = source.first.evaluate(env)) {
-            is VBool -> {
+        val source = blocks.removeAt(env.random.nextInt(blocks.size))
+        return source.first.join(env) {
+            if (it is VBool) {
                 when {
-                    result.value -> EvalSequence(source.second)
+                    it.value -> EvalSequence(source.second)
                     blocks.isEmpty() ->
                         AbortEvaluation("When conditions exhausted, Abort happens by definition")
 
-                    else -> SingleStatement(this)
+                    else -> SingleStatement(this@When)
                 }
-            }
-
-            else -> {
+            } else {
                 AbortEvaluation("Condition must be a logical expression")
             }
         }
@@ -113,11 +129,11 @@ data class While(
     constructor(condition: Exp<*>, statements: ArrayList<out Statement>) :
             this(condition, statements, Uuid.random())
 
-    override fun evaluate(env: Env): EvaluationResult =
-        when (val result = condition.evaluate(env)) {
+    override fun evaluate(env: Env): EvaluationResult = condition.join(env) {
+        when (it) {
             is VBool -> {
-                if (result.value) {
-                    EvalSequence(statements + this)
+                if (it.value) {
+                    EvalSequence(statements + this@While)
                 } else {
                     Finished
                 }
@@ -125,6 +141,7 @@ data class While(
 
             else -> AbortEvaluation("Condition must be a logical expression")
         }
+    }
 }
 
 @KParcelize
@@ -144,9 +161,9 @@ data class DoWhile(
 data class Assign(val label: String, val value: Exp<*>, override val id: Uuid) : Statement(id) {
     constructor(label: String, value: Exp<*>) : this(label, value, Uuid.random())
 
-    override fun evaluate(env: Env): EvaluationResult {
-        env.set(label, value.evaluate(env))
-        return Finished
+    override fun evaluate(env: Env): EvaluationResult = value.join(env) {
+        env.set(label, it)
+        Finished
     }
 }
 
@@ -169,10 +186,14 @@ data class ParallelAssign(
 ) : Statement(id) {
     constructor(assigns: ArrayList<Pair<String, Exp<Value>>>) : this(assigns, Uuid.random())
 
-    override fun evaluate(env: Env): EvaluationResult {
-        for (assign in assigns) env.set(assign.first, assign.second.evaluate(env))
-        return Finished
-    }
+    override fun evaluate(env: Env): EvaluationResult =
+        assigns.map { it.second }.joinAll(env) {
+            for (assign in assigns.map { it.first }.zip(it)) env.set(
+                assign.first,
+                assign.second
+            )
+            Finished
+        }
 }
 
 @KParcelize
@@ -221,15 +242,17 @@ data class Wait(
     constructor(condition: Exp<*>, atomic: Atomic) : this(condition, atomic, Uuid.random())
 
     override fun evaluate(env: Env): EvaluationResult =
-        when (val result = condition.evaluate(env)) {
-            is VBool -> {
-                if (result.value) {
-                    AtomicEvaluation(atomic.statements)
-                } else {
-                    SingleStatement(this)
+        condition.join(env) {
+            when (it) {
+                is VBool -> {
+                    if (it.value) {
+                        AtomicEvaluation(atomic.statements)
+                    } else {
+                        SingleStatement(this@Wait)
+                    }
                 }
-            }
 
-            else -> AbortEvaluation("Condition must be a logical expression")
+                else -> AbortEvaluation("Condition must be a logical expression")
+            }
         }
 }

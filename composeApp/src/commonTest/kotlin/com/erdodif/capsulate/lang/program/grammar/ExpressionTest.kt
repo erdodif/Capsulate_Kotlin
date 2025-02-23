@@ -1,6 +1,10 @@
 package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.fail
+import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.match
 import com.erdodif.capsulate.pass
 import kotlin.test.Test

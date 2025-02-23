@@ -23,6 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Parameter
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
