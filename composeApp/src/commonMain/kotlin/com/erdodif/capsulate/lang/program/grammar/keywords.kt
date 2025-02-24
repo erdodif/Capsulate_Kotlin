@@ -22,6 +22,7 @@ val keywords = arrayOf(
     "await",
     "return",
     "function",
-    "method"
+    "method",
+    "program"
 )
 

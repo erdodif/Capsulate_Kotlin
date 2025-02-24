@@ -76,7 +76,7 @@ val sFunction: Parser<Function<Value>> = (delimit(
         optional(delimited(pVariable, _char(','))),
         _char(')')
     )
-) + statementOrBlock) / { name, params, body ->
+) + delimit(statementOrBlock)) / { name, params, body ->
     val function = Function<Value>(name, params ?: emptyList(), body)
     functions.add(function)
     function

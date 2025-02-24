@@ -174,18 +174,11 @@ typealias Declarations = ArrayList<Either<Method, Function<Value>>>
 
 val sNamed: Parser<NamedHalfProgram> =
     {
-        orEither(
-            _nonKeyword + middle(
-                delimit(_char('{')),
-                delimit(many(right(many(_lineEnd), or(statement, sError)))),
-                delimit(_char('}'))
-            ),
-            delimit(many(right(many(_lineEnd), or(statement, sError)))) / { null to it}
-        )()
+        delimit(optional(right(_keyword("program"), _nonKeyword))+many(right(many(_lineEnd), or(statement, sError))))()
     }
 
 val halfProgram: Parser<Pair<Declarations, NamedHalfProgram>> =
-    topLevel(many(or(sMethod, sFunction)) + sNamed)
+    topLevel(delimit(many(or(sMethod, sFunction))) + sNamed)
 
 
 val sParallel: Parser<Statement> = {

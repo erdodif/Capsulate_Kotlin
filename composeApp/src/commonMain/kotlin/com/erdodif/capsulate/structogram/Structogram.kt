@@ -183,7 +183,18 @@ class Structogram private constructor(
 fun StructogramPreview() = PreviewTheme {
     lateinit var structogram: Structogram
     runBlocking {
-        Structogram.fromString("s")[{
+        Structogram.fromString(
+            "function fun(x){\n" +
+                    "x := x + 2\n" +
+                    "return x * 2\n" +
+                    "}\n" +
+                    "program main {\n" +
+                    "a := 1\n" +
+                    "b := fun(100)\n" +
+                    "a := fun (a)\n" +
+                    "c:= fun(a + b)\n" +
+                    "}"
+        )[{
             structogram = it
         }, {
             throw Exception(it.reason)

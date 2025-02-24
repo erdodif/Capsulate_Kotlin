@@ -50,7 +50,7 @@ data class MethodCall(
 }
 
 val sMethod: Parser<Method> =
-    (right(_keyword("method"), sPattern) + statementOrBlock) / { pattern, block ->
+    (right(_keyword("method"), sPattern) + delimit(statementOrBlock)) / { pattern, block ->
         val method = Method(pattern, block )
         methods.add(method)
         method
