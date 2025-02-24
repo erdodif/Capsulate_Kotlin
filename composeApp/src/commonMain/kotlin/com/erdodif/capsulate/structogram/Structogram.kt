@@ -16,6 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +54,9 @@ import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+internal val LocalStructogramDropHandler: ProvidableCompositionLocal<(Pair<ComposableStatement<*>, Int>) -> Unit> =
+    compositionLocalOf { {} }
+
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
 @Serializable
@@ -65,56 +71,58 @@ class Structogram private constructor(
 
     private constructor(statements: List<ComposableStatement<*>>) : this(statements.toTypedArray())
 
-
     @Composable
     fun Content(
         modifier: Modifier = Modifier,
         draggable: Boolean = false,
-        activeStatement: Uuid? = null
+        activeStatement: Uuid? = null,
+        onDrop: (Pair<ComposableStatement<*>, Int>) -> Unit = {}
     ) = key(this, draggable, activeStatement) {
-        Column(modifier) {
-            if (name != null) {
-                Text(
-                    text = name,
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(24.dp)
-                        ).defaultMinSize(100.dp, 25.dp)
-                        .border(
-                            Theme.borderWidth,
-                            Theme.borderColor,
-                            RoundedCornerShape(22.dp)
-                        )
-                        .padding(Theme.commandPadding)
-                        .padding(2.dp)
-                        .align(Alignment.CenterHorizontally),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                VerticalDivider(
-                    modifier = Modifier.height(25.dp).align(Alignment.CenterHorizontally),
-                    thickness = Theme.borderWidth,
-                    color = Theme.borderColor
-                )
-            }
-            Column(
-                Modifier.fillMaxWidth().width(IntrinsicSize.Max)
-                    .border(Theme.borderWidth, Theme.borderColor)
-                    .padding(Theme.borderWidth, 0.dp)
-            ) {
-                Spacer(Modifier.height(Theme.borderWidth))
-                StackWithSeparator(
-                    statements,
-                    {
-                        it.Show(
-                            Modifier.fillMaxWidth(),
-                            draggable,
-                            activeStatement
-                        )
-                    }) { HorizontalBorder() }
+        CompositionLocalProvider(LocalStructogramDropHandler provides onDrop) {
+            Column(modifier) {
+                if (name != null) {
+                    Text(
+                        text = name,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(24.dp)
+                            ).defaultMinSize(100.dp, 25.dp)
+                            .border(
+                                Theme.borderWidth,
+                                Theme.borderColor,
+                                RoundedCornerShape(22.dp)
+                            )
+                            .padding(Theme.commandPadding)
+                            .padding(2.dp)
+                            .align(Alignment.CenterHorizontally),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    VerticalDivider(
+                        modifier = Modifier.height(25.dp).align(Alignment.CenterHorizontally),
+                        thickness = Theme.borderWidth,
+                        color = Theme.borderColor
+                    )
+                }
+                Column(
+                    Modifier.fillMaxWidth().width(IntrinsicSize.Max)
+                        .border(Theme.borderWidth, Theme.borderColor)
+                        .padding(Theme.borderWidth, 0.dp)
+                ) {
+                    Spacer(Modifier.height(Theme.borderWidth))
+                    StackWithSeparator(
+                        statements,
+                        {
+                            it.Show(
+                                Modifier.fillMaxWidth(),
+                                draggable,
+                                activeStatement
+                            )
+                        }) { HorizontalBorder() }
+                }
             }
         }
     }

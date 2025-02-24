@@ -1,7 +1,8 @@
-@file:Suppress("UNUSED","NOTHING_TO_INLINE")
+@file:Suppress("UNUSED", "NOTHING_TO_INLINE")
 
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.lang.program.grammar.function.sReturn
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
@@ -17,14 +18,15 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.getEither
 import com.erdodif.capsulate.lang.util.times
 
-val anyChar: Parser<Char> = {
-    if (position >= input.length) {
-        fail("Can't mach any char, EOF reached")
-    } else {
-        position++
-        pass(position - 1, input[position - 1])
+inline val anyChar: Parser<Char>
+    get() = {
+        if (position >= input.length) {
+            fail("Can't mach any char, EOF reached")
+        } else {
+            position++
+            pass(position - 1, input[position - 1])
+        }
     }
-}
 
 /**
  * Matches the given [char]
@@ -203,6 +205,9 @@ inline fun <T, R> and(
     }
 }
 
+/**
+ * Matches both the given parsers in order
+ */
 inline fun <T, R> and(
     crossinline parser1: Parser<T>, crossinline parser2: Parser<R>
 ): Parser<Pair<T, R>> = {
@@ -211,18 +216,32 @@ inline fun <T, R> and(
         is Pass -> {
             when (val res2 = parser2()) {
                 is Fail -> res2
-                is Pass -> pass(res1.match.start, Pair(res1.value, res2.value))
+                is Pass -> pass(res1.match.start, res1.value to res2.value)
             }
         }
     }
 }
 
+/**
+ * Pairs the given [parser] with it's match position, so it can be use in a nested parser
+ */
+inline fun <T> record(crossinline parser: Parser<T>): Parser<Pair<T, MatchPos>> = {
+    when (val res = parser()) {
+        is Fail -> res
+        is Pass -> pass(0, res.value to res.match)
+    }
+}
+
+/**
+ * @see [and]
+ */
 inline operator fun <T, R> Parser<T>.plus(crossinline other: Parser<R>): Parser<Pair<T, R>> =
     and(this, other)
 
-inline operator fun
-
-        <T, R> Parser<T>.plus(
+/**
+ * @see [and]
+ */
+inline operator fun <T, R> Parser<T>.plus(
     crossinline other: ParserState .(Pass<T>) -> Parser<R>
 ): Parser<Pair<T, R>> = and(this, other)
 
@@ -247,11 +266,7 @@ inline fun <T> left(crossinline parser1: Parser<T>, crossinline parser2: Parser<
 /**
  * Matches both the parsers, discarding the first value
  */
-inline fun <T> right(
-    crossinline parser1: Parser<*>, crossinline parser2: Parser<T>
-)
-
-        : Parser<T> = {
+inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser<T>): Parser<T> = {
     val result1 = parser1()
     if (result1 is Fail) {
         result1
@@ -284,12 +299,8 @@ inline fun <T> middle(
  * Will fail if the [min] number isn't reached
  */
 inline fun <reified T> between(
-    min
-
-    : Int, max: Int, crossinline parser: Parser<T>
-)
-
-        : Parser<Array<T>> = {
+    min: Int, max: Int, crossinline parser: Parser<T>
+): Parser<Array<T>> = {
     val start = position
     require(min <= max)
     val matches = ArrayList<T>()
@@ -405,9 +416,7 @@ inline fun <reified T> delimited2(
  */
 inline fun <reified T> delimited(
     crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
-)
-
-        : Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
+): Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
     it.first.apply { add(it.second) }
 }
 
@@ -452,12 +461,10 @@ fun <T> leftAssoc(
 ): Parser<T> = chainl1(parser, left({ pass(position, func) }, separator))
 
 inline fun <reified T> nonAssoc(
-    crossinline func: (T, T)
-
-    -> T, noinline parser: Parser<T>, crossinline separator: Parser<*>
-)
-
-        : Parser<T> = delimited(parser, separator)[{
+    crossinline func: (T, T) -> T,
+    noinline parser: Parser<T>,
+    crossinline separator: Parser<*>
+): Parser<T> = delimited(parser, separator)[{
     when (it.value.size) {
         0 -> Fail("No association found.", it.state)
         1 -> Pass(it.value[0], it.state, it.match)

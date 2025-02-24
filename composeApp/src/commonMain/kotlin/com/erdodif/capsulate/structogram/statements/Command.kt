@@ -29,6 +29,7 @@ import com.erdodif.capsulate.lang.program.grammar.Expression
 import com.erdodif.capsulate.lang.program.grammar.ParallelAssign
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.function.MethodCall
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.StatementText
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -57,6 +58,7 @@ class Command(
             is Assign -> "${statement.label} := ${statement.value.toString(state)}"
             is ParallelAssign -> statement.assigns.map { it.first }.toString() + " := " +
                     statement.assigns.map { it.second.toString(state) }.toString()
+
             is MethodCall -> statement.toString(state)
             is Return<*> -> "RETURN ${statement.value.toString(state)}"
             else -> "UNSUPPORTED $statement"
@@ -85,7 +87,9 @@ class Command(
                                 statement.id == activeStatement
                             }.padding(Theme.commandPadding)
                     )
-                    DropTarget(LocalDraggingStatement.current)
+                    if (!dragging) {
+                        DropTarget(LocalDraggingStatement.current, statement.match.start)
+                    }
                 }
             else {
                 Column(modifier) {
@@ -97,7 +101,7 @@ class Command(
                                 .border(3.dp, MaterialTheme.colorScheme.tertiaryContainer)
                         ) {
                             statement.id == activeStatement
-                        } .padding(Theme.commandPadding)
+                        }.padding(Theme.commandPadding)
                     )
                 }
             }
@@ -107,7 +111,7 @@ class Command(
 @Preview
 @Composable
 fun CommandPreview() {
-    val command = Command("statement", Skip())
+    val command = Command("statement", Skip(MatchPos.ZERO))
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     PreviewColumn {
         labeled("Regular") { command.Show(modifier, false, null) }

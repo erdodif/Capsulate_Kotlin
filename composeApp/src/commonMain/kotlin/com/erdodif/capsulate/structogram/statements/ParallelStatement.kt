@@ -31,6 +31,7 @@ import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.statement
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
@@ -129,6 +130,7 @@ class ParallelStatement(
 @Preview
 @Composable
 private fun ParallelPreview() = PreviewColumn {
+    val pos = MatchPos.ZERO
     val parserState = ParserState("{ } | { }")
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("From { } | { }") {
@@ -137,8 +139,8 @@ private fun ParallelPreview() = PreviewColumn {
             (with(parserState) { statement() } as Pass).value)
             .Show(modifier, false, null)
     }
-    val inner = Skip()
-    val statement = Parallel(arrayListOf(arrayListOf(inner), arrayListOf(Abort())))
+    val inner = Skip(pos)
+    val statement = Parallel(arrayListOf(arrayListOf(inner), arrayListOf(Abort(pos))), pos)
     labeled("Raw") {
         ParallelStatement(
             statement,
@@ -149,14 +151,14 @@ private fun ParallelPreview() = PreviewColumn {
         ParallelStatement(
             statement,
             arrayOf<ComposableStatement<*>>(Command("S_1", inner)),
-            arrayOf<ComposableStatement<*>>(Command("S_2", Abort())),
+            arrayOf<ComposableStatement<*>>(Command("S_2", Abort(pos))),
         ).Show(modifier, false, statement.id)
     }
     labeled("Active inner") {
         ParallelStatement(
             statement,
             arrayOf<ComposableStatement<*>>(Command("S_1", inner)),
-            arrayOf<ComposableStatement<*>>(Command("S_2", Abort())),
+            arrayOf<ComposableStatement<*>>(Command("S_2", Abort(pos))),
         ).Show(modifier, false, inner.id)
     }
 }

@@ -11,7 +11,9 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Right
+import kotlinx.coroutines.MainScope
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -41,9 +43,9 @@ class FunctionState<R : Value, T : Value>(
 data class DependentEvaluation<T : Value>(
     val expression: DependentExp<*, T>,
     val callback: Env.(T) -> EvaluationResult
-) : EvaluationResult, Statement() {
+) : EvaluationResult, Statement(match = MatchPos.ZERO) {
     val head: Statement?
-        get() = if (expression is FunctionState) expression.head else Skip()
+        get() = if (expression is FunctionState) expression.head else Skip(MatchPos.ZERO)
 
     @Suppress("UNCHECKED_CAST")
     override fun evaluate(env: Env): EvaluationResult = try {
@@ -79,7 +81,8 @@ data class DependentEvaluation<T : Value>(
 
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
-data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult, Statement() {
+data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult,
+    Statement(match = MatchPos.ZERO) {
     override val id: Uuid
         get() = statements.first().id
 
@@ -126,8 +129,9 @@ data object Finished : EvaluationResult
 @KParcelize
 data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     val value: Exp<T>,
-    override val id: Uuid = Uuid.random()
-) : Statement(id), EvaluationResult {
+    override val id: Uuid = Uuid.random(),
+    override val match: MatchPos
+) : Statement(id, match), EvaluationResult {
     @OptIn(ExperimentalUuidApi::class)
     override fun evaluate(env: Env): EvaluationResult =
         if (value is Holder) this else value.join(env) { this@Return.copy(value = Holder(it)) }

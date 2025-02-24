@@ -124,21 +124,36 @@ class LoopStatement(
 @Preview
 @Composable
 fun LoopPreview() {
-    val tmpWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip()))
-    val tmpDoWhile = While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip()))
+    val pos = MatchPos.ZERO
+    val tmpWhile =
+        While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip(pos)), pos)
+    val tmpDoWhile =
+        While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip(pos)), pos)
     val statements = listOf(
-        Command("statement 1", Skip()),
-        Command("statement 2", Skip()),
-        Command("...", Skip()),
-        Command("statement n", Skip())
+        Command("statement 1", Skip(pos)),
+        Command("statement 2", Skip(pos)),
+        Command("...", Skip(pos)),
+        Command("statement n", Skip(pos))
     )
     val whileStatement = LoopStatement("condition", statements, true, tmpWhile)
     val doWhileStatement = LoopStatement("condition", statements, false, tmpDoWhile)
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     PreviewColumn {
-        labeled("While regular") { whileStatement.Show(modifier, false, null)}
-        labeled("While active") { whileStatement.Show(modifier, false, whileStatement.statement.id)}
-        labeled("DoWhile regular") { doWhileStatement.Show(modifier, false, null)}
-        labeled("DoWhile active") { doWhileStatement.Show(modifier, false, doWhileStatement.statement.id)}
+        labeled("While regular") { whileStatement.Show(modifier, false, null) }
+        labeled("While active") {
+            whileStatement.Show(
+                modifier,
+                false,
+                whileStatement.statement.id
+            )
+        }
+        labeled("DoWhile regular") { doWhileStatement.Show(modifier, false, null) }
+        labeled("DoWhile active") {
+            doWhileStatement.Show(
+                modifier,
+                false,
+                doWhileStatement.statement.id
+            )
+        }
     }
 }

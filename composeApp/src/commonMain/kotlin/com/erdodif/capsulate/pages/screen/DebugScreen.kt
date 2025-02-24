@@ -1,6 +1,8 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -25,6 +27,7 @@ import kotlin.uuid.Uuid
 @KParcelize
 class DebugScreen(val structogram: Structogram) : Screen {
 
+    @Stable
     data class State @OptIn(ExperimentalUuidApi::class) constructor(
         val structogram: Structogram,
         val activeStatement: Uuid?,
@@ -36,6 +39,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
         val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
 
+    @Immutable
     sealed interface Event : CircuitUiEvent {
         data object StepForward : Event
         data object StepOver : Event

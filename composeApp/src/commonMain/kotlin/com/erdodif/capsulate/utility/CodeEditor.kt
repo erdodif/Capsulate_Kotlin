@@ -54,7 +54,6 @@ fun CodeEditor(
                 visualTransformation(text, tokenStream)
             }
         }
-
         BasicTextField( //Prepare for BasicTextField2
             value = code,
             readOnly = onValueChange == null,

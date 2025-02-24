@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -85,7 +84,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                         }
                     } else {
                         ContentWithOverlays(
-                            (Modifier.padding(max(imePaddingValues,innerPadding))).fillMaxSize()
+                            (Modifier.padding(max(imePaddingValues, innerPadding))).fillMaxSize()
                         ) {
                             Column(
                                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
@@ -93,8 +92,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                                 verticalArrangement = Arrangement.SpaceBetween
                             ) {
                                 codeEdit().Content(
-                                    state, Modifier.weight(3f, false).fillMaxWidth()
-                                        .defaultMinSize(30.dp, 64.dp)
+                                    state, Modifier.fillMaxWidth().heightIn(50.dp, 500.dp)
                                 )
                                 if (state.showCode && state.showStructogram)
                                     Spacer(
@@ -102,7 +100,10 @@ class EditorPage() : Ui<EditorScreen.State> {
                                             .background(MaterialTheme.colorScheme.surface)
                                             .height(3.dp)
                                     )
-                                structogram().Content(state, Modifier.weight(2f))
+                                structogram().Content(
+                                    state,
+                                    Modifier.heightIn(250.dp, 500.dp)
+                                )
                                 if (keyboardUp && !state.input) {
                                     Row(Modifier.fillMaxWidth()) {
                                         Button({
@@ -138,7 +139,9 @@ internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
                     Modifier.horizontalScroll(
                         rememberScrollState()
                     ),
-                    state.dragStatements
+                    state.dragStatements,
+                    null,
+                    { state.eventHandler(EditorScreen.Event.DroppedStatement(it.first, it.second)) }
                 )
             } else {
                 Text("Error", Modifier.fillMaxWidth())

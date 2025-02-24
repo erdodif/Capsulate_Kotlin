@@ -9,10 +9,13 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,20 +41,28 @@ import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.program.grammar.function.MethodCall
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.onMobile
+import com.erdodif.capsulate.structogram.LocalStructogramDropHandler
+import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.mohamedrejeb.compose.dnd.drag.DraggableItem
 import com.mohamedrejeb.compose.dnd.drop.dropTarget
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Month
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
 @OptIn(ExperimentalUuidApi::class)
 abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) : KParcelable {
+    open fun toString(state: ParserState) = state[statement.match]
+
     /**
      * Creates an area where the current statement can be dragged if enabled
      *
@@ -66,11 +77,10 @@ abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) 
         content: @Composable (Boolean) -> Unit = { Box(modifier) }
     ) = if (draggable) {
         val state = LocalDraggingStatement.current
-        DraggableItem(if (draggable) modifier else modifier.pointerHoverIcon(
-            PointerIcon.Hand, true
-        ),
+        DraggableItem(modifier = if (draggable) modifier else
+            modifier.pointerHoverIcon(PointerIcon.Hand, true),
             key = this@ComposableStatement,
-            state = state.state,// state.state,
+            state = state.state,
             data = this@ComposableStatement,
             dragAfterLongPress = onMobile,
             draggableContent = {
@@ -102,10 +112,11 @@ abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) 
         get() = this.draggedItem != null && this.draggedItem != this@ComposableStatement
 
     @Composable
-    protected fun DropTarget(state: StatementDragState) {
+    protected fun DropTarget(state: StatementDragState, pos: Int) {
         if (state.draggingInProgress) {
             val coroScope = rememberCoroutineScope()
             var job: Job? by remember { mutableStateOf(null) }
+            val dropHandler = LocalStructogramDropHandler.current
             Box(
                 Modifier.dropTarget(
                     key = this.statement,
@@ -116,12 +127,23 @@ abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) 
                             state.preview = true
                         }
                     },
+                    onDrop = {
+                        Napier.i(
+                            "Dropped (${it.data.statement.match.start},${it.data.statement.match.end}) -> " +
+                                    "$pos ${it.data.statement}"
+                        )
+                        dropHandler(it.data to pos)
+                    },
                     onDragExit = { job?.cancel(); state.preview = false },
-                ).background(Color.Magenta)
+                ).defaultMinSize(minHeight = 20.dp).background(Color.Magenta)
             ) {
                 if (state.preview) {
                     if (state.draggedItem != null && state.state.hoveredDropTargetKey == statement) {
-                        state.draggedItem!!.data.Show(Modifier.background(Color.Gray), false)
+                        Column {
+                            state.draggedItem!!.data.Show(Modifier.background(Color.Gray), false)
+                            HorizontalBorder()
+                            Show(Modifier, false, null)
+                        }
                     } else {
                         Box(Modifier.fillMaxWidth().height(2.dp).background(Color.Magenta))
                     }

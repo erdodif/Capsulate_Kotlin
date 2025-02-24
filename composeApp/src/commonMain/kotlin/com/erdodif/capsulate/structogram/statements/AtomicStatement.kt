@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Skip
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.utility.PreviewColumn
@@ -50,7 +51,7 @@ class AtomicStatement(
                 .padding(Theme.borderWidth * 3)
                 .border(Theme.borderWidth, Theme.borderColor)
         ) {
-            if (statements.isEmpty()) Command("", Skip()).Show(innerModifier)
+            if (statements.isEmpty()) Command("", Skip(MatchPos.ZERO)).Show(innerModifier)
             for (statement in statements) {
                 statement.Show(
                     innerModifier,
@@ -66,22 +67,23 @@ class AtomicStatement(
 @Preview
 @Composable
 fun AtomicPreview() = PreviewColumn {
-    val stmt = Atomic(listOf(Skip()))
-    val inner = Command("A", Skip())
+    val pos = MatchPos.ZERO
+    val stmt = Atomic(listOf(Skip(pos)), pos)
+    val inner = Command("A", Skip(pos))
     val modifier = Modifier.border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") {
-        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), stmt).Show(
+        AtomicStatement(listOf(inner, Command("B", Skip(pos)), Command("C", Skip(pos))), stmt).Show(
             modifier
         )
     }
     labeled("Outer active") {
-        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), stmt).Show(
+        AtomicStatement(listOf(inner, Command("B", Skip(pos)), Command("C", Skip(pos))), stmt).Show(
             modifier,
             activeStatement = stmt.id
         )
     }
     labeled("Inner active") {
-        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), stmt).Show(
+        AtomicStatement(listOf(inner, Command("B", Skip(pos)), Command("C", Skip(pos))), stmt).Show(
             modifier,
             activeStatement = inner.statement.id
         )

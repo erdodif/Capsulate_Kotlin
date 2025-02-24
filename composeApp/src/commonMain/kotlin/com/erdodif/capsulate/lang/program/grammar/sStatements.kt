@@ -94,30 +94,37 @@ val program: Parser<ArrayList<Statement>> = {
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
 
-val sSkip: Parser<Statement> = delimit(_keyword("skip")) / { Skip() }
-val sAbort: Parser<Statement> = delimit(_keyword("abort") / { Abort() })
+val sSkip: Parser<Statement> = delimit(_keyword("skip")) * { _, pos -> Skip(pos) }
+val sAbort: Parser<Statement> = delimit(_keyword("abort") * { _, pos -> Abort(pos) })
 
 val sAtom: Parser<Statement> =
-    delimit(middle(_keyword("["), blockOrParallel, _keyword("]"))) / { Atomic(it) }
+    delimit(middle(_keyword("["), blockOrParallel, _keyword("]"))) * { atom, pos ->
+        Atomic(atom, pos)
+    }
 val sWait: Parser<Statement> = delimit(
-    right(_keyword("await"), delimit(pExp) + or(sAtom, blockOrParallel)) / { condition, atomic ->
+    right(
+        _keyword("await"),
+        delimit(pExp) + or(sAtom, record(blockOrParallel))
+    ) * { (condition, atomic), pos ->
         Wait(
             condition,
             when (val inner = atomic) {
                 is Left -> inner.value as Atomic
-                is Right -> Atomic(inner.value)
-            }
+                is Right -> Atomic(inner.value.first, inner.value.second)
+            },
+            pos
         )
     }
 )
 
-val sExpression: Parser<Statement> = delimit(pExp) / { Expression(it) }
+val sExpression: Parser<Statement> = delimit(pExp) * { exp, pos -> Expression(exp, pos) }
 
 val sIf: Parser<Statement> =
     (right(_keyword("if"), delimit(pExp) + blockOrParallel) +
-            right(delimit(_keyword("else")), blockOrParallel)) /
-            { condition, trueBranch, falseBranch ->
-                If(condition, trueBranch, falseBranch)
+            right(delimit(_keyword("else")), blockOrParallel)) *
+            { (core, falseBranch), pos ->
+                val (condition, trueBranch) = core
+                If(condition, trueBranch, falseBranch, pos)
             }
 
 val sWhen: Parser<Statement> =
@@ -133,48 +140,60 @@ val sWhen: Parser<Statement> =
                     )
                 ),
         newLined(_char('}')),
-    )) / { blocks, trailing, elseBlock ->
+    )) * { (statements, elseBlock), pos ->
+        val (blocks, trailing) = statements
         if (trailing != null) blocks.add(trailing)
-        When(blocks, elseBlock)
+        When(blocks, elseBlock, pos)
     }
 
 val sWhile: Parser<Statement> =
-    (middle(_keyword("while"), pExp, many(_char('\n'))) + blockOrParallel) / {
-        While(it.first, it.second)
+    (middle(
+        _keyword("while"), pExp, many(_char('\n'))
+    ) + blockOrParallel) * { (condition, block), pos ->
+        While(condition, block, pos)
     }
 
 val sDoWhile: Parser<Statement> = right(
     _keyword("do") + many(_char('\n')),
     blockOrParallel + delimit(right(_keyword("while"), pExp)),
-) / { DoWhile(it.second, it.first) }
+) * { (block, condition), pos -> DoWhile(condition, block, pos) }
 
 val sParallelAssign: Parser<Statement> =
     (delimited(_nonKeyword, _char(',')) + right(
         tok(string(":=")),
         delimit(delimited(pExp, _char(',')))
     ))[{
-        if (it.value.second.size != it.value.first.size)
+        val (params, values) = it.value
+        if (values.count() != params.count())
             fail("The number of parameters does not match the number of values to assign.")
         else
             pass(
                 it.match.start,
-                ParallelAssign(it.value.first.zip(it.value.second) as ArrayList),
+                ParallelAssign(params.zip(values) as ArrayList, it.match),
             )
     }]
 
 val sAssign: Parser<Statement> =
-    delimit(_nonKeyword + right(_keyword(":="), pExp)) / { Assign(it.first, it.second) }
+    delimit(_nonKeyword + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+        Assign(variable, value, pos)
+    }
 
 val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specification part
 val sSelect: Parser<Statement> =
-    delimit(_nonKeyword + right(_keyword(":∈"), pType)) / { Select(it.first, it.second.toString()) }
+    delimit(_nonKeyword + right(_keyword(":∈"), pType)) * { (label, set), pos ->
+        Select(label, set.toString(), pos)
+    }
 
 typealias NamedHalfProgram = Pair<String?, ArrayList<Either<Statement, LineError>>>
 typealias Declarations = ArrayList<Either<Method, Function<Value>>>
 
 val sNamed: Parser<NamedHalfProgram> =
     {
-        delimit(optional(right(_keyword("program"), _nonKeyword))+many(right(many(_lineEnd), or(statement, sError))))()
+        delimit(
+            optional(right(_keyword("program"), _nonKeyword)) + many(
+                right(many(_lineEnd), or(statement, sError))
+            )
+        )()
     }
 
 val halfProgram: Parser<Pair<Declarations, NamedHalfProgram>> =
@@ -185,7 +204,7 @@ val sParallel: Parser<Statement> = {
     (delimited2(
         middle(newLined(_char('{')), many(delimit(statement)), newLined(_char('}'))),
         _char('|') + many(_lineBreak),
-    ) / { Parallel(it) as Statement })()
+    ) * { stmt, pos -> Parallel(stmt, pos) as Statement })()
 }
 
 class ParseException(reason: String) : Exception(reason)
@@ -228,11 +247,7 @@ fun reTokenizeProgram(
         when (val result = tokenizeProgram(input.substring(start..end))) {
             is Pass -> {
                 tokens.addAll(startIndex, result.value)
-                Pass(
-                    tokens,
-                    result.state,
-                    MatchPos(0, input.length)
-                )
+                Pass(tokens, result.state, MatchPos(0, input.length))
             }
 
             is Fail -> tokenizeProgram(input) // retry on whole program

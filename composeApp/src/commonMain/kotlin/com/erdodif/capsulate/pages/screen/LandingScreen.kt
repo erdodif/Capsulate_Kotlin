@@ -5,6 +5,7 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @KParcelize
 data object LandingScreen : Screen {
+
     @OptIn(ExperimentalMaterial3Api::class)
     data class State(
         val presetVisible: Boolean,
@@ -44,6 +46,7 @@ data object LandingScreen : Screen {
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
+    @Immutable
     sealed interface Event : CircuitUiEvent {
         data object OpenFile : Event
         data object OpenFolder : Event

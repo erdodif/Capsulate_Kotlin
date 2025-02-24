@@ -1,7 +1,9 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +37,7 @@ import kotlinx.serialization.Serializable
 
 @KParcelize
 data class ProjectScreen(val project: Project) : Screen {
+    @Stable
     class State(
         val project: Project,
         val opened: OpenFile,
@@ -43,6 +46,7 @@ data class ProjectScreen(val project: Project) : Screen {
         val eventHandler: (Event) -> Unit
     ) : CircuitUiState
 
+    @Immutable
     sealed interface Event : CircuitUiEvent {
         data class ProjectSelected(val path: PlatformDirectory) : Event
         data object Close : Event

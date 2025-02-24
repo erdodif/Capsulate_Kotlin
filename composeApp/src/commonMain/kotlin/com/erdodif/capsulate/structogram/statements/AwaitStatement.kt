@@ -81,12 +81,13 @@ class AwaitStatement(
 @Preview
 @Composable
 fun AwaitPreview() = PreviewColumn {
-    val atom = Atomic(listOf(Skip()))
-    val inner = Command("A", Skip())
+    val pos = MatchPos.ZERO
+    val atom = Atomic(listOf(Skip(pos)), pos)
+    val inner = Command("A", Skip(pos))
     val statement = AwaitStatement(
         "guard",
-        AtomicStatement(listOf(inner, Command("B", Skip()), Command("C", Skip())), atom),
-        Wait(BoolLit(false, MatchPos.ZERO), atom)
+        AtomicStatement(listOf(inner, Command("B", Skip(pos)), Command("C", Skip(pos))), atom),
+        Wait(BoolLit(false, MatchPos.ZERO), atom, pos)
     )
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular") { statement.Show(modifier, false, null) }

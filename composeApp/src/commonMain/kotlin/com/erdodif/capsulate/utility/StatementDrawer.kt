@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.erdodif.capsulate.utility
 
 import androidx.compose.foundation.border
@@ -25,40 +27,22 @@ import com.erdodif.capsulate.structogram.statements.AtomicStatement
 import com.erdodif.capsulate.structogram.statements.AwaitStatement
 import com.erdodif.capsulate.structogram.statements.Block
 import com.erdodif.capsulate.structogram.statements.Command
+import com.erdodif.capsulate.structogram.statements.DropStatement
 import com.erdodif.capsulate.structogram.statements.IfStatement
 import com.erdodif.capsulate.structogram.statements.LoopStatement
 import com.erdodif.capsulate.structogram.statements.ParallelStatement
 import com.erdodif.capsulate.structogram.statements.WhenStatement
 import kotlin.uuid.ExperimentalUuidApi
-
-private val match = MatchPos(0, 1)
-private val boolLit = BoolLit(true, match)
-private val assign = Assign("a", IntLit(0, match))
+import kotlin.uuid.Uuid
 
 private val statements = listOf(
-    Command("statement", assign),
-    IfStatement(
-        "if", statement = If(boolLit, arrayListOf(), arrayListOf())
-    ),
-    WhenStatement(
-        arrayOf(
-            Block("switch"),
-            Block("case"),
-            Block("else")
-        ),
-        statement = When(mutableListOf(boolLit to listOf(), boolLit to listOf()), listOf())
-    ),
-    LoopStatement("while", listOf(), true, While(boolLit, arrayListOf())),
-    LoopStatement("do while", listOf(), false, DoWhile(boolLit, arrayListOf())),
-    AwaitStatement(
-        "await",
-        AtomicStatement(listOf(), Atomic(listOf())),
-        Wait(boolLit, Atomic(listOf()))
-    ),
-    ParallelStatement(
-        Parallel(arrayListOf(arrayListOf(assign), arrayListOf(assign))),
-        arrayOf(Command("", Skip()), Command(" ", Skip()))
-    )
+    DropStatement("skip\n"),
+    DropStatement("if true {\n  skip\n} else {\n  skip\n}\n"),
+    DropStatement("when{\n  case1: skip,\n  case2: skip,\n  else: skip\n}\n"),
+    DropStatement("while true {\n  skip\n}\n"),
+    DropStatement("do {\n  skip\n} while true\n"),
+    DropStatement("await condition {\n  skip\n}\n"),
+    DropStatement("{ skip }|{ skip }"),
 )
 
 @OptIn(ExperimentalUuidApi::class)

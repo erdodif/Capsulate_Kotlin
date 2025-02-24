@@ -138,18 +138,19 @@ open class IfStatement(
 @Preview
 @Composable
 fun IfPreview() = PreviewColumn(width = 400.dp) {
+    val pos = MatchPos.ZERO
     val statement =
         IfStatement(
             "condition",
             listOf(
-                Command("true statement 1", Skip()),
-                Command("true statement 2", Skip())
+                Command("true statement 1", Skip(pos)),
+                Command("true statement 2", Skip(pos))
             ),
             listOf(
-                Command("false statement 1", Skip()),
-                Command("false statement 2", Skip())
+                Command("false statement 1", Skip(pos)),
+                Command("false statement 2", Skip(pos))
             ),
-            If(BoolLit(true, MatchPos.ZERO), arrayListOf(), arrayListOf())
+            If(BoolLit(true, MatchPos.ZERO), arrayListOf(), arrayListOf(), pos)
         )
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     labeled("Regular If") { statement.Show(modifier, false, null) }

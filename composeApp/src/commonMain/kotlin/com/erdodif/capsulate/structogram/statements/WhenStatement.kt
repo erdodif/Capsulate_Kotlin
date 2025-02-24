@@ -154,10 +154,17 @@ class Block(
 
 @Preview
 @Composable
-fun WhenPreview() = PreviewColumn(width= 400.dp) {
+fun WhenPreview() = PreviewColumn(width = 400.dp) {
+    val pos = MatchPos.ZERO
     val parserState = ParserState("")
-    val statement = WhenStatement(When(mutableListOf(BoolLit(false, MatchPos.ZERO) to listOf(Skip())), listOf()), parserState)
+    val statement = WhenStatement(
+        When(
+            mutableListOf(BoolLit(false, MatchPos.ZERO) to listOf(Skip(pos))), listOf(), pos
+        ), parserState
+    )
     labeled("When with else") { statement.Show(Modifier.fillMaxWidth(), false, null) }
-    labeled("When with else active") { statement.Show(Modifier.fillMaxWidth(), false, statement.statement.id) }
+    labeled("When with else active") {
+        statement.Show(Modifier.fillMaxWidth(), false, statement.statement.id)
+    }
 }
 

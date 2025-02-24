@@ -2,6 +2,8 @@ package com.erdodif.capsulate.pages.screen
 
 import com.erdodif.capsulate.pages.screen.PresetScreen.State
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.presets.Preset
 import com.erdodif.capsulate.utility.screenPresenterFactory
@@ -13,7 +15,9 @@ import com.slack.circuit.runtime.screen.Screen
 
 @KParcelize
 data class PresetScreen(val preset: Preset) : Screen {
+    @Stable
     data class State(val eventHandler: (Event) -> Unit) : CircuitUiState
+    @Immutable
     sealed interface Event : CircuitUiEvent {
         data object Close : Event
     }

@@ -37,9 +37,9 @@ data class Method(
 data class MethodCall(
     val method: Method,
     val values: List<Variable>,
-    val match: MatchPos,
+    override val match: MatchPos,
     override val id: Uuid = Uuid.random()
-) : Statement() {
+) : Statement(id, match) {
     override fun evaluate(env: Env): EvaluationResult {
         return EvalSequence(method.program)
     }

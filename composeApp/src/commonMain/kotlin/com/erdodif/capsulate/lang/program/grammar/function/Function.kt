@@ -31,6 +31,7 @@ import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.times
 import kotlin.uuid.ExperimentalUuidApi
 
 
@@ -82,7 +83,9 @@ val sFunction: Parser<Function<Value>> = (delimit(
     function
 }
 
-val sReturn: Parser<Statement> = right(_keyword("return"), pExp) / { Return<Value>(it) }
+val sReturn: Parser<Statement> = right(_keyword("return"), pExp) * { value, pos ->
+    Return<Value>(value, match = pos)
+}
 
 val sFunctionCall: Parser<Exp<Value>> = {
     delimit((_nonKeyword + middle(_char('('), optional(delimited(pExp, _char(','))), _char(')'))))[{

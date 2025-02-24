@@ -82,6 +82,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 private val functions: List<Function<Value>> = listOf()
+private val pos = MatchPos.ZERO
 
 private val methods: List<Method> = listOf(
     Method(
@@ -95,19 +96,19 @@ private val methods: List<Method> = listOf(
             ),
             ":_read"
         ),
-        listOf(Skip())
+        listOf(Skip(pos))
     ),
     Method(
         Pattern("read", listOf(), listOf(), null),
-        listOf(Abort())
+        listOf(Abort(pos))
     ),
     Method(
         Pattern("param", listOf(), listOf(Variable("hm", MatchPos.ZERO)), null),
-        listOf(Skip(), Skip())
+        listOf(Skip(pos), Skip(pos))
     ),
     Method(
         Pattern("param", listOf(), listOf(Variable("hm", MatchPos.ZERO)), "abor"),
-        listOf(Abort())
+        listOf(Abort(pos))
     )
 )
 
