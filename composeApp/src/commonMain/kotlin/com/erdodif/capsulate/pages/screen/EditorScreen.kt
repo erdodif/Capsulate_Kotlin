@@ -31,6 +31,7 @@ import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.measureTime
@@ -75,7 +76,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var inputValue by rememberSaveable(saver = mutableSaverOf(TextFieldValueSaver)) {
             mutableStateOf(TextFieldValue("", TextRange.Zero))
         }
-        var structogram: Structogram by rememberRetained{
+        var structogram: Structogram by rememberRetained {
             mutableStateOf(Structogram.fromStatements(Command("", Skip())))
         }
         var showCode by remember { mutableStateOf(true) }
@@ -111,10 +112,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                             structogram = when (it) {
                                 is Left -> it.value
                                 is Right -> Structogram.fromStatements(
-                                    Command(
-                                        it.value.reason,
-                                        Skip()
-                                    )
+                                    Command(it.value.reason, Skip())
                                 )
                             }
                         }
@@ -146,12 +144,23 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
     private suspend fun initStructogram(
         input: String,
         onResult: (Either<Structogram, Fail>) -> Unit
-    ) = withContext(Dispatchers.Default) {
+    ) = withContext(Dispatchers.IO) {
         var structogram: Either<Structogram, Fail>
         val time = measureTime {
             structogram = Structogram.fromString(input)
         }
-        println("Structogram built in ${time}")
+        if (structogram is Left) {
+            val value = structogram.value
+            Napier.i(
+                "Structogram built in $time" +
+                        "${value.statements.count()} statements, " +
+                        "${value.methods.count()} methods and " +
+                        "${value.functions.count()} functions"
+            )
+        } else {
+            val reason = (structogram as Right).value
+            Napier.e("Structogram parse failed in $time with reason: $reason")
+        }
         onResult(structogram)
     }
 

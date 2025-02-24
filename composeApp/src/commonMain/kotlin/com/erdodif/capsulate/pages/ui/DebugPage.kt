@@ -7,25 +7,25 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.evaluation.Parameter
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
@@ -40,9 +40,22 @@ class DebugPage : Ui<State> {
     @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content(state: State, modifier: Modifier) {
-        if(state.overlayStructogram != null){
-            ModalBottomSheet({}){
-                state.overlayStructogram.Content(Modifier, false, state.activeStatement)
+        if (state.overlayStructogram != null) {
+            ModalBottomSheet({ state.eventHandler(Event.StepOver) }) {
+                Column(Modifier, verticalArrangement = Arrangement.SpaceBetween) {
+                    state.overlayStructogram.Content(
+                        Modifier.scrollable(rememberScrollState(0), Orientation.Vertical)
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 250.dp),
+                        false,
+                        state.activeStatement
+                    )
+                    Row(Modifier.fillMaxWidth()) {
+                        Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
+                        Button({ state.eventHandler(Event.StepOver) }) { Text("Step over") }
+                        Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                    }
+                }
             }
         }
         Column(Modifier.safeContentPadding(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -107,7 +120,7 @@ class DebugPage : Ui<State> {
                     Text(
                         state.error,
                         modifier = Modifier
-                            .padding(2.dp,15.dp)
+                            .padding(2.dp, 15.dp)
                             .fillMaxWidth()
                             .heightIn(25.dp, 125.dp)
                             .scrollable(scrollState, Orientation.Vertical)
@@ -133,6 +146,5 @@ class DebugPage : Ui<State> {
                 }
             }
         }
-        // TODO("Highligted structogram and/or code needed. + The debug controls")
     }
 }

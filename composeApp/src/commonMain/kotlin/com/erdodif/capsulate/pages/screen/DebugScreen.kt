@@ -38,6 +38,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
 
     sealed interface Event : CircuitUiEvent {
         data object StepForward : Event
+        data object StepOver : Event
         data object Reset : Event
         data object ResetRenew : Event
         data object Close : Event
@@ -66,10 +67,8 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         val statement: Uuid? by remember(step) { derivedStateOf { debug.head?.id } }
         val ongoing: Structogram? by remember(step) {
             derivedStateOf {
-                if (debug.functionOngoing != null) {
-                    screen.structogram.functions.firstOrNull { it.name == debug.functionOngoing?.expression?.call?.function?.name }
-                        ?.asStructogram()
-                } else null
+                screen.structogram.functions.firstOrNull { it.function == debug.functionOngoing?.expression?.call?.function }
+                    ?.asStructogram()
             }
         }
         return State(
@@ -106,6 +105,15 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     debug = EvaluationContext(Env.empty, EvalSequence(screen.structogram.program))
                     step = 0
                     error = null
+                }
+                is Event.StepOver ->{
+                    while(debug.functionOngoing != null || debug.error != null){
+                        debug = debug.step()
+                        step = step + 1
+                    }
+                    if (debug.error != null) {
+                        error = debug.error
+                    }
                 }
 
                 is Event.Close -> navigator.pop()

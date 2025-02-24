@@ -96,7 +96,6 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
 
     private fun handleResult(result: EvaluationResult): EvaluationResult = when (result) {
         is DependentEvaluation<*> -> result + ::handleResult
-        // TODO: WON'T WORK BECAUSE THIS TRANSFORM WILL PUT THE EVALUATION STACK TO THE SOON DESTROYED FUNCTION'S STACK
 
         is AbortEvaluation -> result
 

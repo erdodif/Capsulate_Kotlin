@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
+import com.erdodif.capsulate.lang.program.evaluation.Return
 import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
@@ -57,6 +58,7 @@ class Command(
             is ParallelAssign -> statement.assigns.map { it.first }.toString() + " := " +
                     statement.assigns.map { it.second.toString(state) }.toString()
             is MethodCall -> statement.toString(state)
+            is Return<*> -> "RETURN ${statement.value.toString(state)}"
             else -> "UNSUPPORTED $statement"
         }, statement
     )

@@ -169,12 +169,24 @@ val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specificatio
 val sSelect: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":∈"), pType)) / { Select(it.first, it.second.toString()) }
 
-val halfProgram: Parser<Pair<ArrayList<Either<Method, Function<Value>>>,ArrayList<Either<Statement, LineError>>>> = {
-    (many(or(sMethod,sFunction)) + orEither(
-        topLevel(many(right(many(_lineEnd), or(statement, sError)))),
-        topLevel(many(_lineEnd) / { arrayListOf() }),
-    ))()
-}
+typealias NamedHalfProgram = Pair<String?, ArrayList<Either<Statement, LineError>>>
+typealias Declarations = ArrayList<Either<Method, Function<Value>>>
+
+val sNamed: Parser<NamedHalfProgram> =
+    {
+        orEither(
+            _nonKeyword + middle(
+                delimit(_char('{')),
+                delimit(many(right(many(_lineEnd), or(statement, sError)))),
+                delimit(_char('}'))
+            ),
+            delimit(many(right(many(_lineEnd), or(statement, sError)))) / { null to it}
+        )()
+    }
+
+val halfProgram: Parser<Pair<Declarations, NamedHalfProgram>> =
+    topLevel(many(or(sMethod, sFunction)) + sNamed)
+
 
 val sParallel: Parser<Statement> = {
     (delimited2(

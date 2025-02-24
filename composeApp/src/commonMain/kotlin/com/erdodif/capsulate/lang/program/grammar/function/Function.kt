@@ -51,7 +51,7 @@ data class Function<T>(
                 append(parameters[i].id)
                 append(", ")
             }
-            append(parameters[parameters.count() - 1])
+            append(parameters[parameters.count() - 1].id)
         }
         append(')')
     }

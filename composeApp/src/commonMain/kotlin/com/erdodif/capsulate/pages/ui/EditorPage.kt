@@ -84,7 +84,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                         }
                     } else {
                         ContentWithOverlays(
-                            (Modifier.padding(imePaddingValues)).fillMaxSize()
+                            (Modifier.padding(imePaddingValues).padding(innerPadding)).fillMaxSize()
                         ) {
                             Column(
                                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
