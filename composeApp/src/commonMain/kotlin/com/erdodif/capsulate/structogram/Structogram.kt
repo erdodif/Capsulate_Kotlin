@@ -84,7 +84,7 @@ class Structogram private constructor(
                         .border(
                             Theme.borderWidth,
                             Theme.borderColor,
-                            RoundedCornerShape(24.dp)
+                            RoundedCornerShape(22.dp)
                         )
                         .padding(Theme.commandPadding)
                         .padding(2.dp)

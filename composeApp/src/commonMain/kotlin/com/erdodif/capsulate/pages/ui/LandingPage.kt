@@ -11,24 +11,32 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +48,9 @@ import com.erdodif.capsulate.pages.screen.LandingScreen
 import com.erdodif.capsulate.presets.presets
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.app_name
+import com.erdodif.capsulate.resources.ic_logo_foreground
 import com.erdodif.capsulate.resources.ic_logo_foreground_monochrome_paddingless
+import com.erdodif.capsulate.resources.ic_logo_foreground_paddingless
 import com.erdodif.capsulate.resources.open
 import com.erdodif.capsulate.resources.open_file
 import com.erdodif.capsulate.resources.open_folder
@@ -94,12 +104,29 @@ class LandingPage() : Ui<LandingScreen.State> {
             160.dp
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
-                stringResource(Res.string.app_name),
-                Modifier.size(logoSize).padding(0.dp, 10.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Box(Modifier.size(logoSize)) {
+                Icon(
+                    painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
+                    stringResource(Res.string.app_name),
+                    Modifier.size(logoSize - 2.dp).padding(0.dp, 10.dp).offset(x = 0.dp, y = 2.dp)
+                        .blur(2.dp),
+                    tint = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
+                )
+                Icon(
+                    painterResource(Res.drawable.ic_logo_foreground_paddingless),
+                    stringResource(Res.string.app_name),
+                    Modifier.size(logoSize - 2.dp).padding(0.dp, 10.dp),
+                    tint = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                        .compositeOver(MaterialTheme.colorScheme.primary)
+                )
+                Icon(
+                    painterResource(Res.drawable.ic_logo_foreground_monochrome_paddingless),
+                    stringResource(Res.string.app_name),
+                    Modifier.size(logoSize - 2.dp).padding(0.dp, 10.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
             Text(
                 stringResource(Res.string.app_name),
                 Modifier.padding(20.dp),
@@ -113,8 +140,12 @@ class LandingPage() : Ui<LandingScreen.State> {
     @Composable
     private fun Selector(state: LandingScreen.State) {
         val windowSize = currentWindowAdaptiveInfo()
+        val buttonModifier = Modifier.fillMaxWidth().padding(2.dp)
         LazyColumn(
-            Modifier.defaultMinSize(10.dp, 150.dp).padding(80.dp, 20.dp)
+            Modifier
+                .defaultMinSize(10.dp, 150.dp)
+                .padding(80.dp, 20.dp)
+                .shadow(10.dp, RoundedCornerShape(10.dp))
                 .background(
                     MaterialTheme.colorScheme.surfaceContainer,
                     RoundedCornerShape(10.dp)
@@ -125,25 +156,29 @@ class LandingPage() : Ui<LandingScreen.State> {
             item {
                 Button(
                     { state.eventHandler(LandingScreen.Event.OpenFile) },
-                    Modifier.fillMaxWidth().padding(2.dp)
+                    buttonModifier,
+                    elevation = ButtonDefaults.buttonElevation(5.dp)
                 ) { Text(stringResource(Res.string.open_file)) }
             }
             item {
                 Button(
                     { state.eventHandler(LandingScreen.Event.OpenFolder) },
-                    Modifier.fillMaxWidth().padding(2.dp)
+                    buttonModifier,
+                    elevation = ButtonDefaults.buttonElevation(5.dp)
                 ) { Text(stringResource(Res.string.open_folder)) }
             }
             item {
                 Button(
                     { state.eventHandler(LandingScreen.Event.ToEmptyProject) },
-                    Modifier.fillMaxWidth().padding(2.dp)
+                    buttonModifier,
+                    elevation = ButtonDefaults.buttonElevation(5.dp)
                 ) { Text(stringResource(Res.string.start_empty)) }
             }
             item {
                 Button(
                     { state.eventHandler(LandingScreen.Event.OpenPresetModal) },
-                    Modifier.fillMaxWidth().padding(2.dp)
+                    buttonModifier,
+                    elevation = ButtonDefaults.buttonElevation(5.dp)
                 ) { Text(stringResource(Res.string.open_preset)) }
             }
             item {

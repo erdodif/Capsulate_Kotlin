@@ -107,7 +107,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     error = null
                 }
                 is Event.StepOver ->{
-                    while(debug.functionOngoing != null || debug.error != null){
+                    while(debug.functionOngoing != null && debug.error == null){
                         debug = debug.step()
                         step = step + 1
                     }
