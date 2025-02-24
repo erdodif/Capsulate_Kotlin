@@ -14,24 +14,25 @@ import kotlinx.io.readString
 
 @KParcelize
 data class OpenFile(@KIgnoredOnParcel var file: IPlatformFile? = null) : KParcelable {
+    var content: String? = null
 
-    suspend fun save(content: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun save(): Boolean = withContext(Dispatchers.IO) {
         if (file == null) {
             file = FileKit.saveFile(
-                    content.encodeToByteArray(),
-                    "program",
-                    "struk"
-                )?.toKmpFile()
+                (content ?: "").encodeToByteArray(),
+                "program",
+                "struk"
+            )?.toKmpFile()
             if (file == null) {
                 return@withContext false
             }
         }
         val buffer = file?.openOutputStream(false)
         if (buffer == null) {
-            Napier.e{ "Could not save file ${file?.getName()}" }
+            Napier.e { "Could not save file ${file?.getName()}" }
             false
         } else {
-            buffer.write(content.encodeToByteArray())
+            buffer.write((content ?: "").encodeToByteArray())
             buffer.close()
             true
         }

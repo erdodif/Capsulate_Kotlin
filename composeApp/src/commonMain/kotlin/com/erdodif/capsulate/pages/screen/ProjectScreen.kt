@@ -58,7 +58,7 @@ class ProjectPresenter(
         var path by rememberRetained { mutableStateOf(screen.project.directory) }
         var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) { mutableStateOf(init) }
         val openFiles = rememberSaveable(saver = stateListSaver<OpenFile>()) { mutableStateListOf<OpenFile>() }
-        val backStack = rememberSaveableBackStack(root = EditorScreen(init))
+        val backStack = rememberSaveableBackStack(root = EditorScreen(init) {})
         val editorNavigator = rememberCircuitNavigator(backStack, navigator::pop)
         val project = Project(screen.project.directory, openFiles)
         return ProjectScreen.State(project, opened, editorNavigator, backStack) { event ->
@@ -67,18 +67,18 @@ class ProjectPresenter(
                 is Event.Close -> navigator.pop()
                 is Event.OpenAFile -> {
                     opened = project.getFile(event.name)
-                    editorNavigator.resetRoot(EditorScreen(project.getFile(event.name)))
+                    editorNavigator.resetRoot(EditorScreen(project.getFile(event.name), {opened = it}))
                 }
 
                 is Event.New -> {
                     opened = OpenFile()
                     openFiles.add(opened)
-                    editorNavigator.resetRoot(EditorScreen(opened))
+                    editorNavigator.resetRoot(EditorScreen(opened, {opened = it}))
                 }
 
                 is Event.OpenN -> {
                     opened = project.openFiles[event.index]
-                    editorNavigator.resetRoot(EditorScreen(opened))
+                    editorNavigator.resetRoot(EditorScreen(opened,{opened = it}))
                 }
             }
         }

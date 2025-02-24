@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
 import kotlin.time.measureTime
 
 @KParcelize
-data class EditorScreen(val file: OpenFile) : Screen {
+data class EditorScreen(val file: OpenFile, val changeHandler: (OpenFile) -> Unit) : Screen {
     data class State(
         val code: TextFieldValue,
         val structogram: Structogram?,
@@ -86,17 +86,21 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var loading by remember { mutableStateOf(true) }
         if (loading) {
             LaunchedEffect(Unit) {
-                inputValue = inputValue.copy(text = file.load() ?: "")
-                initStructogram(inputValue.text) {
-                    structogram = when (it) {
-                        is Left -> it.value
-                        is Right -> Structogram.fromStatements(
-                            Command(
-                                it.value.reason,
-                                Skip()
+                if (file.content == null) {
+                    inputValue = inputValue.copy(text = file.load() ?: "")
+                    initStructogram(inputValue.text) {
+                        structogram = when (it) {
+                            is Left -> it.value
+                            is Right -> Structogram.fromStatements(
+                                Command(
+                                    it.value.reason,
+                                    Skip()
+                                )
                             )
-                        )
+                        }
                     }
+                } else {
+                    inputValue = inputValue.copy(text = file.content!!)
                 }
                 loading = false
             }
@@ -107,6 +111,10 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
             when (event) {
                 is Event.TextInput -> {
                     inputValue = event.code
+                    file.content = inputValue.text
+                    coroutineScope.launch {
+                        screen.changeHandler(file)
+                    }
                     coroutineScope.launch {
                         initStructogram(inputValue.text) {
                             structogram = when (it) {
@@ -121,7 +129,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
 
                 is Event.Save -> {
                     coroutineScope.launch {
-                        file.save(inputValue.text)
+                        file.save()
                     }
                 }
 
