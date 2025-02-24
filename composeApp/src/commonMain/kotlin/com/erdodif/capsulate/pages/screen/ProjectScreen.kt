@@ -25,6 +25,11 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import io.github.vinceglb.filekit.core.PlatformDirectory
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 @KParcelize
 data class ProjectScreen(val project: Project) : Screen {
@@ -57,28 +62,32 @@ class ProjectPresenter(
         val init = remember { screen.project.openFiles.firstOrNull() ?: OpenFile() }
         var path by rememberRetained { mutableStateOf(screen.project.directory) }
         var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) { mutableStateOf(init) }
-        val openFiles = rememberSaveable(saver = stateListSaver<OpenFile>()) { mutableStateListOf<OpenFile>() }
+        val openFiles =
+            rememberSaveable(saver = stateListSaver<OpenFile>()) { mutableStateListOf<OpenFile>() }
         val backStack = rememberSaveableBackStack(root = EditorScreen(init) {})
         val editorNavigator = rememberCircuitNavigator(backStack, navigator::pop)
         val project = Project(screen.project.directory, openFiles)
+        val func: @Serializable (@Serializable OpenFile) -> Unit = { opened = it } // TODO: CANNOT BE CAST TO SERIALIZABLE :(
         return ProjectScreen.State(project, opened, editorNavigator, backStack) { event ->
             when (event) {
                 is Event.ProjectSelected -> path = event.path
                 is Event.Close -> navigator.pop()
                 is Event.OpenAFile -> {
                     opened = project.getFile(event.name)
-                    editorNavigator.resetRoot(EditorScreen(project.getFile(event.name), {opened = it}))
+                    editorNavigator.resetRoot(
+                        EditorScreen(project.getFile(event.name), func)
+                    )
                 }
 
                 is Event.New -> {
                     opened = OpenFile()
                     openFiles.add(opened)
-                    editorNavigator.resetRoot(EditorScreen(opened, {opened = it}))
+                    editorNavigator.resetRoot(EditorScreen(opened, func))
                 }
 
                 is Event.OpenN -> {
                     opened = project.openFiles[event.index]
-                    editorNavigator.resetRoot(EditorScreen(opened,{opened = it}))
+                    editorNavigator.resetRoot(EditorScreen(opened, func))
                 }
             }
         }

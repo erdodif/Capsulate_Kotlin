@@ -34,10 +34,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlin.time.measureTime
 
 @KParcelize
-data class EditorScreen(val file: OpenFile, val changeHandler: (OpenFile) -> Unit) : Screen {
+@Serializable
+data class EditorScreen(val file: OpenFile, val changeHandler: @Serializable (@Serializable OpenFile) -> Unit) : Screen {
     data class State(
         val code: TextFieldValue,
         val structogram: Structogram?,

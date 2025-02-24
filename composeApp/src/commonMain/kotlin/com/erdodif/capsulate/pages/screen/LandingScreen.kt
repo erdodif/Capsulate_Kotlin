@@ -89,8 +89,7 @@ class LandingPresenter(
         ) {
             if (it != null) {
                 Napier.d { it.path.toString() }
-                val project = Project()
-                project.openFiles.add(OpenFile(it.toKmpFile()))
+                val project = Project(OpenFile(it.toKmpFile()))
                 navigator.goTo(ProjectScreen(project))
             } else {
                 coroutineScope.launch {

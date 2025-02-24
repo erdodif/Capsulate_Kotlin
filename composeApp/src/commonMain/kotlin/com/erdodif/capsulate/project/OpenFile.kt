@@ -11,8 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.io.readString
+import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 data class OpenFile(@KIgnoredOnParcel var file: IPlatformFile? = null) : KParcelable {
     var content: String? = null
 

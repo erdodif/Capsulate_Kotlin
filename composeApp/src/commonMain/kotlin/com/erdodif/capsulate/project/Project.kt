@@ -17,6 +17,7 @@ class Project(
     @KIgnoredOnParcel val directory: PlatformDirectory? = null,
     val openFiles: MutableList<OpenFile> = mutableListOf()
 ) : KParcelable {
+    constructor(openFile: OpenFile) : this(null, mutableListOf(openFile))
 
     init {
         Napier.d { directory.toString() }
