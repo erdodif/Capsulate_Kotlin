@@ -46,6 +46,12 @@ class ProjectPage : Ui<State> {
             disabledContentColor = MaterialTheme.colorScheme.primary,
             disabledContainerColor = MaterialTheme.colorScheme.primaryContainer
         )
+        val openedColors = ButtonColors(
+            contentColor = MaterialTheme.colorScheme.tertiary,
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            disabledContentColor = MaterialTheme.colorScheme.primary,
+            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer
+        )
         val temporalColors = ButtonColors(
             contentColor = MaterialTheme.colorScheme.secondary,
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -77,20 +83,17 @@ class ProjectPage : Ui<State> {
                 }
                 var nameless = 0
                 itemsIndexed(state.project.openFiles) { index, openFile ->
-                    val color = if (openFile.file != null) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.tertiary
-                    }
+                    val color = if (openFile.file != null) MaterialTheme.colorScheme.secondary
+                    else MaterialTheme.colorScheme.tertiary
                     Button(
                         modifier = Modifier,
                         onClick = { state.eventHandler(Event.OpenN(index)) },
                         shape = RectangleShape,
                         enabled = state.opened.file != openFile,
-                        colors = regularColors
+                        colors = if (state.opened == openFile) openedColors else regularColors
                     ) {
                         Text(
-                            openFile.file?.getName() ?: "New File (${nameless++})",
+                            (openFile.file?.getName() ?: "New File (${nameless++})") + " *",
                             modifier = Modifier.padding(1.dp, 2.dp),
                             color = color
                         ) // STOPSHIP - Locale
