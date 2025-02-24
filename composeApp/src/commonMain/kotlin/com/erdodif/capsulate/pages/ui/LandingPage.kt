@@ -17,17 +17,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -48,7 +45,6 @@ import com.erdodif.capsulate.pages.screen.LandingScreen
 import com.erdodif.capsulate.presets.presets
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.app_name
-import com.erdodif.capsulate.resources.ic_logo_foreground
 import com.erdodif.capsulate.resources.ic_logo_foreground_monochrome_paddingless
 import com.erdodif.capsulate.resources.ic_logo_foreground_paddingless
 import com.erdodif.capsulate.resources.open

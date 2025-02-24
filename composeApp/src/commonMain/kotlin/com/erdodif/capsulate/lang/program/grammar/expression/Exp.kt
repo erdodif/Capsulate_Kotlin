@@ -20,7 +20,6 @@ import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.evaluation.Parameter
 import com.erdodif.capsulate.lang.program.grammar.function.sFunctionCall
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos

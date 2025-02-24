@@ -13,7 +13,6 @@ import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Right
-import kotlinx.coroutines.MainScope
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

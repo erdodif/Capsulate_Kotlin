@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +40,6 @@ import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.program.grammar.function.MethodCall
-import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.onMobile
 import com.erdodif.capsulate.structogram.LocalStructogramDropHandler
@@ -53,8 +51,6 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Month
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
