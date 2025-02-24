@@ -30,11 +30,14 @@ abstract class Statement(open val id: Uuid = Uuid.random()) : KParcelable {
     fun <R : Value> Exp<R>.join(
         context: Env,
         onValue: Env.(R) -> EvaluationResult
-    ): EvaluationResult =
+    ): EvaluationResult = try {
         when (val result = evaluate(context)) {
             is Left -> onValue(context, result.value)
             is Right -> DependentEvaluation(result.value, onValue)
         }
+    } catch (e: Exception) {
+        AbortEvaluation(e.message ?: "Error while evaluating expression: $e")
+    }
 
     fun List<Exp<Value>>.joinAll(
         context: Env,
@@ -204,8 +207,12 @@ data class Expression(
     constructor(expression: Exp<Value>) : this(expression, Uuid.random())
 
     override fun evaluate(env: Env): EvaluationResult {
-        expression.evaluate(env)
-        return Finished
+        return try {
+            expression.evaluate(env)
+            Finished
+        } catch (e: Exception) {
+            AbortEvaluation(e.message ?: "Error while evaluating Expression!")
+        }
     }
 }
 
