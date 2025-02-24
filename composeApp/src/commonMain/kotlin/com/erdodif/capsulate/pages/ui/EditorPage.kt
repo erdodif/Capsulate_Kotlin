@@ -49,6 +49,7 @@ import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.utility.UnicodeOverlay
+import com.erdodif.capsulate.utility.max
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
 import com.slack.circuit.overlay.ContentWithOverlays
@@ -84,7 +85,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                         }
                     } else {
                         ContentWithOverlays(
-                            (Modifier.padding(imePaddingValues).padding(innerPadding)).fillMaxSize()
+                            (Modifier.padding(max(imePaddingValues,innerPadding))).fillMaxSize()
                         ) {
                             Column(
                                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
