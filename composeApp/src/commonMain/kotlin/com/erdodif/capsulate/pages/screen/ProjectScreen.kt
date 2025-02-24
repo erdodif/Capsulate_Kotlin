@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.pages.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
+import com.erdodif.capsulate.utility.ChannelRepository
 import com.erdodif.capsulate.utility.saver.mutableSaverOf
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.erdodif.capsulate.utility.saver.stateListSaver
@@ -62,12 +64,16 @@ class ProjectPresenter(
         val init = remember { screen.project.openFiles.firstOrNull() ?: OpenFile() }
         var path by rememberRetained { mutableStateOf(screen.project.directory) }
         var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) { mutableStateOf(init) }
+        val channel: ChannelRepository.ChannelEntry<OpenFile> =
+            remember(opened.file) { ChannelRepository.getNewChannel() }
         val openFiles =
             rememberSaveable(saver = stateListSaver<OpenFile>()) { mutableStateListOf<OpenFile>() }
-        val backStack = rememberSaveableBackStack(root = EditorScreen(init) {})
+        val backStack = rememberSaveableBackStack(root = EditorScreen(init, channel))
         val editorNavigator = rememberCircuitNavigator(backStack, navigator::pop)
         val project = Project(screen.project.directory, openFiles)
-        val func: @Serializable (@Serializable OpenFile) -> Unit = { opened = it } // TODO: CANNOT BE CAST TO SERIALIZABLE :(
+        LaunchedEffect(channel) {
+            opened = channel.receive()
+        }
         return ProjectScreen.State(project, opened, editorNavigator, backStack) { event ->
             when (event) {
                 is Event.ProjectSelected -> path = event.path
@@ -75,19 +81,19 @@ class ProjectPresenter(
                 is Event.OpenAFile -> {
                     opened = project.getFile(event.name)
                     editorNavigator.resetRoot(
-                        EditorScreen(project.getFile(event.name), func)
+                        EditorScreen(project.getFile(event.name), channel)
                     )
                 }
 
                 is Event.New -> {
                     opened = OpenFile()
                     openFiles.add(opened)
-                    editorNavigator.resetRoot(EditorScreen(opened, func))
+                    editorNavigator.resetRoot(EditorScreen(opened, channel))
                 }
 
                 is Event.OpenN -> {
                     opened = project.openFiles[event.index]
-                    editorNavigator.resetRoot(EditorScreen(opened, func))
+                    editorNavigator.resetRoot(EditorScreen(opened, channel))
                 }
             }
         }

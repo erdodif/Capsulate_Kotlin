@@ -36,10 +36,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlin.time.measureTime
+import com.erdodif.capsulate.utility.ChannelRepository.ChannelEntry
 
 @KParcelize
 @Serializable
-data class EditorScreen(val file: OpenFile, val changeHandler: @Serializable (@Serializable OpenFile) -> Unit) : Screen {
+data class EditorScreen(val file: OpenFile, val fileChannel: ChannelEntry<OpenFile>) : Screen {
     data class State(
         val code: TextFieldValue,
         val structogram: Structogram?,
@@ -115,7 +116,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                     inputValue = event.code
                     file.content = inputValue.text
                     coroutineScope.launch {
-                        screen.changeHandler(file)
+                        screen.fileChannel.send(file)
                     }
                     coroutineScope.launch {
                         initStructogram(inputValue.text) {
