@@ -16,6 +16,9 @@ import com.erdodif.capsulate.lang.program.grammar.function.sMethod
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
@@ -166,9 +169,8 @@ val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specificatio
 val sSelect: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":∈"), pType)) / { Select(it.first, it.second.toString()) }
 
-val halfProgram: Parser<ArrayList<Either<Statement, LineError>>> = {
-    right(many(or(sMethod,sFunction)),
-    orEither(
+val halfProgram: Parser<Pair<ArrayList<Either<Method, Function<Value>>>,ArrayList<Either<Statement, LineError>>>> = {
+    (many(or(sMethod,sFunction)) + orEither(
         topLevel(many(right(many(_lineEnd), or(statement, sError)))),
         topLevel(many(_lineEnd) / { arrayListOf() }),
     ))()

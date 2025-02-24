@@ -32,6 +32,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
         val stepCount: Int,
         val seed: Int,
         val error: String?,
+        val overlayStructogram: Structogram?,
         val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
 
@@ -63,20 +64,40 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         var error: String? by remember { mutableStateOf(null) }
         val envState by remember(step) { derivedStateOf { debug.env } }
         val statement: Uuid? by remember(step) { derivedStateOf { debug.head?.id } }
-        return State(screen.structogram, statement, envState, step, debug.seed, error) { event ->
+        val ongoing: Structogram? by remember(step) {
+            derivedStateOf {
+                if (debug.functionOngoing != null) {
+                    screen.structogram.functions.firstOrNull { it.name == debug.functionOngoing?.expression?.call?.function?.name }
+                        ?.asStructogram()
+                } else null
+            }
+        }
+        return State(
+            screen.structogram,
+            statement,
+            envState,
+            step,
+            debug.seed,
+            error,
+            ongoing
+        ) { event ->
             when (event) {
                 is Event.StepForward -> {
                     if (debug.head != null) {
                         debug = debug.step()
                         step = step + 1
-                        if(debug.error != null){
+                        if (debug.error != null) {
                             error = debug.error
                         }
                     }
                 }
 
                 is Event.Reset -> {
-                    debug = EvaluationContext(Env.empty, EvalSequence(screen.structogram.program), debug.seed)
+                    debug = EvaluationContext(
+                        Env.empty,
+                        EvalSequence(screen.structogram.program),
+                        debug.seed
+                    )
                     step = 0
                     error = null
                 }

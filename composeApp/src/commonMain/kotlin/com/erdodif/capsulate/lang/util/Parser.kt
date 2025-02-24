@@ -24,11 +24,11 @@ data class Left<out T>(val value: T) : Either<T, Nothing>
 data class Right<out R>(val value: R) : Either<Nothing, R>
 
 inline operator fun <T, R, S> Either<T, R>.get(
-    crossinline left: (Left<T>) -> S,
-    crossinline right: (Right<R>) -> S
+    crossinline left: (T) -> S,
+    crossinline right: (R) -> S
 ): S = when (this) {
-    is Left<T> -> left(this)
-    is Right<R> -> right(this)
+    is Left<T> -> left(this.value)
+    is Right<R> -> right(this.value)
 }
 
 open class ParserState(

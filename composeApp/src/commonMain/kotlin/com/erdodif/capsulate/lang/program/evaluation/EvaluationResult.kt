@@ -2,7 +2,6 @@ package com.erdodif.capsulate.lang.program.evaluation
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.DependentExp
@@ -10,7 +9,6 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Holder
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
-import com.erdodif.capsulate.lang.program.grammar.expression.withValue
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Right
@@ -45,31 +43,38 @@ data class DependentEvaluation<T : Value>(
     val callback: Env.(T) -> EvaluationResult
 ) : EvaluationResult, Statement() {
     val head: Statement?
-        get() = if(expression is FunctionState) expression.head else Skip()
+        get() = if (expression is FunctionState) expression.head else Skip()
 
     @Suppress("UNCHECKED_CAST")
-    override fun evaluate(env: Env): EvaluationResult = when (expression) {
-        is FunctionState -> when (val result = expression.step()) {
-            is Right -> when (result.value) {
-                is AbortEvaluation -> result.value
-                else -> this.copy()
+    override fun evaluate(env: Env): EvaluationResult = try {
+        when (expression) {
+            is FunctionState -> when (val result = expression.step()) {
+                is Right -> when (result.value) {
+                    is AbortEvaluation -> result.value
+                    else -> this.copy()
+                }
+
+                is Left -> callback(env, result.value)
             }
 
-            is Left -> callback(env, result.value)
+            else -> expression.call.values.joinAll(env) {
+                val newEnv = Env(
+                    env.functions,
+                    env.methods,
+                    expression.call.function.parameters.zip(it)
+                        .map { (param, value) -> Parameter(param.id, value.type(), value) }
+                        .toMutableList(),
+                    env.seed
+                )
+                DependentEvaluation(FunctionState(newEnv, expression), callback)
+            }
         }
-
-        else -> expression.call.values.joinAll(env) {
-            val newEnv = Env(
-                env.functions,
-                env.methods,
-                expression.call.function.parameters.zip(it)
-                    .map { (param, value) -> Parameter(param.id, value.type(), value) }
-                    .toMutableList(),
-                env.seed
-            )
-            DependentEvaluation(FunctionState(newEnv, expression), callback)
-        }
+    } catch (e: Exception) {
+        AbortEvaluation(e.message ?: "Error while evaluating expression! $e")
     }
+
+    operator fun plus(transform: (EvaluationResult) -> EvaluationResult): DependentEvaluation<T> =
+        copy(callback = { transform(callback(it)) })
 }
 
 @OptIn(ExperimentalUuidApi::class)
@@ -82,27 +87,33 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
 
     override fun evaluate(env: Env): EvaluationResult {
         val result = statements.removeFirst().evaluate(env)
-        if (statements.isEmpty()) {
-            return result
+        return if (statements.isEmpty()) {
+            result
+        } else {
+            handleResult(result)
         }
-        return when (result) {
-            is DependentEvaluation<*> -> result
-            is AbortEvaluation -> result
-            is SingleStatement -> {
-                statements.addFirst(result.next)
-                this
-            }
+    }
 
-            is EvalSequence -> {
-                statements.addAll(0, result.statements)
-                this
-            }
+    private fun handleResult(result: EvaluationResult): EvaluationResult = when (result) {
+        is DependentEvaluation<*> -> result + ::handleResult
+        // TODO: WON'T WORK BECAUSE THIS TRANSFORM WILL PUT THE EVALUATION STACK TO THE SOON DESTROYED FUNCTION'S STACK
 
-            else -> when {
-                statements.isEmpty() -> Finished
-                statements.count() == 1 -> SingleStatement(statements.first())
-                else -> this
-            }
+        is AbortEvaluation -> result
+
+        is SingleStatement -> {
+            statements.addFirst(result.next)
+            this
+        }
+
+        is EvalSequence -> {
+            statements.addAll(0, result.statements)
+            this
+        }
+
+        else -> when {
+            statements.isEmpty() -> Finished
+            statements.count() == 1 -> SingleStatement(statements.first())
+            else -> this
         }
     }
 }
@@ -120,7 +131,7 @@ data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
 ) : Statement(id), EvaluationResult {
     @OptIn(ExperimentalUuidApi::class)
     override fun evaluate(env: Env): EvaluationResult =
-        if(value is Holder) this else value.join(env) { this@Return.copy(value = Holder(it)) }
+        if (value is Holder) this else value.join(env) { this@Return.copy(value = Holder(it)) }
 }
 
 @KParcelize

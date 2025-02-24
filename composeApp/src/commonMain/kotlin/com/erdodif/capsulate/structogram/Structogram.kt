@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Statement
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Either
@@ -26,6 +28,7 @@ import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
@@ -42,7 +45,9 @@ import kotlin.uuid.Uuid
 @Serializable
 class Structogram private constructor(
     var statements: Array<ComposableStatement<*>>,
-    val name: String? = null
+    val name: String? = null,
+    val functions: Array<ComposableFunction> = emptyArray(),
+    val methods: Array<ComposableMethod> = emptyArray()
 ) : KParcelable {
     val program: List<Statement>
         get() = statements.map { it.statement }
@@ -57,7 +62,7 @@ class Structogram private constructor(
         activeStatement: Uuid? = null
     ) = key(this, draggable, activeStatement) {
         Column(modifier) {
-            if(name != null){
+            if (name != null) {
                 Text(
                     text = name,
                     modifier = Theme.commandModifier.border(
@@ -96,9 +101,18 @@ class Structogram private constructor(
         suspend fun fromString(text: String): Either<Structogram, Fail> {
             val parserState = ParserState(text)
             val result = halfProgram(parserState)
-            val parsedStatements =
-                ((result as? Pass<*>)?.value as List<*>?)?.filterNot { it is Right<*> }
-                    ?.map {
+            return if (result is Pass) {
+                val functions = mutableListOf<ComposableFunction>()
+                val methods = mutableListOf<ComposableMethod>()
+                result.value.first.map {
+                    it[{ method ->
+                        methods.add(ComposableMethod(method, parserState))
+                    }, { function ->
+                        functions.add(ComposableFunction(function, parserState))
+                    }]
+                }
+                val parsedStatements = result.value.second.filterNot { it is Right<*> }
+                    .map {
                         yield()
                         it as Left<*>
                         val statement: GrammarStatement = it.value as GrammarStatement
@@ -106,17 +120,29 @@ class Structogram private constructor(
                             parserState,
                             statement
                         )
-                    }?.toTypedArray()
-            return if (parsedStatements?.isNotEmpty() == true) {
-                Left(Structogram(parsedStatements))
+                    }.toTypedArray()
+                if (parsedStatements.isNotEmpty()) {
+                    Left(Structogram(parsedStatements))
+                } else {
+                    Right(Fail("No statement matched!", parserState))
+                }
             } else {
-                Right(result as? Fail ?: Fail("No statement matched!", parserState))
+                Right(result as Fail)
             }
         }
 
+        fun fromStatements(
+            vararg statements: ComposableStatement<*>,
+            name: String? = null
+        ): Structogram {
+            return Structogram(statements.toList().toTypedArray(), name = name)
+        }
 
-        fun fromStatements(vararg statements: ComposableStatement<*>): Structogram {
-            return Structogram(statements.asList())
+        fun fromStatements(
+            statements: List<ComposableStatement<*>>,
+            name: String? = null
+        ): Structogram {
+            return Structogram(statements.toTypedArray(), name = name)
         }
     }
 }

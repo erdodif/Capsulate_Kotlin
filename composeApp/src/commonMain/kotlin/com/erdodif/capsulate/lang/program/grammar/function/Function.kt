@@ -38,12 +38,23 @@ import kotlin.uuid.ExperimentalUuidApi
 data class Function<T>(
     val name: String,
     val parameters: List<Variable>,
-    val body: List<Statement>
+    val body: List<Statement>,
 ) : KParcelable {
 
     override fun toString(): String =
         "Function $name, (${parameters.count()} parameters) { ... ${body.count()} statements}"
 
+    fun getHead(): String = buildString {
+        append("$name(")
+        if (parameters.isNotEmpty()) {
+            for (i in 0..<parameters.count() - 1) {
+                append(parameters[i].id)
+                append(", ")
+            }
+            append(parameters[parameters.count() - 1])
+        }
+        append(')')
+    }
 }
 
 @KParcelize

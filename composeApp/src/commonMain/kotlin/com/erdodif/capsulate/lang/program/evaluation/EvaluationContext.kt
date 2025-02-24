@@ -67,8 +67,6 @@ data class EvaluationContext(
             }
         }
         handleResult(current!!.evaluate(env))
-        currentStatement =
-            if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
         return this.copy()
     }
 
@@ -91,5 +89,7 @@ data class EvaluationContext(
             is ParallelEvaluation -> entries.addAll(stack.entries)
             is DependentEvaluation<*> -> functionOngoing = stack
         }
+        currentStatement =
+            if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
     }
 }
