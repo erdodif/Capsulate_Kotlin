@@ -8,6 +8,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.NatLit
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
+import com.erdodif.capsulate.lang.program.grammar.expression.VNum
 import com.erdodif.capsulate.lang.program.grammar.expression.VStr
 import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
@@ -39,7 +40,7 @@ class AssignTest {
         val env = intEnv()
         val result1 = Assign("a", IntLit(10, pos), pos).evaluate(env)
         assertIs<Finished>(result1)
-        assertEquals(10, (env.parameters[0].value as VNat).value)
+        assertEquals(10, (env.parameters[0].value as VWhole).value)
     }
 
     @Test
@@ -53,8 +54,8 @@ class AssignTest {
         assertEquals(7, (env.parameters[2].value as VNat).value)
         val result2 = Assign("a", Variable("c", pos), pos).evaluate(env)
         assertIs<Finished>(result2)
-        assertEquals(4, (env.parameters[0].value as VNat).value)
-        assertEquals(7, (env.parameters[1].value as VNat).value)
+        assertEquals(7, (env.parameters[0].value as VNat).value)
+        assertEquals(4, (env.parameters[1].value as VNat).value)
         assertEquals(7, (env.parameters[2].value as VNat).value)
     }
 
