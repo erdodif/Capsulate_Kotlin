@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.erdodif.capsulate
 
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
