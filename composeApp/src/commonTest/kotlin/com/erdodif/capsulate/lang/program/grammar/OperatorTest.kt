@@ -11,11 +11,12 @@ import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryCalc
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryOperator
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryCalculation
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryOperator
-import com.erdodif.capsulate.lang.util.Association
 import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.grammar.expression.operator.Association
+import com.erdodif.capsulate.lang.program.grammar.expression.operator.Fixation
 import com.erdodif.capsulate.lang.util.Fail
-import com.erdodif.capsulate.lang.util.Fixation
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.OperatorTable
+import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
@@ -38,8 +39,8 @@ class OperatorTest {
         }
 
         @KParcelize
-        private data class TestExp(val matchedChar: Char) : Exp<Value> {
-            override fun evaluate(context: Env) = TestValue(matchedChar)
+        private data class TestExp(val matchedChar: Char) : Exp<TestValue> {
+            override fun evaluate(context: Env) = Left(TestValue(matchedChar))
             override fun toString(state: ParserState) = matchedChar.toString()
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == matchedChar) ||
@@ -48,41 +49,45 @@ class OperatorTest {
             override fun hashCode(): Int = matchedChar.hashCode()
         }
 
-        val strongLeft = BinaryOperator(20, "/", _char('/'), Association.LEFT)
+        val strongLeft = BinaryOperator<TestValue, TestValue>(20, "/", _char('/'), Association.LEFT)
         { _, _ -> TestValue('/') }
-        val weakLeft = BinaryOperator(10, "-", _char('-'), Association.LEFT)
+        val weakLeft = BinaryOperator<TestValue, TestValue>(10, "-", _char('-'), Association.LEFT)
         { _, _ -> TestValue('-') }
         val strongRight =
-            BinaryOperator(20, "*", _char('*'), Association.RIGHT)
+            BinaryOperator<TestValue, TestValue>(20, "*", _char('*'), Association.RIGHT)
             { _, _ -> TestValue('*') }
-        val weakRight = BinaryOperator(10, "+", _char('+'), Association.RIGHT)
+        val weakRight = BinaryOperator<TestValue, TestValue>(10, "+", _char('+'), Association.RIGHT)
         { _, _ -> TestValue('+') }
-        val unaryPreLeft = UnaryOperator(20, "-", _char('-'), Fixation.PREFIX)
+        val unaryPreLeft = UnaryOperator<TestValue, TestValue>(20, "-", _char('-'), Fixation.PREFIX)
         { _ -> TestValue('~') }
-        val unaryPre = UnaryOperator(20, "~", _char('@'), Fixation.PREFIX)
+        val unaryPre = UnaryOperator<TestValue, TestValue>(20, "~", _char('@'), Fixation.PREFIX)
         { _ -> TestValue('~') }
-        val unaryPostLeft = UnaryOperator(20, "~", _char('*'), Fixation.POSTFIX)
+        val unaryPostLeft =
+            UnaryOperator<TestValue, TestValue>(20, "~", _char('*'), Fixation.POSTFIX)
+            { _ -> TestValue('~') }
+        val unaryPost = UnaryOperator<TestValue, TestValue>(20, "~", _char('#'), Fixation.POSTFIX)
         { _ -> TestValue('~') }
-        val unaryPost = UnaryOperator(20, "~", _char('#'), Fixation.POSTFIX)
-        { _ -> TestValue('~') }
-        val strongNone = BinaryOperator(10, "_", _char('_'), Association.NONE)
+        val strongNone = BinaryOperator<TestValue, TestValue>(10, "_", _char('_'), Association.NONE)
         { _, _ -> TestValue('_') }
-        val weakNone = BinaryOperator(5, "=", _char('='), Association.NONE)
+        val weakNone = BinaryOperator<TestValue, TestValue>(5, "=", _char('='), Association.NONE)
         { _, _ -> TestValue('=') }
 
         val operatorsConflict = OperatorTable(
             strongLeft, strongRight, weakLeft, weakRight, unaryPreLeft,
             unaryPre, unaryPostLeft, unaryPost, strongNone, weakNone
         )
-        val operatorsSimple = OperatorTable(weakLeft, weakRight, weakNone, unaryPre, unaryPost)
-        val testAtom: Parser<Exp<Value>> = tok(asum(
-            char('a'),
-            char('b'),
-            char('c'),
-            char('d')
-        )) / { TestExp(it) }
+        val testAtom: Parser<Exp<TestValue>> = tok(
+            asum(
+                char('a'),
+                char('b'),
+                char('c'),
+                char('d')
+            )
+        ) / { TestExp(it) }
+        val operatorsSimple =
+            OperatorTable<Exp<TestValue>>(weakLeft, weakRight, weakNone, unaryPre, unaryPost)
 
-        fun OperatorTable<Exp<Value>>.parse(text: String) =
+        fun OperatorTable<Exp<TestValue>>.parse(text: String) =
             ParserState(text).parse(topLevel(verboseParser(testAtom)))
 
         fun expectForSingle(
@@ -90,7 +95,7 @@ class OperatorTest {
             firstChar: Char = 'a',
             secondChar: Char = 'b'
         ): (Pass<*>) -> Boolean = {
-            val calc = it.value as BinaryCalculation
+            val calc = it.value as BinaryCalculation<*, *>
             calc.label == label &&
                     (calc.first as TestExp).matchedChar == firstChar &&
                     (calc.second as TestExp).matchedChar == secondChar
@@ -103,8 +108,8 @@ class OperatorTest {
             secondChar: Char = 'b',
             thirdChar: Char = 'c'
         ): (Pass<*>) -> Boolean = {
-            val calc1 = it.value as BinaryCalculation
-            val calc2 = calc1.first as BinaryCalculation
+            val calc1 = it.value as BinaryCalculation<*, *>
+            val calc2 = calc1.first as BinaryCalculation<*, *>
             calc1.label == label &&
                     calc2.label == labelSecond &&
                     (calc2.first as TestExp).matchedChar == firstChar &&
@@ -119,8 +124,8 @@ class OperatorTest {
             secondChar: Char = 'b',
             thirdChar: Char = 'c'
         ): (Pass<*>) -> Boolean = {
-            val calc1 = it.value as BinaryCalculation
-            val calc2 = calc1.second as BinaryCalculation
+            val calc1 = it.value as BinaryCalculation<*, *>
+            val calc2 = calc1.second as BinaryCalculation<*, *>
             calc1.label == label &&
                     calc2.label == labelSecond &&
                     (calc1.first as TestExp).matchedChar == firstChar &&
@@ -128,22 +133,22 @@ class OperatorTest {
                     (calc2.second as TestExp).matchedChar == thirdChar
         }
 
-        infix fun OperatorTable<Exp<Value>>.pass(text: String): Pass<Exp<Value>> =
+        infix fun OperatorTable<Exp<TestValue>>.pass(text: String): Pass<Exp<TestValue>> =
             this.parse(text).let(::assertPass)
 
-        infix fun OperatorTable<Exp<Value>>.fail(text: String): Fail =
+        infix fun OperatorTable<Exp<TestValue>>.fail(text: String): Fail =
             this.parse(text).let(::assertFail)
     }
 
     @Test
     fun single_value_Pass() {
         assertTrue(
-            { it.value is TestExp && (it.value as TestExp).matchedChar == 'a' },
-            operatorsSimple.parse("a ")
+            { it.value is TestExp && it.value.matchedChar == 'a' },
+            operatorsSimple.parser(testAtom)(ParserState("a"))
         )
         assertTrue(
-            { it.value is TestExp && (it.value as TestExp).matchedChar == 'b' },
-            operatorsConflict.parse("b ")
+            { it.value is TestExp && it.value.matchedChar == 'b' },
+            operatorsConflict.parser(testAtom)(ParserState("b"))
         )
     }
 
@@ -155,7 +160,7 @@ class OperatorTest {
 
     @Test
     fun weakRight_Pass_single() {
-        val expectedPredicate: (Pass<Exp<Value>>) -> Boolean = expectForSingle("+")
+        val expectedPredicate: (Pass<Exp<TestValue>>) -> Boolean = expectForSingle("+")
         operatorsSimple pass "a + b " matches expectedPredicate
         operatorsSimple pass "a +b " matches expectedPredicate
         operatorsSimple pass "a+ b " matches expectedPredicate
@@ -212,8 +217,8 @@ class OperatorTest {
 
     @Test
     fun unaryPreLeft_Pass() {
-        val expectPredicate: (Pass<Exp<Value>>) -> Boolean =
-            { it.value is UnaryCalculation && ((it.value as UnaryCalculation).param as TestExp).matchedChar == 'a' }
+        val expectPredicate: (Pass<Exp<TestValue>>) -> Boolean =
+            { it.value is UnaryCalculation<*, *> && ((it.value as UnaryCalculation<*, *>).param as TestExp).matchedChar == 'a' }
         operatorsSimple pass "@a" matches expectPredicate
         operatorsSimple pass "@ a" matches expectPredicate
         operatorsSimple pass "@  a " matches expectPredicate
