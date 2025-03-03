@@ -38,7 +38,7 @@ data class UnaryCalculation<T : Value, R : Value>(
     val param: Exp<R>,
     val label: String = "∘",
     val fixation: Fixation,
-    val operation: @Serializable Env.(Exp<R>) -> T
+    val operation: @Serializable Env.(R) -> T
 ) : Exp<T> {
     constructor(first: Exp<R>, operator: UnaryOperator<T, R>) : this(
         first,
@@ -50,7 +50,7 @@ data class UnaryCalculation<T : Value, R : Value>(
     @Suppress("UNCHECKED_CAST")
     override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
         param.withRawValue(context) {
-            context.operation(it as Exp<R>)
+            context.operation(it)
         }
 
     override fun toString(state: ParserState): String =
@@ -77,13 +77,11 @@ data class BinaryCalculation<T : Value, R : Value>(
 
     override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
         (first to second).withValue(context) { a, b ->
-            Left(operation(a,b))
+            Left(operation(a, b))
         }
 
-    //override fun evaluate(context: Env): Value = context.operation(first, second)
-
     override fun toString(state: ParserState): String =
-        "${first.toString(state)} $label ${second.toString(state)}"
+        "$label(${first.toString(state)} $label ${second.toString(state)})"
 }
 
 
@@ -94,7 +92,7 @@ open class UnaryOperator<T : Value, R : Value>(
     override val label: String = "~",
     override val operatorParser: Parser<*>,
     val fixation: Fixation,
-    val operation: @Serializable Env.(Exp<R>) -> T
+    val operation: @Serializable Env.(R) -> T
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")

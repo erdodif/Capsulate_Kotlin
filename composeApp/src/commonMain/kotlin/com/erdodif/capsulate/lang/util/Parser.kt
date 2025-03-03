@@ -117,7 +117,7 @@ data class Fail(val reason: String, override val state: ParserState) :
 }
 
 /**
- * A function that tries to create T value from the current [ParserState] context
+ * A function that tries to create T value from the current [ParserState] contextPair<
  */
 typealias Parser<T> = ParserState.() -> ParserResult<T>
 /**

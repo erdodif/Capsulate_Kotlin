@@ -60,10 +60,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         var step by remember { mutableStateOf(0) }
         var debug by remember {
             mutableStateOf(
-                EvaluationContext(
-                    Env.empty,
-                    EvalSequence(screen.structogram.program),
-                )
+                EvaluationContext(Env.empty, EvalSequence(screen.structogram.program))
             )
         }
         var error: String? by remember { mutableStateOf(null) }
@@ -110,11 +107,12 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     step = 0
                     error = null
                 }
-                is Event.StepOver ->{
-                    while(debug.functionOngoing != null && debug.error == null){
+
+                is Event.StepOver -> {
+                    do {
                         debug = debug.step()
                         step = step + 1
-                    }
+                    } while (debug.functionOngoing != null && debug.error == null)
                     if (debug.error != null) {
                         error = debug.error
                     }

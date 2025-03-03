@@ -12,6 +12,8 @@ import com.erdodif.capsulate.lang.program.grammar.or
 import com.erdodif.capsulate.lang.util._char
 import kotlinx.serialization.Serializable
 
+// TODO - CAST ON ASSIGNMENT SIDE
+
 @KParcelize
 @Serializable
 object Add : BinaryOperator<VNum, VNum>(
@@ -20,16 +22,7 @@ object Add : BinaryOperator<VNum, VNum>(
     _char('+'),
     Association.RIGHT,
     { a, b ->
-        if (a !is VNum) {
-            throw RuntimeException("The first operand must be a Number!")
-        }
-        if (b !is VNum) {
-            throw RuntimeException("The second operand must be a Number!")
-        }
-        if (a.type() != b.type()) {
-            throw RuntimeException("Operands must have the same type ('${a.type()}' + '${b.type()}' is not allowed by design)")
-        }
-        if (a is VNat) {
+        if (a is VNat && b is VNat) {
             VNat((a.value + b.value).toUInt())
         } else {
             VWhole(a.value + b.value)
@@ -44,22 +37,7 @@ object Sub : BinaryOperator<VNum, VNum>(
     "-",
     _char('-'),
     Association.LEFT,
-    { a, b ->
-        if (a !is VNum) {
-            throw RuntimeException("The first operand must be a Number!")
-        }
-        if (b !is VNum) {
-            throw RuntimeException("The second operand must be a Number!")
-        }
-        if (a.type() != b.type()) {
-            throw RuntimeException("Operands must have the same type ('${a.type()}' - '${b.type()}' is not allowed by design)")
-        }
-        if (a !is VNat) {
-            VNat((a.value + b.value).toUInt())
-        } else {
-            VWhole(a.value + b.value)
-        }
-    }
+    { a, b -> VWhole(a.value - b.value) }
 )
 
 @KParcelize
@@ -70,16 +48,7 @@ object Mul : BinaryOperator<VNum, VNum>(
     _char('*'),
     Association.RIGHT,
     { a, b ->
-        if (a !is VNum) {
-            throw RuntimeException("The first operand must be a Number!")
-        }
-        if (b !is VNum) {
-            throw RuntimeException("The second operand must be a Number!")
-        }
-        if (a.type() != b.type()) {
-            throw RuntimeException("Operands must have the same type ('${a.type()}' * '${b.type()}' is not allowed by design)")
-        }
-        if (a !is VNat) {
+        if (a is VNat) {
             VNat((a.value * b.value).toUInt())
         } else {
             VWhole(a.value * b.value)
@@ -95,19 +64,13 @@ object Div : BinaryOperator<VNum, VNum>(
     _char('/'),
     Association.LEFT,
     { a, b ->
-        if (a !is VNum) {
-            throw RuntimeException("The first operand must be a Number!")
+        if (b.value == 0) {
+            throw RuntimeException("Division by Zero!")
         }
-        if (b !is VNum) {
-            throw RuntimeException("The second operand must be a Number!")
-        }
-        if (a.type() != b.type()) {
-            throw RuntimeException("Operands must have the same type ('${a.type()}' / '${b.type()}' is not allowed by design)")
-        }
-        if (a !is VNat) {
-            VNat((a.value * b.value).toUInt())
+        if (a is VNat) {
+            VNat((a.value / b.value).toUInt())
         } else {
-            VWhole(a.value * b.value)
+            VWhole(a.value / b.value)
         }
     }
 )
@@ -130,42 +93,22 @@ object Equal : BinaryOperator<Value, Value>(
 
 @KParcelize
 @Serializable
-object And: BinaryOperator<VBool, VBool>(
+object And : BinaryOperator<VBool, VBool>(
     6,
     "&",
     _char('&'),
     Association.LEFT,
-    { a, b ->
-        if (a !is VBool) {
-            throw RuntimeException("First operand must be Logical")
-        }
-        if (b !is VBool) {
-            throw RuntimeException("Second operand must be Logical")
-        }
-        else{
-            VBool(a.value && b.value)
-        }
-    }
+    { a, b -> VBool(a.value && b.value) }
 )
 
 @KParcelize
 @Serializable
-object Or: BinaryOperator<VBool, VBool>(
+object Or : BinaryOperator<VBool, VBool>(
     5,
     "|",
     or(_char('|'), _char('v')),
     Association.LEFT,
-    { a, b ->
-        if (a !is VBool) {
-            throw RuntimeException("First operand must be Logical")
-        }
-        if (b !is VBool) {
-            throw RuntimeException("Second operand must be Logical")
-        }
-        else{
-            VBool(a.value || b.value)
-        }
-    }
+    { a, b -> VBool(a.value || b.value) }
 )
 
 @KParcelize
@@ -175,13 +118,7 @@ object Sign : UnaryOperator<VNum, VWhole>(
     "-",
     _char('-'),
     Fixation.PREFIX,
-    {
-        if (it is VNum) {
-            VWhole(- it.value)
-        } else {
-            throw RuntimeException("Type must be a Number")
-        }
-    }
+    { VWhole(-it.value) }
 )
 
 @KParcelize
@@ -191,13 +128,7 @@ object Not : UnaryOperator<VBool, VBool>(
     "!",
     _char('!'),
     Fixation.PREFIX,
-    {
-        if (it is VBool) {
-            VBool(!it.value)
-        } else {
-            throw RuntimeException("Type must be Logical")
-        }
-    }
+    { VBool(!it.value) }
 )
 
 @KParcelize
@@ -208,26 +139,20 @@ object Factorial : UnaryOperator<VNum, VNum>(
     _char('!'),
     Fixation.POSTFIX,
     {
-        if (it is VNum) {
-            val range =
-            if (it.value > 0){
-                1..it.value
-            }
-            else if (it.value < 0){
-                it.value..<0
-            }
-            else {
-                0..0
-            }
-            val result = range.fold(1, Int::times)
-            VWhole(result)
+        val range = if (it.value > 0) {
+            1..it.value
+        } else if (it.value < 0) {
+            it.value..<0
         } else {
-            throw RuntimeException("Type must be Logical")
+            0..0
         }
+        val result = range.fold(1, Int::times)
+        VWhole(result)
     }
 )
 
 val builtInOperators = arrayListOf(Add, Sub, Sign, Mul, Div, And, Or, Not, Equal)
 
 @Suppress("UNCHECKED_CAST")
-val builtInOperatorTable: OperatorTable<Exp<Value>> = OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>)
+val builtInOperatorTable: OperatorTable<Exp<Value>> =
+    OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>)

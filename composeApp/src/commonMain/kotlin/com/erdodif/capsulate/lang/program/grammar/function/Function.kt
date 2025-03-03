@@ -67,8 +67,13 @@ class FunctionCall<T : Value>(
     override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
         Right(DependentExp(this) { Left(it) })
 
-    override fun toString(state: ParserState): String = state[match]
-
+    override fun toString(state: ParserState): String =
+        "${function.name}("+buildString {
+            values.forEach {
+                append(it.toString(state))
+                append(", ")
+            }
+        }.dropLast(2) +")"
 }
 
 val sFunction: Parser<Function<Value>> = (delimit(
@@ -88,7 +93,7 @@ val sReturn: Parser<Statement> = right(_keyword("return"), pExp) * { value, pos 
 }
 
 val sFunctionCall: Parser<Exp<Value>> = {
-    delimit((_nonKeyword + middle(_char('('), optional(delimited(pExp, _char(','))), _char(')'))))[{
+    (_nonKeyword + middle(_char('('), optional(delimited(pExp, _char(','))), _char(')')))[{
         val (name, params) = it.value
         val function =
             functions.firstOrNull {

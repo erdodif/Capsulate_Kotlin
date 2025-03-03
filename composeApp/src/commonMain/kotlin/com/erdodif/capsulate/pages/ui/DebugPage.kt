@@ -95,6 +95,7 @@ class DebugPage : Ui<State> {
                     )
                     Row {
                         Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
+                        Button({ state.eventHandler(Event.StepOver) }) { Text("Step over") }
                         Button({ state.eventHandler(Event.Close) }) { Text("Close") }
                     }
                 }
@@ -134,12 +135,8 @@ class DebugPage : Ui<State> {
                         color = MaterialTheme.colorScheme.error
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Button({ state.eventHandler(Event.Close) }) {
-                            Text("Close")
-                        }
-                        Button({ state.eventHandler(Event.Reset) }) {
-                            Text("Rerun")
-                        }
+                        Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                        Button({ state.eventHandler(Event.Reset) }) { Text("Rerun") }
                     }
                 }
             }
