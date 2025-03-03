@@ -43,7 +43,7 @@ data class Function<T>(
 ) : KParcelable {
 
     override fun toString(): String =
-        "Function $name, (${parameters.count()} parameters) { ... ${body.count()} statements}"
+        "$name(params: ${parameters.count()}) { statements: ${body.count()} }"
 
     fun getHead(): String = buildString {
         append("$name(")

@@ -49,7 +49,7 @@ open class DependentExp<R : Value, T : Value>(
         DependentExp(call) _env@{
             when (val result = onValue(it)) {
                 is Left -> other.onValue(this, result.value)
-                is Right -> Right(result.value + other)
+                is Right -> Right(result.value.plus(other))
             }
         }
 
@@ -65,7 +65,7 @@ open class DependentExp<R : Value, T : Value>(
         DependentExp(call) {
             when (val result = onValue(it)) {
                 is Left -> Left(transform(this, result.value))
-                is Right -> Right(result.value + transform)
+                is Right -> Right(result.value.plus(transform))
             }
         }
 }
@@ -85,7 +85,6 @@ fun <R : Value, T : Value> Exp<T>.withRawValue(
         is Left -> Left(onValue(env, result.value))
     }
 
-@Suppress("UNCHECKED_CAST")
 fun <R : Value, T : Value> Exp<T>.withValue(
     env: Env,
     onValue: Env.(T) -> Either<R, DependentExp<*, R>>

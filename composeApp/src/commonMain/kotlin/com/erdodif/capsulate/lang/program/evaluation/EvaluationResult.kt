@@ -32,17 +32,29 @@ class FunctionState<R : Value, T : Value>(
     fun step(): Either<T, EvaluationResult> {
         context.step()
         return when {
-            context.returnValue != null && context.returnValue is RawValue ->
-                Left((context.returnValue as RawValue<T>).get(context.env))
+            context.returnValue != null && context.returnValue is RawValue -> {
+                when (val result =
+                    onValue(env, (context.returnValue as RawValue<R>).get(context.env))) {
+                    is Left -> result
+                    is Right -> Right(
+                        DependentEvaluation(result.value) { Return(Holder(it), match = MatchPos.ZERO) }
+                    )
+                }
+            }
+
 
             context.returnValue != null -> Right(DependentEvaluation(this) {
-                Return<T>(context.returnValue!!.evaluate(this) as Exp<T>, match = MatchPos.ZERO)
+                Return(context.returnValue!!.evaluate(this) as Exp<T>, match = MatchPos.ZERO)
             })
 
             context.error != null -> Right(AbortEvaluation(context.error!!))
             context.head == null -> Right(AbortEvaluation("Function execution ended, no return statement found on the way."))
             else -> Right(SingleStatement(context.head!!))
         }
+    }
+
+    override fun toString(): String {
+        return "FuncState(calls on: ${call.function.name}, error: ${context.error}, value: ${context.returnValue}, head: ${context.head})"
     }
 }
 
@@ -54,7 +66,6 @@ data class DependentEvaluation<T : Value>(
     val head: Statement?
         get() = if (expression is FunctionState) expression.head else Skip(MatchPos.ZERO)
 
-    @Suppress("UNCHECKED_CAST")
     override fun evaluate(env: Env): EvaluationResult = try {
         when (expression) {
             is FunctionState -> when (val result = expression.step()) {
@@ -133,6 +144,7 @@ data class SingleStatement(val next: Statement) : EvaluationResult
 @KParcelize
 data object Finished : EvaluationResult
 
+@OptIn(ExperimentalUuidApi::class)
 @KParcelize
 data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     val value: Exp<T>,

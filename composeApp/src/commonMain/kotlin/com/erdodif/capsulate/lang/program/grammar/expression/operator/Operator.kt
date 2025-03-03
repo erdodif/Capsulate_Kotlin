@@ -76,6 +76,10 @@ data class BinaryCalculation<T : Value, R : Value>(
     )
 
     override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
+        /*first.withRawValue(context){
+            println(it.toString())
+            it as T
+        }*/
         (first to second).withValue(context) { a, b ->
             Left(operation(a, b))
         }
