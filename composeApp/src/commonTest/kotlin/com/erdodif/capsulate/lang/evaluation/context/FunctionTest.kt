@@ -1,16 +1,13 @@
 package com.erdodif.capsulate.lang.evaluation.context
 
-import com.erdodif.capsulate.RawValue
 import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.evaluation.Return
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
-import com.erdodif.capsulate.lang.program.grammar.expression.Holder
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
-import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Add
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryCalculation
