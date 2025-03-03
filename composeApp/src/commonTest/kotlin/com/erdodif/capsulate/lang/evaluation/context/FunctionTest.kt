@@ -69,7 +69,7 @@ class FunctionTest {
     @Test
     fun `niladic function in expression`() {
         val function =
-            Function<VNum>("x", listOf(), listOf(Return(IntLit(1, pos), match = pos)))
+            Function<VNum>("x", listOf(), listOf(Return(IntLit(2, pos), match = pos)))
         val underTest = FunctionCall(function, listOf(), pos)
         var context =
             EvaluationContext(
@@ -84,6 +84,6 @@ class FunctionTest {
         context.step()
         context.step()
         assertNull(context.functionOngoing)
-        assertEquals(2, (context.env.parameters[0].value as VNum).value)
+        assertEquals(4, (context.env.parameters[0].value as VNum).value)
     }
 }

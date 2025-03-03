@@ -7,6 +7,7 @@ import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.DependentExp
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Holder
+import com.erdodif.capsulate.lang.program.grammar.expression.RawValue
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.util.Either
@@ -26,11 +27,18 @@ class FunctionState<R : Value, T : Value>(
     val head: Statement?
         get() = context.head
 
+    @OptIn(ExperimentalUuidApi::class)
     @Suppress("UNCHECKED_CAST")
     fun step(): Either<T, EvaluationResult> {
         context.step()
         return when {
-            context.returnValue != null -> Left((context.returnValue as Holder<T>).value) // TODO: CHECK
+            context.returnValue != null && context.returnValue is RawValue ->
+                Left((context.returnValue as RawValue<T>).get(context.env))
+
+            context.returnValue != null -> Right(DependentEvaluation(this) {
+                Return<T>(context.returnValue!!.evaluate(this) as Exp<T>, match = MatchPos.ZERO)
+            })
+
             context.error != null -> Right(AbortEvaluation(context.error!!))
             context.head == null -> Right(AbortEvaluation("Function execution ended, no return statement found on the way."))
             else -> Right(SingleStatement(context.head!!))
@@ -133,7 +141,7 @@ data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
 ) : Statement(id, match), EvaluationResult {
     @OptIn(ExperimentalUuidApi::class)
     override fun evaluate(env: Env): EvaluationResult =
-        if (value is Holder) this else value.join(env) { this@Return.copy(value = Holder(it)) }
+        if (value is RawValue) this else value.join(env) { this@Return.copy(value = Holder(it)) }
 }
 
 @KParcelize
