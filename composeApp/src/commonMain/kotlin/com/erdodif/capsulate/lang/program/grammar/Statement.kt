@@ -231,8 +231,7 @@ data class Expression(
 
     override fun evaluate(env: Env): EvaluationResult {
         return try {
-            expression.evaluate(env)
-            Finished
+            expression.join(env){ Finished }
         } catch (e: Exception) {
             AbortEvaluation(e.message ?: "Error while evaluating Expression!")
         }
