@@ -42,27 +42,30 @@ import kotlinx.serialization.Serializable
 open class DependentExp<R : Value, T : Value>(
     open val call: FunctionCall<R>,
     open val onValue: @Serializable Env.(R) -> Either<T, DependentExp<*, T>>
-): KParcelable {
+) : KParcelable {
 
-    @Suppress("UNCHECKED_CAST")
+
     operator fun <S : Value> plus(other: DependentExp<T, S>): DependentExp<R, S> =
-        DependentExp(call) {
+        DependentExp(call) _env@{
             when (val result = onValue(it)) {
                 is Left -> other.onValue(this, result.value)
-                is Right -> Right(
-                    DependentExp(result.value.call) { other.onValue(this, it as T) }
-                )
+                is Right -> Right(result.value + other)
             }
         }
 
-    @Suppress("UNCHECKED_CAST")
+    fun <S : Value> addTransform(transform: Env.(T) -> Either<S, DependentExp<*, S>>): DependentExp<R, S> =
+        DependentExp(call) _env@{
+            when (val result = onValue(it)) {
+                is Left -> transform(this, result.value)
+                is Right -> Right(result.value.addTransform(transform))
+            }
+        }
+
     operator fun <S : Value> plus(transform: Env.(T) -> S): DependentExp<R, S> =
         DependentExp(call) {
             when (val result = onValue(it)) {
                 is Left -> Left(transform(this, result.value))
-                is Right -> Right(
-                    DependentExp(result.value.call) { Left(transform(this, it as T)) }
-                )
+                is Right -> Right(result.value + transform)
             }
         }
 }
@@ -89,9 +92,7 @@ fun <R : Value, T : Value> Exp<T>.withValue(
 ): Either<R, DependentExp<*, R>> =
     when (val result = evaluate(env)) {
         is Left -> onValue(env, result.value)
-        is Right -> Right(DependentExp(result.value.call, {
-            onValue(this, it as T)
-        }))
+        is Right -> Right(result.value.addTransform(onValue))
     }
 
 fun <T : Value> List<Exp<*>>.withValues(
@@ -113,20 +114,14 @@ fun <T : Value> List<Exp<*>>.withValues(
     }
 
 
-@Suppress("UNCHECKED_CAST")
 fun <R : Value, T : Value, S : Value> Pair<Exp<T>, Exp<S>>.withValue(
     env: Env,
     onValue: Env.(T, S) -> Either<R, DependentExp<*, R>>
-): Either<R, DependentExp<*, R>> =
-    when (val result = first.evaluate(env)) {
-        is Left -> second.withValue(env) { this.onValue(result.value, it) }
-        is Right -> Right(DependentExp(
-            result.value.call
-        ) { x ->
-            second.withValue(env) { y -> this.onValue(x as T, y) }
-        })
-
+): Either<R, DependentExp<*, R>> = first.withValue(env) { a ->
+    second.withValue(env) { b ->
+        onValue(a, b)
     }
+}
 
 @KParcelize
 open class Token(open val match: MatchPos) : KParcelable {
@@ -181,8 +176,10 @@ typealias ExParser = Parser<Exp<Value>>
 @Suppress("UNCHECKED_CAST")
 inline fun pAtom(): ExParser = {
     // Can't be directly assigned, or else the pExp reference -|
-    //                                v___v--------------------| would be null
-    asum(sFunctionCall,*litOrder, middle(_char('('), pExp, _char(')')))() as ParserResult<Exp<Value>>
+    //                                               v___v-----| would be null
+    asum(
+        sFunctionCall, *litOrder, middle(_char('('), pExp, _char(')'))
+    )() as ParserResult<Exp<Value>>
 }
 
 val pExp: Parser<Exp<Value>> = builtInOperatorTable.parser(pAtom())
