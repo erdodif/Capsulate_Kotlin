@@ -1,12 +1,16 @@
 package com.erdodif.capsulate.lang.evaluation.context
 
+import com.erdodif.capsulate.RawValue
 import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.evaluation.Return
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
+import com.erdodif.capsulate.lang.program.grammar.expression.Exp
+import com.erdodif.capsulate.lang.program.grammar.expression.Holder
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
+import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Add
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryCalculation
@@ -67,7 +71,34 @@ class FunctionTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `niladic function in expression`() {
+    fun `niladic function in simple expression`() {
+        val function =
+            Function<VNum>("x", listOf(), listOf(Return(IntLit(2, pos), match = pos)))
+        val underTest = FunctionCall(function, listOf(), pos)
+        var context =
+            EvaluationContext(
+                Env(
+                    mapOf("x" to function.body.toTypedArray()),
+                    mapOf(),
+                    mutableListOf()
+                ),
+                Assign(
+                    "a",
+                    BinaryCalculation<VNum, VNum>(underTest, IntLit(3, pos) as Exp<VNum>, Add),
+                    pos
+                )
+            )
+        context.step()
+        assertNotNull(context.functionOngoing)
+        context.step()
+        context.step()
+        assertNull(context.functionOngoing)
+        assertEquals(5, (context.env.parameters[0].value as VNum).value)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `niladic function in expression with another function`() {
         val function =
             Function<VNum>("x", listOf(), listOf(Return(IntLit(2, pos), match = pos)))
         val underTest = FunctionCall(function, listOf(), pos)
@@ -86,4 +117,5 @@ class FunctionTest {
         assertNull(context.functionOngoing)
         assertEquals(4, (context.env.parameters[0].value as VNum).value)
     }
+
 }
