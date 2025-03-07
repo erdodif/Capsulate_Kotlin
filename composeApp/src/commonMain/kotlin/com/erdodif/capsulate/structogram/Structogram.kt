@@ -24,15 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Statement
-import com.erdodif.capsulate.lang.program.grammar.expression.Value
-import com.erdodif.capsulate.lang.program.grammar.function.Function
-import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
@@ -44,13 +40,11 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.structogram.composables.HorizontalBorder
 import com.erdodif.capsulate.structogram.composables.StackWithSeparator
 import com.erdodif.capsulate.structogram.composables.Theme
-import com.erdodif.capsulate.structogram.composables.VerticalBorder
 import com.erdodif.capsulate.structogram.statements.ComposableStatement
 import com.erdodif.capsulate.utility.PreviewTheme
 import kotlinx.coroutines.runBlocking
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 import kotlinx.coroutines.yield
-import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -59,7 +53,6 @@ internal val LocalStructogramDropHandler: ProvidableCompositionLocal<(Pair<Compo
 
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
-@Serializable
 class Structogram private constructor(
     var statements: Array<ComposableStatement<*>>,
     val name: String? = null,

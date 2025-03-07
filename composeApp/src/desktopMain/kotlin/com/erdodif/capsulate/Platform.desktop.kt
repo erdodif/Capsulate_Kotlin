@@ -22,6 +22,7 @@ actual fun resolveColors(): ColorScheme = dynamicColorScheme(Color(106,56,193), 
 actual annotation class KIgnoredOnParcel actual constructor()
 actual interface KParcelable
 actual interface KParceler<T>
+@Retention(value = AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 actual annotation class KTypeParceler<T, R : KParceler<in T>>
 actual class FileParceler : KParceler<IPlatformFile?>

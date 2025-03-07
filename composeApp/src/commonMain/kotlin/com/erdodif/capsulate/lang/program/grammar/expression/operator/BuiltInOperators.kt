@@ -10,12 +10,10 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.or
 import com.erdodif.capsulate.lang.util._char
-import kotlinx.serialization.Serializable
 
 // TODO - CAST ON ASSIGNMENT SIDE
 
 @KParcelize
-@Serializable
 object Add : BinaryOperator<VNum, VNum>(
     14,
     "+",
@@ -31,7 +29,6 @@ object Add : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-@Serializable
 object Sub : BinaryOperator<VNum, VNum>(
     12,
     "-",
@@ -41,7 +38,6 @@ object Sub : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-@Serializable
 object Mul : BinaryOperator<VNum, VNum>(
     18,
     "*",
@@ -57,7 +53,6 @@ object Mul : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-@Serializable
 object Div : BinaryOperator<VNum, VNum>(
     16,
     "/",
@@ -76,7 +71,6 @@ object Div : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-@Serializable
 object Equal : BinaryOperator<Value, Value>(
     4,
     "=",
@@ -92,7 +86,6 @@ object Equal : BinaryOperator<Value, Value>(
 )
 
 @KParcelize
-@Serializable
 object And : BinaryOperator<VBool, VBool>(
     6,
     "&",
@@ -102,7 +95,6 @@ object And : BinaryOperator<VBool, VBool>(
 )
 
 @KParcelize
-@Serializable
 object Or : BinaryOperator<VBool, VBool>(
     5,
     "|",
@@ -112,7 +104,6 @@ object Or : BinaryOperator<VBool, VBool>(
 )
 
 @KParcelize
-@Serializable
 object Sign : UnaryOperator<VNum, VWhole>(
     20,
     "-",
@@ -122,7 +113,6 @@ object Sign : UnaryOperator<VNum, VWhole>(
 )
 
 @KParcelize
-@Serializable
 object Not : UnaryOperator<VBool, VBool>(
     20,
     "!",
@@ -132,7 +122,6 @@ object Not : UnaryOperator<VBool, VBool>(
 )
 
 @KParcelize
-@Serializable
 object Factorial : UnaryOperator<VNum, VNum>(
     20,
     "!",

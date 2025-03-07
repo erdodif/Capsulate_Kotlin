@@ -7,28 +7,14 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
+import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 data class MatchPos(val start: Int, val end: Int) : KParcelable {
     companion object Constants {
         val ZERO = MatchPos(0, 0)
     }
-}
-
-sealed interface Either<out T, out R>
-
-typealias Value<T> = Left<T>
-typealias Error<R> = Right<R>
-
-data class Left<out T>(val value: T) : Either<T, Nothing>
-data class Right<out R>(val value: R) : Either<Nothing, R>
-
-inline operator fun <T, R, S> Either<T, R>.get(
-    crossinline left: (T) -> S,
-    crossinline right: (R) -> S
-): S = when (this) {
-    is Left<T> -> left(this.value)
-    is Right<R> -> right(this.value)
 }
 
 open class ParserState(

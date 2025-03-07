@@ -51,12 +51,14 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
+@Serializable
 @OptIn(ExperimentalUuidApi::class)
-abstract class ComposableStatement<T : GrammarStatement>(open val statement: T) : KParcelable {
+sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : KParcelable {
     open fun toString(state: ParserState) = state[statement.match]
 
     /**

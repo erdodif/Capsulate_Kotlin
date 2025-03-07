@@ -18,9 +18,9 @@ import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.statementOrBlock
 import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.evaluation.Return
-import com.erdodif.capsulate.lang.program.grammar.expression.DependentExp
-import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
+import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
+import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.div
@@ -33,7 +33,7 @@ import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 import kotlin.uuid.ExperimentalUuidApi
-
+import kotlin.uuid.Uuid
 
 @KParcelize
 data class Function<T>(
@@ -64,16 +64,17 @@ class FunctionCall<T : Value>(
     val values: List<Exp<Value>>,
     val match: MatchPos
 ) : Exp<T> {
-    override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
-        Right(DependentExp(this) { Left(it) })
+    @Suppress("UNCHECKED_CAST")
+    override fun evaluate(context: Env): Right<PendingExpression<Value, T>> =
+        Right(PendingExpression(this as FunctionCall<Value>) { Left(it as T) })
 
     override fun toString(state: ParserState): String =
-        "${function.name}("+buildString {
+        "${function.name}(" + buildString {
             values.forEach {
                 append(it.toString(state))
                 append(", ")
             }
-        }.dropLast(2) +")"
+        }.dropLast(2) + ")"
 }
 
 val sFunction: Parser<Function<Value>> = (delimit(
@@ -86,6 +87,20 @@ val sFunction: Parser<Function<Value>> = (delimit(
     val function = Function<Value>(name, params ?: emptyList(), body)
     functions.add(function)
     function
+}
+
+
+@OptIn(ExperimentalUuidApi::class)
+@KParcelize
+data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
+    val value: Exp<T>,
+    override val id: Uuid = Uuid.random(),
+    override val match: MatchPos
+) : Statement(id, match) {
+    @OptIn(ExperimentalUuidApi::class)
+    override fun evaluate(env: Env): EvaluationResult = value.join(env) { returnValue: T ->
+        ReturnEvaluation(returnValue)
+    }
 }
 
 val sReturn: Parser<Statement> = right(_keyword("return"), pExp) * { value, pos ->

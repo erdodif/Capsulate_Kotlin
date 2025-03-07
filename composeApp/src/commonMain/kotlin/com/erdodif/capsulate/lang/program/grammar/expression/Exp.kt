@@ -35,94 +35,70 @@ import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @KParcelize
-@Serializable
-open class DependentExp<R : Value, T : Value>(
+open class PendingExpression<R : Value, T : Value>(
     open val call: FunctionCall<R>,
-    open val onValue: @Serializable Env.(R) -> Either<T, DependentExp<*, T>>
+    open val onValue: @Serializable Env.(R) -> Either<T, PendingExpression<Value, T>>
 ) : KParcelable {
 
-
-    operator fun <S : Value> plus(other: DependentExp<T, S>): DependentExp<R, S> =
-        DependentExp(call) _env@{
+    fun <S : Value> map(transform: Env.(T) -> S): PendingExpression<R, S> =
+        PendingExpression(call) {
             when (val result = onValue(it)) {
-                is Left -> other.onValue(this, result.value)
-                is Right -> Right(result.value.plus(other))
+                is Left -> Left(transform(this, result.value))
+                is Right -> Right(result.value.map(transform))
             }
         }
 
-    fun <S : Value> addTransform(transform: Env.(T) -> Either<S, DependentExp<*, S>>): DependentExp<R, S> =
-        DependentExp(call) _env@{
+    fun <S : Value> addTransform(transform: Env.(T) -> Either<S, PendingExpression<Value, S>>): PendingExpression<R, S> =
+        PendingExpression(call) _env@{
             when (val result = onValue(it)) {
                 is Left -> transform(this, result.value)
                 is Right -> Right(result.value.addTransform(transform))
             }
         }
 
-    operator fun <S : Value> plus(transform: Env.(T) -> S): DependentExp<R, S> =
-        DependentExp(call) {
-            when (val result = onValue(it)) {
-                is Left -> Left(transform(this, result.value))
-                is Right -> Right(result.value.plus(transform))
-            }
-        }
 }
 
 interface Exp<T : Value> : KParcelable {
 
-    fun evaluate(context: Env): Either<T, DependentExp<*, T>>
+    fun evaluate(context: Env): Either<T, PendingExpression<Value, T>>
     fun toString(state: ParserState): String
 }
 
 fun <R : Value, T : Value> Exp<T>.withRawValue(
     env: Env,
     onValue: Env.(T) -> R
-): Either<R, DependentExp<*, R>> =
+): Either<R, PendingExpression<Value, R>> =
     when (val result = evaluate(env)) {
-        is Right -> Right((result.value) + onValue)
+        is Right -> Right(result.value.map(onValue))
         is Left -> Left(onValue(env, result.value))
     }
 
 fun <R : Value, T : Value> Exp<T>.withValue(
     env: Env,
-    onValue: Env.(T) -> Either<R, DependentExp<*, R>>
-): Either<R, DependentExp<*, R>> =
+    onValue: Env.(T) -> Either<R, PendingExpression<Value, R>>
+): Either<R, PendingExpression<Value, R>> =
     when (val result = evaluate(env)) {
         is Left -> onValue(env, result.value)
         is Right -> Right(result.value.addTransform(onValue))
     }
 
-fun <T : Value> List<Exp<*>>.withValues(
-    env: Env,
-    onValue: Env.(List<Value>) -> Either<T, DependentExp<*, T>>
-): Either<T, DependentExp<*, T>> =
-    if (isEmpty()) {
-        onValue(env, emptyList())
-    } else {
-        when (val result = this[0].evaluate(env)) {
-            is Left -> with(this.drop(1)) {
-                withValues(env) { onValue(env, buildList { add(result.value); addAll(this) }) }
-            }
-
-            is Right -> Right(DependentExp(result.value.call) { res ->
-                withValues(env) { onValue(env, buildList { add(res); addAll(this) }) }
-            })
-        }
-    }
-
 
 fun <R : Value, T : Value, S : Value> Pair<Exp<T>, Exp<S>>.withValue(
     env: Env,
-    onValue: Env.(T, S) -> Either<R, DependentExp<*, R>>
-): Either<R, DependentExp<*, R>> = first.withValue(env) { a ->
+    onValue: Env.(T, S) -> Either<R, PendingExpression<Value, R>>
+): Either<R, PendingExpression<Value, R>> = first.withValue(env) { a ->
     second.withValue(env) { b ->
         onValue(a, b)
     }
 }
 
 @KParcelize
+@Serializable
+@SerialName("token")
 open class Token(open val match: MatchPos) : KParcelable {
     inline fun matchedToken(parserState: ParserState): String =
         parserState.input[match.start, match.end]

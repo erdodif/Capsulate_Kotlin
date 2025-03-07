@@ -60,7 +60,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         var step by remember { mutableStateOf(0) }
         var debug by remember {
             mutableStateOf(
-                EvaluationContext(Env.empty, EvalSequence(screen.structogram.program))
+                EvaluationContext(Env.EMPTY, EvalSequence(screen.structogram.program))
             )
         }
         var error: String? by remember { mutableStateOf(null) }
@@ -94,7 +94,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
 
                 is Event.Reset -> {
                     debug = EvaluationContext(
-                        Env.empty,
+                        Env.EMPTY,
                         EvalSequence(screen.structogram.program),
                         debug.seed
                     )
@@ -103,7 +103,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                 }
 
                 is Event.ResetRenew -> {
-                    debug = EvaluationContext(Env.empty, EvalSequence(screen.structogram.program))
+                    debug = EvaluationContext(Env.EMPTY, EvalSequence(screen.structogram.program))
                     step = 0
                     error = null
                 }

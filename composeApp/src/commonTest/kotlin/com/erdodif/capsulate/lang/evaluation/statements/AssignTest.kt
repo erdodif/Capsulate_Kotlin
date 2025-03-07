@@ -1,14 +1,13 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
-import com.erdodif.capsulate.lang.evaluation.MockEnvironments.Companion.emptyEnv
 import com.erdodif.capsulate.lang.evaluation.MockEnvironments.Companion.intEnv
+import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.NatLit
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
-import com.erdodif.capsulate.lang.program.grammar.expression.VNum
 import com.erdodif.capsulate.lang.program.grammar.expression.VStr
 import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
@@ -22,7 +21,7 @@ class AssignTest {
 
     @Test
     fun `assign in empty environment`() {
-        val env = emptyEnv()
+        val env = Env.EMPTY
         val result1 = Assign("a", IntLit(0, pos), pos).evaluate(env)
         assertIs<Finished>(result1)
         val result2 = Assign("b", NatLit(0U, pos), pos).evaluate(env)

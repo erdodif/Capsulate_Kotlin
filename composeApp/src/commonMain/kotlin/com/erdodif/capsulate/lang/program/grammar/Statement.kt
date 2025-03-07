@@ -9,7 +9,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VBool
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.evaluation.AbortEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.AtomicEvaluation
-import com.erdodif.capsulate.lang.program.evaluation.DependentEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.PendingFunctionEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
@@ -19,12 +19,14 @@ import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Right
+import kotlinx.serialization.Serializable
 import kotlin.collections.plus
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@Serializable
 abstract class Statement(open val id: Uuid = Uuid.random(), open val match: MatchPos) :
-    KParcelable {
+    KParcelable{
     abstract fun evaluate(env: Env): EvaluationResult
     override fun equals(other: Any?): Boolean = other is Statement && other.id == id
     override fun hashCode(): Int = id.hashCode()
@@ -35,7 +37,7 @@ abstract class Statement(open val id: Uuid = Uuid.random(), open val match: Matc
     ): EvaluationResult = try {
         when (val result = evaluate(context)) {
             is Left -> onValue(context, result.value)
-            is Right -> DependentEvaluation(result.value, onValue)
+            is Right -> PendingFunctionEvaluation(result.value, onValue)
         }
     } catch (e: Exception) {
         AbortEvaluation(e.message ?: "Error while evaluating expression: $e")
@@ -231,7 +233,7 @@ data class Expression(
 
     override fun evaluate(env: Env): EvaluationResult {
         return try {
-            expression.join(env){ Finished }
+            expression.join(env) { Finished }
         } catch (e: Exception) {
             AbortEvaluation(e.message ?: "Error while evaluating Expression!")
         }

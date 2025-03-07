@@ -1,6 +1,6 @@
 package com.erdodif.capsulate.lang.evaluation.expressions
 
-import com.erdodif.capsulate.lang.evaluation.MockEnvironments.Companion.emptyEnv
+import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.NatLit
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
@@ -18,7 +18,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate NatLit`() {
-        val result = NatLit(0U, pos).evaluate(emptyEnv())
+        val result = NatLit(0U, pos).evaluate(Env.EMPTY)
         assertIs<Left<*>>(result)
         assertIs<VNat>(result.value)
         assertEquals(0, result.value.value)
@@ -26,7 +26,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate IntLit`() {
-        val result = IntLit(0, pos).evaluate(emptyEnv())
+        val result = IntLit(0, pos).evaluate(Env.EMPTY)
         assertIs<Left<*>>(result)
         assertIs<VWhole>(result.value)
         assertEquals(0, result.value.value)
@@ -34,7 +34,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate StrLit`() {
-        val result = StrLit("text", pos).evaluate(emptyEnv())
+        val result = StrLit("text", pos).evaluate(Env.EMPTY)
         assertIs<Left<*>>(result)
         assertIs<VStr>(result.value)
         assertEquals("text", result.value.value)

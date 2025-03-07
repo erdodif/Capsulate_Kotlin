@@ -11,7 +11,7 @@ import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.rightAssoc
 import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.grammar.expression.DependentExp
+import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.withRawValue
 import com.erdodif.capsulate.lang.program.grammar.expression.withValue
 import com.erdodif.capsulate.lang.util.Either
@@ -33,7 +33,6 @@ enum class Fixation {
 }
 
 @KParcelize
-@Serializable
 data class UnaryCalculation<T : Value, R : Value>(
     val param: Exp<R>,
     val label: String = "∘",
@@ -47,11 +46,8 @@ data class UnaryCalculation<T : Value, R : Value>(
         operator.operation
     )
 
-    @Suppress("UNCHECKED_CAST")
-    override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
-        param.withRawValue(context) {
-            context.operation(it)
-        }
+    override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
+        param.withRawValue(context) { a: R -> context.operation(a) }
 
     override fun toString(state: ParserState): String =
         when (fixation) {
@@ -61,28 +57,17 @@ data class UnaryCalculation<T : Value, R : Value>(
 }
 
 @KParcelize
-@Serializable
 data class BinaryCalculation<T : Value, R : Value>(
     val first: Exp<R>,
     val second: Exp<R>,
     val label: String = "∘",
     val operation: @Serializable Env.(R, R) -> T
 ) : Exp<T>, KParcelable {
-    constructor(first: Exp<R>, second: Exp<R>, operator: BinaryOperator<T, R>) : this(
-        first,
-        second,
-        operator.label,
-        operator.operation
-    )
+    constructor(first: Exp<R>, second: Exp<R>, operator: BinaryOperator<T, R>) :
+            this(first, second, operator.label, operator.operation)
 
-    override fun evaluate(context: Env): Either<T, DependentExp<*, T>> =
-        /*first.withRawValue(context){
-            println(it.toString())
-            it as T
-        }*/
-        (first to second).withValue(context) { a, b ->
-            Left(operation(a, b))
-        }
+    override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
+        (first to second).withValue(context) { a: R, b: R -> Left(operation(a, b)) }
 
     override fun toString(state: ParserState): String =
         "$label(${first.toString(state)} $label ${second.toString(state)})"
@@ -90,7 +75,6 @@ data class BinaryCalculation<T : Value, R : Value>(
 
 
 @KParcelize
-@Serializable
 open class UnaryOperator<T : Value, R : Value>(
     override val bindingStrength: Int,
     override val label: String = "~",
@@ -101,19 +85,19 @@ open class UnaryOperator<T : Value, R : Value>(
 
     @Suppress("UNCHECKED_CAST")
     override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
-        orEither(when (fixation) {
-            Fixation.PREFIX -> right(operatorParser, strongerParser) / {
-                UnaryCalculation<T, R>(it as Exp<R>, this@UnaryOperator)
-            }
+        orEither(
+            when (fixation) {
+                Fixation.PREFIX -> right(operatorParser, strongerParser) / {
+                    UnaryCalculation<T, R>(it as Exp<R>, this@UnaryOperator)
+                }
 
-            Fixation.POSTFIX -> left(strongerParser, operatorParser) / {
-                UnaryCalculation<T, R>(it as Exp<R>, this@UnaryOperator)
-            }
-        }, strongerParser)
+                Fixation.POSTFIX -> left(strongerParser, operatorParser) / {
+                    UnaryCalculation<T, R>(it as Exp<R>, this@UnaryOperator)
+                }
+            }, strongerParser)
 }
 
 @KParcelize
-@Serializable
 open class BinaryOperator<T : Value, R : Value>(
     override val bindingStrength: Int,
     override val label: String,
@@ -122,7 +106,7 @@ open class BinaryOperator<T : Value, R : Value>(
     val operation: @Serializable Env.(R, R) -> T
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
-    //@Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
         when (association) {
             Association.LEFT -> leftAssoc(

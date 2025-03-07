@@ -7,7 +7,6 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.program.grammar.expression.VStr
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
-import com.erdodif.capsulate.lang.util.MatchPos
 
 class MockEnvironments {
     companion object {
@@ -17,7 +16,6 @@ class MockEnvironments {
                 throw IllegalStateException("Equals called the never parameter!")
         }
 
-        fun emptyEnv(): Env = Env.empty
         fun neverEnv(): Env = Env(
             mapOf(), mapOf(), mutableListOf(
                 Parameter("_", Type.NEVER, NeverValue)

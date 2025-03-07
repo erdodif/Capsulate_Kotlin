@@ -1,8 +1,8 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
-import com.erdodif.capsulate.lang.evaluation.MockEnvironments.Companion.emptyEnv
 import com.erdodif.capsulate.lang.evaluation.MockEnvironments.Companion.intEnv
 import com.erdodif.capsulate.lang.program.evaluation.AbortEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -14,7 +14,7 @@ class AbortTest {
 
     @Test
     fun `abort on empty environment`() {
-        val env = emptyEnv()
+        val env = Env.EMPTY
         val result = Abort(MatchPos.ZERO).evaluate(env)
         assertIs<AbortEvaluation>(result)
         assertEquals(0, env.parameters.size)

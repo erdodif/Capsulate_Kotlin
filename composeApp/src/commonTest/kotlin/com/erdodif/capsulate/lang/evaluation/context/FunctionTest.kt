@@ -1,9 +1,9 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.erdodif.capsulate.lang.evaluation.context
 
 import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
-import com.erdodif.capsulate.lang.program.evaluation.Parameter
-import com.erdodif.capsulate.lang.program.evaluation.Return
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
@@ -16,6 +16,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryCalc
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Sub
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.FunctionCall
+import com.erdodif.capsulate.lang.program.grammar.function.Return
 import com.erdodif.capsulate.lang.util.MatchPos
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -99,23 +100,33 @@ class FunctionTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `niladic function in expression with another function`() {
-        val function =
+        val constant1 =
             Function<VNum>("x", listOf(), listOf(Return(IntLit(2, pos), match = pos)))
-        val underTest = FunctionCall(function, listOf(), pos)
+        val constant2 =
+            Function<VNum>("y", listOf(), listOf(Return(IntLit(3, pos), match = pos)))
+        val underTest1 = FunctionCall(constant1, listOf(), pos)
+        val underTest2 = FunctionCall(constant2, listOf(), pos)
         var context =
             EvaluationContext(
                 Env(
-                    mapOf("x" to function.body.toTypedArray()),
+                    mapOf(
+                        "x" to constant1.body.toTypedArray(),
+                        "y" to constant2.body.toTypedArray()
+                    ),
                     mapOf(),
                     mutableListOf()
-                ), Assign("a", BinaryCalculation<VNum, VNum>(underTest, underTest, Add), pos)
+                ), Assign("a", BinaryCalculation<VNum, VNum>(underTest1, underTest2, Add), pos)
             )
         context.step()
         assertNotNull(context.functionOngoing)
         context.step()
         context.step()
+        context.step()
+        context.step()
+        context.step()
         assertNull(context.functionOngoing)
-        assertEquals(4, (context.env.parameters[0].value as VNum).value)
+        assertEquals(1, context.env.parameters.size)
+        assertEquals(5, (context.env.parameters[0].value as VNum).value)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -124,18 +135,26 @@ class FunctionTest {
         val constant =
             Function<VNum>("x", listOf(), listOf(Return(IntLit(2, pos), match = pos)))
         val function =
-            Function<VNum>("x", listOf(Variable("a", pos)), listOf(Return(
-                BinaryCalculation<VNum, VNum>(IntLit(3, pos) as Exp<VNum>, Variable("a", pos) as Exp<VNum>, Add)
-
-                , match = pos)))
-        val underTest = FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
+            Function<VNum>(
+                "f", listOf(Variable("a", pos)), listOf(
+                    Return(
+                        BinaryCalculation<VNum, VNum>(
+                            IntLit(3, pos) as Exp<VNum>,
+                            Variable("a", pos) as Exp<VNum>,
+                            Add
+                        ), match = pos
+                    )
+                )
+            )
+        val underTest =
+            FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
             EvaluationContext(
                 Env(
-                    mapOf("x" to function.body.toTypedArray()),
+                    mapOf("f" to function.body.toTypedArray(), "x" to constant.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
-                ), Assign("a", BinaryCalculation<VNum, VNum>(underTest, underTest, Add), pos)
+                ), Assign("a", underTest, pos)
             )
         context.step()
         assertNotNull(context.functionOngoing)
@@ -144,26 +163,36 @@ class FunctionTest {
         context.step()
         context.step()
         assertNull(context.functionOngoing)
+        assertEquals(1, context.env.parameters.size)
         assertEquals(5, (context.env.parameters[0].value as VNum).value)
     }
+
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `monodic function inside another function sub`() {
         val constant =
-            Function<VNum>("x", listOf(), listOf(Return(IntLit(2, pos), match = pos)))
+            Function<VNum>("x", listOf(), listOf(Return(IntLit(-2, pos), match = pos)))
         val function =
-            Function<VNum>("x", listOf(Variable("a", pos)), listOf(Return(
-                BinaryCalculation<VNum, VNum>(IntLit(3, pos) as Exp<VNum>, Variable("a", pos) as Exp<VNum>, Sub)
-
-                , match = pos)))
-        val underTest = FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
+            Function<VNum>(
+                "f", listOf(Variable("a", pos)), listOf(
+                    Return(
+                        BinaryCalculation<VNum, VNum>(
+                            IntLit(3, pos) as Exp<VNum>,
+                            Variable("a", pos) as Exp<VNum>,
+                            Sub
+                        ), match = pos
+                    )
+                )
+            )
+        val underTest =
+            FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
             EvaluationContext(
                 Env(
-                    mapOf("x" to function.body.toTypedArray()),
+                    mapOf("f" to function.body.toTypedArray(), "x" to constant.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
-                ), Assign("a", BinaryCalculation<VNum, VNum>(underTest, underTest, Sub), pos)
+                ), Assign("a", underTest, pos)
             )
         context.step()
         assertNotNull(context.functionOngoing)
@@ -171,9 +200,12 @@ class FunctionTest {
         context.step()
         context.step()
         context.step()
+        context.step()
         assertNull(context.functionOngoing)
+        assertEquals(1, context.env.parameters.size)
         assertEquals(5, (context.env.parameters[0].value as VNum).value)
     }
+
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `test whether the operator returns the first operand call`() {
@@ -186,17 +218,23 @@ class FunctionTest {
         val context =
             EvaluationContext(
                 Env(
-                    mapOf("x" to constant2.body.toTypedArray(),"y" to constant3.body.toTypedArray()),
+                    mapOf(
+                        "x" to constant2.body.toTypedArray(),
+                        "y" to constant3.body.toTypedArray()
+                    ),
                     mapOf(),
                     mutableListOf()
                 ), Assign("a", BinaryCalculation(underTest2, underTest3, Add), pos)
             )
         context.step()
         assertNotNull(context.functionOngoing)
-        for(i in 1..1000){
-            context.step()
-        }
+        context.step()
+        context.step()
+        context.step()
+        context.step()
+        context.step()
         assertNull(context.functionOngoing)
+        assertEquals(1, context.env.parameters.size)
         assertEquals(5, (context.env.parameters[0].value as VNum).value)
     }
 

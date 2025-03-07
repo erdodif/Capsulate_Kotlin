@@ -6,7 +6,6 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Statement
-import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import kotlin.random.Random
 
@@ -19,21 +18,20 @@ data class EvaluationContext(
     @KIgnoredOnParcel
     val random = Random(seed)
     val entries: ArrayList<Statement> = arrayListOf()
-    var functionOngoing: DependentEvaluation<*>? = null
+    var functionOngoing: PendingFunctionEvaluation<*>? = null
         private set
     private var atomicOngoing: EvaluationContext? = null
     val head: Statement?
         get() = functionOngoing?.head ?: atomicOngoing?.head ?: currentStatement
 
     var error: String? = null
-    var returnValue: Exp<Value>? = null
+    var returnValue: Value? = null
 
     fun step(): EvaluationContext {
         val function = functionOngoing
-        val atomic = atomicOngoing
         if (function != null) {
             when (val result = function.evaluate(env)) {
-                is DependentEvaluation<*> -> this.functionOngoing = result
+                is PendingFunctionEvaluation<*> -> this.functionOngoing = result
                 else -> {
                     this.functionOngoing = null
                     handleResult(result)
@@ -41,6 +39,7 @@ data class EvaluationContext(
             }
             return this.copy()
         }
+        val atomic = atomicOngoing
         if (atomic?.head == null) {
             this.atomicOngoing = null
         }
@@ -73,7 +72,7 @@ data class EvaluationContext(
     private fun handleResult(stack: EvaluationResult) {
         when (stack) {
             is Finished -> {}
-            is Return<*> -> returnValue = stack.value as Exp<Value>
+            is ReturnEvaluation<*> -> returnValue = stack.value
             is AbortEvaluation -> {
                 error = stack.reason
                 entries.clear()
@@ -87,7 +86,7 @@ data class EvaluationContext(
 
             is SingleStatement -> entries.add(stack.next)
             is ParallelEvaluation -> entries.addAll(stack.entries)
-            is DependentEvaluation<*> -> functionOngoing = stack
+            is PendingFunctionEvaluation<*> -> functionOngoing = stack
         }
         currentStatement =
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))

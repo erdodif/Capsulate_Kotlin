@@ -82,9 +82,10 @@ kotlin {
             implementation(libs.kotlin.test.junit)
         }
         iosMain.dependencies {
-// implementation(libs.kotlin.test.native)
         }
         commonTest.dependencies {
+            implementation(kotlin("test-common"))
+            implementation(kotlin("test-annotations-common"))
             implementation(kotlin("reflect"))
         }
         androidTarget {

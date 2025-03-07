@@ -81,7 +81,7 @@ data class Env(
     }
 
     companion object {
-        val empty: Env
+        val EMPTY: Env
             get() = Env(mapOf(), mapOf(), mutableListOf())
     }
 
@@ -89,5 +89,3 @@ data class Env(
         return values.toString()
     }
 }
-
-class ErrorContext
