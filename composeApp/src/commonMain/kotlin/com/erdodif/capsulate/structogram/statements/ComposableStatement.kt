@@ -30,6 +30,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelable
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragState
 import com.erdodif.capsulate.lang.program.grammar.Atomic
@@ -56,6 +57,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 
+@KParcelize
 @Serializable
 @OptIn(ExperimentalUuidApi::class)
 sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : KParcelable {

@@ -51,8 +51,8 @@ import kotlin.uuid.Uuid
 internal val LocalStructogramDropHandler: ProvidableCompositionLocal<(Pair<ComposableStatement<*>, Int>) -> Unit> =
     compositionLocalOf { {} }
 
-@OptIn(ExperimentalUuidApi::class)
 @KParcelize
+@OptIn(ExperimentalUuidApi::class)
 class Structogram private constructor(
     var statements: Array<ComposableStatement<*>>,
     val name: String? = null,
@@ -61,8 +61,6 @@ class Structogram private constructor(
 ) : KParcelable {
     val program: List<Statement>
         get() = statements.map { it.statement }
-
-    private constructor(statements: List<ComposableStatement<*>>) : this(statements.toTypedArray())
 
     @Composable
     fun Content(

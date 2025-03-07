@@ -35,24 +35,16 @@ enum class Fixation {
 @KParcelize
 data class UnaryCalculation<T : Value, R : Value>(
     val param: Exp<R>,
-    val label: String = "∘",
-    val fixation: Fixation,
-    val operation: @Serializable Env.(R) -> T
+    val operator: UnaryOperator<T, R>
 ) : Exp<T> {
-    constructor(first: Exp<R>, operator: UnaryOperator<T, R>) : this(
-        first,
-        operator.label,
-        operator.fixation,
-        operator.operation
-    )
 
     override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
-        param.withRawValue(context) { a: R -> context.operation(a) }
+        param.withRawValue(context) { a: R -> operator.operation(context, a) }
 
     override fun toString(state: ParserState): String =
-        when (fixation) {
-            Fixation.PREFIX -> "$label${param.toString(state)}"
-            Fixation.POSTFIX -> "${param.toString(state)}$label"
+        when (operator.fixation) {
+            Fixation.PREFIX -> "${operator.label}${param.toString(state)}"
+            Fixation.POSTFIX -> "${param.toString(state)}${operator.label}"
         }
 }
 
@@ -60,17 +52,18 @@ data class UnaryCalculation<T : Value, R : Value>(
 data class BinaryCalculation<T : Value, R : Value>(
     val first: Exp<R>,
     val second: Exp<R>,
-    val label: String = "∘",
-    val operation: @Serializable Env.(R, R) -> T
+    val operator: BinaryOperator<T, R>
 ) : Exp<T>, KParcelable {
-    constructor(first: Exp<R>, second: Exp<R>, operator: BinaryOperator<T, R>) :
-            this(first, second, operator.label, operator.operation)
 
     override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
-        (first to second).withValue(context) { a: R, b: R -> Left(operation(a, b)) }
+        (first to second).withValue(context) { a: R, b: R ->
+            Left(
+                operator.operation(context, a, b)
+            )
+        }
 
     override fun toString(state: ParserState): String =
-        "$label(${first.toString(state)} $label ${second.toString(state)})"
+        "${operator.label}(${first.toString(state)} ${operator.label} ${second.toString(state)})"
 }
 
 
