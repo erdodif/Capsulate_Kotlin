@@ -14,6 +14,22 @@ inline operator fun <T, R, S> Either<T, R>.get(
 }
 
 /**
+ * Returns the "value" ([Left]) if possible
+ *
+ * This function does not make sense when [T] is nullable
+ */
+val <T,R> Either<T,R>.valueOrNull: T?
+    get() = if(this is Left) this.value else null
+
+/**
+ * Returns the "error" ([Right]) if possible
+ *
+ * This function does not make sense when [R] is nullable
+ */
+val <T,R> Either<T,R>.errorOrNull: R?
+    get() = if(this is Right) this.value else null
+
+/**
  * Calls either [onLeft] or [onRight] to produce the result `S`
  */
 inline fun <T, R, S> Either<T, R>.fold(

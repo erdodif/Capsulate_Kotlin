@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.util.valueOrNull
 import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
@@ -60,14 +61,16 @@ class ProjectPresenter(
     @Composable
     override fun present(): ProjectScreen.State {
         // the backstack and the state must point to the same object or else the navigation breaks
-        val init = remember { screen.project.openFiles.firstOrNull() ?: OpenFile() }
         var path by rememberRetained { mutableStateOf(screen.project.directory) }
-        var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) { mutableStateOf(init) }
+        var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) {
+            mutableStateOf(screen.project.openFiles.firstOrNull() ?: screen.project.openEmptyFile())
+        }
         val channel: ChannelRepository.ChannelEntry<OpenFile> =
-            remember(opened.file) { ChannelRepository.getNewChannel() }
-        val openFiles =
-            rememberSaveable(saver = stateListSaver<OpenFile>()) { mutableStateListOf<OpenFile>() }
-        val backStack = rememberSaveableBackStack(root = EditorScreen(init, channel))
+            remember(opened) { ChannelRepository.getNewChannel() }
+        val openFiles = rememberSaveable(saver = stateListSaver<OpenFile>()) {
+            mutableStateListOf<OpenFile>(*screen.project.openFiles.toTypedArray())
+        }
+        val backStack = rememberSaveableBackStack(root = EditorScreen(opened, channel))
         val editorNavigator = rememberCircuitNavigator(backStack, navigator::pop)
         val project = Project(screen.project.directory, openFiles)
         LaunchedEffect(channel) {

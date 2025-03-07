@@ -263,7 +263,7 @@ fun EditorPagePreview() = PreviewTheme {
             false,
             true,
             false,
-            OpenFile(null),
+            OpenFile(),
             false
         ) {}, Modifier.fillMaxSize()
     )

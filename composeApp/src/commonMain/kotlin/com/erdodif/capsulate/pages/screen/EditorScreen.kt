@@ -19,6 +19,8 @@ import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.fold
+import com.erdodif.capsulate.lang.util.recover
 import com.erdodif.capsulate.pages.screen.EditorScreen.Event
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.structogram.Structogram
@@ -100,12 +102,9 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
             LaunchedEffect(Unit) {
                 if (file.content == null) {
                     inputValue = inputValue.copy(text = file.load() ?: "")
-                    initStructogram(inputValue.text) {
-                        structogram = when (it) {
-                            is Left -> it.value
-                            is Right -> Structogram.fromStatements(
-                                Command(it.value.reason, Skip(MatchPos.ZERO))
-                            )
+                    initStructogram(inputValue.text) { struk ->
+                        structogram = struk.recover {
+                            Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
                         }
                     }
                 } else {
@@ -125,12 +124,9 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                         screen.fileChannel.send(file)
                     }
                     coroutineScope.launch {
-                        initStructogram(inputValue.text) {
-                            structogram = when (it) {
-                                is Left -> it.value
-                                is Right -> Structogram.fromStatements(
-                                    Command(it.value.reason, Skip(MatchPos.ZERO))
-                                )
+                        initStructogram(inputValue.text) { struk ->
+                            structogram = struk.recover {
+                                Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
                             }
                         }
                     }
@@ -154,32 +150,19 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 is Event.OpenUnicodeInput -> input = true
                 is Event.CloseUnicodeInput -> input = false
                 is Event.DroppedStatement -> {
-                    if (event.statement is DropStatement) {
-                        inputValue =
-                            inputValue.copy(
-                                text = pasteText(
-                                    inputValue.text,
-                                    event.statement.string,
-                                    event.position
-                                )
-                            )
-                    } else {
-                        inputValue =
-                            inputValue.copy(
-                                text = cutAndPasteText(
-                                    inputValue.text,
-                                    event.statement.statement.match,
-                                    event.position
-                                )
-                            )
-                    }
+                    inputValue = inputValue.copy(
+                        text = if (event.statement is DropStatement) {
+                            pasteText(inputValue.text, event.statement.string, event.position)
+                        } else cutAndPasteText(
+                            inputValue.text,
+                            event.statement.statement.match,
+                            event.position
+                        )
+                    )
                     coroutineScope.launch {
-                        initStructogram(inputValue.text) {
-                            structogram = when (it) {
-                                is Left -> it.value
-                                is Right -> Structogram.fromStatements(
-                                    Command(it.value.reason, Skip(MatchPos.ZERO))
-                                )
+                        initStructogram(inputValue.text) { struk ->
+                            structogram = struk.recover {
+                                Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
                             }
                         }
                     }

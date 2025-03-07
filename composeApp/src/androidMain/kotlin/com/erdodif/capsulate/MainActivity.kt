@@ -15,6 +15,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.core.view.WindowCompat
+import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.utility.preview.ParserTester
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
@@ -26,7 +28,10 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
+import kotlinx.serialization.json.Json
 import kotlin.system.exitProcess
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class MainActivity : ComponentActivity() {
     private val scope = MainScope()
@@ -76,26 +81,36 @@ fun AppAndroidPreview() {
 
 @Preview
 @Composable
-private fun Tester(){
+private fun Tester() {
     ParserTester()
 }
 
-object xd : Parceler<IPlatformFile>{
-    override fun IPlatformFile.write(
+/**
+ * Needed for Parcelling [OpenFile]
+ */
+@Suppress("UNUSED")
+@OptIn(ExperimentalUuidApi::class)
+object OpenFileParceler : Parceler<OpenFile> {
+    override fun OpenFile.write(
         parcel: Parcel,
         flags: Int
-    ) {
-        parcel.writeString(this.getPath())
+    ) = file[{
+        parcel.writeString(it.getName())
+        parcel.writeString(content)
+    }, {
+        parcel.writeString(Json.encodeToString(it.toByteArray()))
+        parcel.writeString(content)
+    }]
+
+
+    override fun create(parcel: Parcel): OpenFile {
+        val content = parcel.readString()
+        return try {
+            val id = Json.decodeFromString<ByteArray>(content ?: "")
+            OpenFile(Uuid.fromByteArray(id))
+        } catch (_: Exception) {
+            OpenFile(PlatformFile(content ?: ""))
+        }
     }
-
-    override fun create(parcel: Parcel): IPlatformFile {
-        return PlatformFile(parcel.readString()!!)
-    }
-
-}
-
-
-@Parcelize
-class XD(@TypeParceler<IPlatformFile, xd> val d:  IPlatformFile) : Parcelable {
 
 }
