@@ -14,10 +14,14 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Skip
+import com.erdodif.capsulate.lang.program.grammar.expression.Token
+import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.ParserResult
+import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.fold
 import com.erdodif.capsulate.lang.util.recover
@@ -44,6 +48,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlin.time.measureTime
 import com.erdodif.capsulate.utility.ChannelRepository.ChannelEntry
+import kotlinx.coroutines.Job
 
 @KParcelize
 @Serializable
@@ -51,6 +56,7 @@ data class EditorScreen(val file: OpenFile, val fileChannel: ChannelEntry<OpenFi
     @Stable
     data class State(
         val code: TextFieldValue,
+        val tokenized: ParserResult<ArrayList<Token>>,
         val structogram: Structogram?,
         val showCode: Boolean,
         val input: Boolean,
@@ -98,10 +104,14 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var dragStatements by remember { mutableStateOf(false) }
         var input by remember { mutableStateOf(false) }
         var loading by remember { mutableStateOf(true) }
+        var tokenized: ParserResult<ArrayList<Token>>
+                by remember { mutableStateOf(Fail("", ParserState(inputValue.text))) }
+        var tokenJob: Job? by remember { mutableStateOf(null) }
         if (loading) {
             LaunchedEffect(Unit) {
                 if (file.content == null) {
                     inputValue = inputValue.copy(text = file.load() ?: "")
+                    tokenized = tokenizeProgram(inputValue.text)
                     initStructogram(inputValue.text) { struk ->
                         structogram = struk.recover {
                             Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
@@ -113,22 +123,34 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 loading = false
             }
         }
+        LaunchedEffect(file.content) {
+            screen.fileChannel.send(file)
+        }
+        LaunchedEffect(inputValue) {
+            initStructogram(inputValue.text) { struk ->
+                structogram = struk.recover {
+                    Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
+                }
+            }
+        }
         return EditorScreen.State(
-            inputValue, structogram, showCode, input, showStructogram, dragStatements, file, loading
+            inputValue,
+            tokenized,
+            structogram,
+            showCode,
+            input,
+            showStructogram,
+            dragStatements,
+            file,
+            loading
         ) { event ->
             when (event) {
                 is Event.TextInput -> {
                     inputValue = event.code
                     file.content = inputValue.text
-                    coroutineScope.launch {
-                        screen.fileChannel.send(file)
-                    }
-                    coroutineScope.launch {
-                        initStructogram(inputValue.text) { struk ->
-                            structogram = struk.recover {
-                                Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
-                            }
-                        }
+                    val text = inputValue.text
+                    tokenJob = coroutineScope.launch {
+                        tokenized = tokenizeProgram(text)
                     }
                 }
 
@@ -159,12 +181,10 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                             event.position
                         )
                     )
-                    coroutineScope.launch {
-                        initStructogram(inputValue.text) { struk ->
-                            structogram = struk.recover {
-                                Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
-                            }
-                        }
+                    tokenJob?.cancel()
+                    val text = inputValue.text
+                    tokenJob = coroutineScope.launch {
+                        tokenized = tokenizeProgram(text)
                     }
                 }
             }

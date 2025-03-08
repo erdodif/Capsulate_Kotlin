@@ -90,6 +90,11 @@ sealed class ParserResult<out T>(open val state: ParserState) {
             is Pass -> Pass(lambda(state, value, match), state, match)
             is Fail -> this
         }
+
+    fun toEither(): Either<T, String> = when(this){
+        is Pass -> Left(this.value)
+        is Fail -> Right(this.reason)
+    }
 }
 
 data class Pass<T>(val value: T, override val state: ParserState, val match: MatchPos) :

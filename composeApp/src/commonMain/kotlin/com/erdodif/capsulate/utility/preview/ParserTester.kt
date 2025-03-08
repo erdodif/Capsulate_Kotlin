@@ -64,6 +64,7 @@ import com.erdodif.capsulate.lang.program.grammar.sWhen
 import com.erdodif.capsulate.lang.program.grammar.sWhile
 import com.erdodif.capsulate.lang.program.grammar.statement
 import com.erdodif.capsulate.lang.program.grammar.statementOrBlock
+import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.program.grammar.topLevel
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
@@ -152,7 +153,7 @@ fun ParserTester() = PreviewTheme {
     var input by remember { mutableStateOf(TextFieldValue("")) }
     var filter by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().imePadding()) {
-        CodeEditor(input, Modifier.fillMaxWidth().height(100.dp)) { input = it }
+        CodeEditor(input, tokenizeProgram(input.text), Modifier.fillMaxWidth().height(100.dp)) { input = it }
         HorizontalDivider()
         Row(
             Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),

@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragProvider
+import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.pages.screen.EditorScreen
 import com.erdodif.capsulate.presets.presets
@@ -156,33 +157,33 @@ internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
         }
 }
 
-internal fun codeEdit(): Ui<EditorScreen.State> =
-    ui { state, modifier ->
-        if (state.showCode)
-            CodeEditor(
-                state.code,
-                modifier,
-                { state.eventHandler(EditorScreen.Event.OpenUnicodeInput) }
-            ) {
-                state.eventHandler(EditorScreen.Event.TextInput(it))
+internal fun codeEdit(): Ui<EditorScreen.State> = ui { state, modifier ->
+    if (state.showCode)
+        CodeEditor(
+            state.code,
+            state.tokenized,
+            modifier,
+            { state.eventHandler(EditorScreen.Event.OpenUnicodeInput) }
+        ) {
+            state.eventHandler(EditorScreen.Event.TextInput(it))
+        }
+    if (state.input)
+        OverlayEffect(state) {
+            val result = show(UnicodeOverlay(false))
+            if (result == 0.toChar()) {
+                state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
+                return@OverlayEffect
+            } else {
+                val code = state.code
+                state.eventHandler(EditorScreen.Event.TextInput(code.copy(buildString {
+                    append(code.text.substring(0, code.selection.start))
+                    append(result)
+                    append(code.text.substring(code.selection.start, code.text.length))
+                }, TextRange(code.selection.start + 1))))
+                state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
             }
-        if (state.input)
-            OverlayEffect(state) {
-                val result = show(UnicodeOverlay(false))
-                if (result == 0.toChar()) {
-                    state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
-                    return@OverlayEffect
-                } else {
-                    val code = state.code
-                    state.eventHandler(EditorScreen.Event.TextInput(code.copy(buildString {
-                        append(code.text.substring(0, code.selection.start))
-                        append(result)
-                        append(code.text.substring(code.selection.start, code.text.length))
-                    }, TextRange(code.selection.start + 1))))
-                    state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
-                }
-            }
-    }
+        }
+}
 
 internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
     BottomAppBar {
@@ -258,6 +259,7 @@ fun EditorPagePreview() = PreviewTheme {
     EditorPage().Content(
         EditorScreen.State(
             code,
+            tokenizeProgram(code.text),
             structorgram,
             true,
             false,

@@ -85,7 +85,7 @@ class PresetPage(private val preset: Preset) : Ui<State> {
                                 Text(it.description)
                                 CodeEditor(
                                     TextFieldValue(it.code),
-                                    Modifier.heightIn(max = 350.dp).fillMaxWidth()
+                                    modifier = Modifier.heightIn(max = 350.dp).fillMaxWidth()
                                 )
                                 var image: ImageBitmap by remember {
                                     mutableStateOf(

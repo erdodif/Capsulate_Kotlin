@@ -102,19 +102,29 @@ fun <R : Value, T : Value, S : Value> Pair<Exp<T>, Exp<S>>.withValue(
 open class Token(open val match: MatchPos) : KParcelable {
     inline fun matchedToken(parserState: ParserState): String =
         parserState.input[match.start, match.end]
+
+    open fun copy(match: MatchPos): Token = Token(match)
 }
 
 @KParcelize
-class KeyWord(val id: String, override val match: MatchPos) : Token(match)
+data class KeyWord(val id: String, override val match: MatchPos) : Token(match) {
+    override fun copy(match: MatchPos): Token = copy(id = id, match = match)
+}
 
 @KParcelize
-class Symbol(val id: Char, override val match: MatchPos) : Token(match)
+data class Symbol(val id: Char, override val match: MatchPos) : Token(match) {
+    override fun copy(match: MatchPos): Token = copy(id = id, match = match)
+}
 
 @KParcelize
-class LineEnd(val char: Char, override val match: MatchPos) : Token(match)
+data class LineEnd(val char: Char, override val match: MatchPos) : Token(match) {
+    override fun copy(match: MatchPos): Token = copy(char = char, match = match)
+}
 
 @KParcelize
-class Comment(val content: String, override val match: MatchPos) : Token(match)
+data class Comment(val content: String, override val match: MatchPos) : Token(match) {
+    override fun copy(match: MatchPos): Token = copy(content = content, match = match)
+}
 
 val pComment: Parser<Comment> = orEither(
     right(

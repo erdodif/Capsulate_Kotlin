@@ -42,6 +42,7 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
+import kotlin.math.max
 
 fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 
@@ -237,17 +238,23 @@ fun reTokenizeProgram(
     previousState: ParserResult<ArrayList<Token>>
 ): ParserResult<ArrayList<Token>> = when (previousState) {
     is Pass -> {
+        val res = tokenizeProgram(input) // TODO: TEMPORAL
         //Only single caret is supported
         val tokens = previousState.value
         val pairs = input.zip(previousState.state.input)
-        val start = pairs.indexOfFirst { it.first != it.second }
-        val end = pairs.reversed().indexOfFirst { it.first != it.second }
-        val startIndex = tokens.indexOfFirst { it.match.start >= start }
+        val start = max(pairs.indexOfFirst { it.first != it.second }, 0)
+        var end = pairs.reversed().indexOfFirst { it.first != it.second }
+
+        val startIndex = max(tokens.indexOfFirst { it.match.start >= start }, 0)
+        println(tokens)
         tokens.removeAll { it.match.start >= start && it.match.end <= end }
-        when (val result = tokenizeProgram(input.substring(start..end))) {
+        println(tokens)
+        tokens.mapTo(tokens) { if(it.match.start >= start) it.copy(it.match.copy(it.match.start + (start - end), it.match.end+ (start - end))) else it }
+        when (val result = tokenizeProgram(input.substring(start..<(if (end < 0) input.length else end)))) {
             is Pass -> {
                 tokens.addAll(startIndex, result.value)
                 Pass(tokens, result.state, MatchPos(0, input.length))
+                res // TODO: ONLY UNTIL THE ALGO ISN'T FIXED
             }
 
             is Fail -> tokenizeProgram(input) // retry on whole program

@@ -18,10 +18,11 @@ import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
-import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserResult
-import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.lang.util.fold
 import com.erdodif.capsulate.lang.util.get
+import kotlin.math.max
 
 class CodeHighlight private constructor(
     val constant: Color,
@@ -103,27 +104,28 @@ class CodeHighlight private constructor(
         }
     }
 
+    val Token.spanStyle: SpanStyle
+        get() = SpanStyle(color = highlight(), fontWeight = weight(), fontStyle = style())
+
     fun visualTransformation(code: String, tokenStream: ParserResult<ArrayList<Token>>) =
         VisualTransformation {
-            if (tokenStream is Fail) {
+            tokenStream.toEither().fold({ tokens ->
                 TransformedText(buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.Red, background = Color.Black))
-                    { append(code) }
-                }, OffsetMapping.Identity)
-            } else {
-                tokenStream as Pass
-                TransformedText(buildAnnotatedString {
-                    for (token in tokenStream.value) {
-                        withStyle(
-                            SpanStyle(
-                                color = token.highlight(),
-                                fontWeight = token.weight(),
-                                fontStyle = token.style()
-                            )
-                        ) {
+                    withStyle(Token(MatchPos(0, code.length)).spanStyle) {
+                        append(code[0, tokens.firstOrNull()?.match?.start ?: max(0,code.length - 1)])
+                    }
+                    println(code)
+                    for (token in tokens) {
+                        withStyle(token.spanStyle) {
+                            println(token)
                             append(code[token.match.start, token.match.end])
                         }
                     }
+                }, OffsetMapping.Identity)
+            }) {
+                TransformedText(buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = Color.Red, background = Color.Black))
+                    { append(code) }
                 }, OffsetMapping.Identity)
             }
         }

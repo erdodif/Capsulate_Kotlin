@@ -25,7 +25,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.erdodif.capsulate.lang.program.grammar.expression.Token
+import com.erdodif.capsulate.lang.program.grammar.reTokenizeProgram
 import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.ParserResult
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -37,11 +42,11 @@ fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
 @Composable
 fun CodeEditor(
     code: TextFieldValue = TextFieldValue(""),
+    tokenizationResult: ParserResult<ArrayList<Token>> = tokenizeProgram(code.text),
     modifier: Modifier = Modifier,
     onBackSlashEntered: () -> Unit = {},
     onValueChange: ((TextFieldValue) -> Unit)? = null
 ) {
-    val tokenStream = tokenizeProgram(code.text)
     val text = code.text
     defaultCodeHighLight.apply {
         val textStyle = TextStyle(fontFamily = fonts, fontSize = 18.sp)
@@ -49,19 +54,17 @@ fun CodeEditor(
         var lineCountContent by remember { mutableStateOf("") }
         val coroutineScope = rememberCoroutineScope()
         val scrollState = rememberScrollState(0)
-        val transform by remember(code, tokenStream) {
+        val transform by remember(code, tokenizationResult) {
             derivedStateOf {
-                visualTransformation(text, tokenStream)
+                visualTransformation(text, tokenizationResult)
             }
         }
-        BasicTextField( //Prepare for BasicTextField2
+        BasicTextField(
             value = code,
             readOnly = onValueChange == null,
             onValueChange = {
-                if (it.text.length >= max(
-                        it.selection.start,
-                        1
-                    ) && it.selection.start > 0 && it.text[it.selection.start - 1] == '\\'
+                if (it.text.length >= max(it.selection.start, 1) &&
+                    it.selection.start > 0 && it.text[it.selection.start - 1] == '\\'
                 ) {
                     onBackSlashEntered()
                 } else if (onValueChange == null) {
@@ -88,7 +91,7 @@ fun CodeEditor(
                 }
             },
             visualTransformation = transform
-        ) {
+        ) { textField ->
             Column(Modifier.verticalScroll(scrollState)) {
                 Row(Modifier) {
                     Text(
@@ -104,7 +107,7 @@ fun CodeEditor(
                             .background(Color(37, 37, 37, 200))
                             .width(2.dp)
                     )
-                    it()
+                    textField()
                 }
             }
         }
