@@ -10,6 +10,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.or
 import com.erdodif.capsulate.lang.util._char
+import com.erdodif.capsulate.lang.util._keyword
 
 // TODO - CAST ON ASSIGNMENT SIDE
 
@@ -68,6 +69,42 @@ object Div : BinaryOperator<VNum, VNum>(
             VWhole(a.value / b.value)
         }
     }
+)
+
+@KParcelize
+object Larger : BinaryOperator<VBool, VNum>(
+    5,
+    ">",
+    _char('>'),
+    Association.NONE,
+    { a, b -> VBool(a.value > b.value) }
+)
+
+@KParcelize
+object Smaller : BinaryOperator<VBool, VNum>(
+    5,
+    "<",
+    _char('<'),
+    Association.NONE,
+    { a, b -> VBool(a.value < b.value) }
+)
+
+@KParcelize
+object LargerEq : BinaryOperator<VBool, VNum>(
+    5,
+    ">=",
+    _keyword(">="),
+    Association.NONE,
+    { a, b -> VBool(a.value >= b.value) }
+)
+
+@KParcelize
+object SmallerEq : BinaryOperator<VBool, VNum>(
+    5,
+    "<=",
+    _keyword("<="),
+    Association.NONE,
+    { a, b -> VBool(a.value <= b.value) }
 )
 
 @KParcelize
@@ -140,7 +177,11 @@ object Factorial : UnaryOperator<VNum, VNum>(
     }
 )
 
-val builtInOperators = arrayListOf(Add, Sub, Sign, Mul, Div, And, Or, Not, Equal)
+val builtInOperators = arrayListOf(
+    Add, Sub, Sign, Mul, Div,
+    And, Or, Not,
+    SmallerEq, LargerEq, Smaller, Larger, Equal
+)
 
 @Suppress("UNCHECKED_CAST")
 val builtInOperatorTable: OperatorTable<Exp<Value>> =
