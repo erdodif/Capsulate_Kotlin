@@ -9,6 +9,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.or
+import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 
@@ -92,8 +93,8 @@ object Smaller : BinaryOperator<VBool, VNum>(
 @KParcelize
 object LargerEq : BinaryOperator<VBool, VNum>(
     5,
-    ">=",
-    _keyword(">="),
+    "≥",
+    or(_keyword(">="), _char('≥')),
     Association.NONE,
     { a, b -> VBool(a.value >= b.value) }
 )
@@ -101,8 +102,8 @@ object LargerEq : BinaryOperator<VBool, VNum>(
 @KParcelize
 object SmallerEq : BinaryOperator<VBool, VNum>(
     5,
-    "<=",
-    _keyword("<="),
+    "≤",
+    or(_keyword("<="), _char('≤')),
     Association.NONE,
     { a, b -> VBool(a.value <= b.value) }
 )
@@ -125,8 +126,8 @@ object Equal : BinaryOperator<Value, Value>(
 @KParcelize
 object And : BinaryOperator<VBool, VBool>(
     6,
-    "&",
-    _char('&'),
+    "∧",
+    orEither(_char('&'),_char('∧')),
     Association.LEFT,
     { a, b -> VBool(a.value && b.value) }
 )
@@ -134,8 +135,8 @@ object And : BinaryOperator<VBool, VBool>(
 @KParcelize
 object Or : BinaryOperator<VBool, VBool>(
     5,
-    "|",
-    or(_char('|'), _char('v')),
+    "∨",
+    orEither(_char('|'), _char('v')),
     Association.LEFT,
     { a, b -> VBool(a.value || b.value) }
 )
@@ -152,29 +153,10 @@ object Sign : UnaryOperator<VNum, VWhole>(
 @KParcelize
 object Not : UnaryOperator<VBool, VBool>(
     20,
-    "!",
-    _char('!'),
+    "¬",
+    orEither(_char('!'),_char('¬')),
     Fixation.PREFIX,
     { VBool(!it.value) }
-)
-
-@KParcelize
-object Factorial : UnaryOperator<VNum, VNum>(
-    20,
-    "!",
-    _char('!'),
-    Fixation.POSTFIX,
-    {
-        val range = if (it.value > 0) {
-            1..it.value
-        } else if (it.value < 0) {
-            it.value..<0
-        } else {
-            0..0
-        }
-        val result = range.fold(1, Int::times)
-        VWhole(result)
-    }
 )
 
 val builtInOperators = arrayListOf(

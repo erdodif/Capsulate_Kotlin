@@ -10,6 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.erdodif.capsulate.KParcelize
@@ -23,7 +24,6 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
-import com.erdodif.capsulate.lang.util.fold
 import com.erdodif.capsulate.lang.util.recover
 import com.erdodif.capsulate.pages.screen.EditorScreen.Event
 import com.erdodif.capsulate.project.OpenFile
@@ -56,10 +56,11 @@ data class EditorScreen(val file: OpenFile, val fileChannel: ChannelEntry<OpenFi
     @Stable
     data class State(
         val code: TextFieldValue,
-        val tokenized: ParserResult<ArrayList<Token>>,
+        val tokenized: ParserResult<List<Token>>,
         val structogram: Structogram?,
         val showCode: Boolean,
         val input: Boolean,
+        val focusRequester: FocusRequester,
         val showStructogram: Boolean,
         val dragStatements: Boolean,
         val openFile: OpenFile,
@@ -104,7 +105,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var dragStatements by remember { mutableStateOf(false) }
         var input by remember { mutableStateOf(false) }
         var loading by remember { mutableStateOf(true) }
-        var tokenized: ParserResult<ArrayList<Token>>
+        var tokenized: ParserResult<List<Token>>
                 by remember { mutableStateOf(Fail("", ParserState(inputValue.text))) }
         var tokenJob: Job? by remember { mutableStateOf(null) }
         if (loading) {
@@ -133,12 +134,14 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 }
             }
         }
+        val focusRequester = remember { FocusRequester() }
         return EditorScreen.State(
             inputValue,
             tokenized,
             structogram,
             showCode,
             input,
+            focusRequester,
             showStructogram,
             dragStatements,
             file,
@@ -170,7 +173,11 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
 
                 is Event.ToggleStatementDrag -> dragStatements = !dragStatements
                 is Event.OpenUnicodeInput -> input = true
-                is Event.CloseUnicodeInput -> input = false
+                is Event.CloseUnicodeInput -> {
+                    input = false
+                    focusRequester.requestFocus()
+                }
+
                 is Event.DroppedStatement -> {
                     inputValue = inputValue.copy(
                         text = if (event.statement is DropStatement) {

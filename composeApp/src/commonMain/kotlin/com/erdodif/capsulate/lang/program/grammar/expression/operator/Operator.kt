@@ -63,7 +63,7 @@ data class BinaryCalculation<T : Value, R : Value>(
         }
 
     override fun toString(state: ParserState): String =
-        "${operator.label}(${first.toString(state)} ${operator.label} ${second.toString(state)})"
+        "${first.toString(state)} ${operator.label} ${second.toString(state)}"
 }
 
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -32,6 +33,7 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
 import com.erdodif.capsulate.lang.program.grammar.blockOrParallel
+import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.Pattern
@@ -152,8 +154,9 @@ private val parsers: List<Pair<Parser<*>, String>> = listOf(
 fun ParserTester() = PreviewTheme {
     var input by remember { mutableStateOf(TextFieldValue("")) }
     var filter by remember { mutableStateOf("") }
+    val tokens = tokenizeProgram(input.text)
     Column(Modifier.fillMaxSize().imePadding()) {
-        CodeEditor(input, tokenizeProgram(input.text), Modifier.fillMaxWidth().height(100.dp)) { input = it }
+        CodeEditor(input, tokens, Modifier.fillMaxWidth().height(100.dp)) { input = it }
         HorizontalDivider()
         Row(
             Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -163,6 +166,16 @@ fun ParserTester() = PreviewTheme {
             BasicTextField(filter, { filter = it }, Modifier.fillMaxWidth())
         }
         HorizontalDivider()
+        LazyRow {
+            val stream = tokens.passOrNull()?.value
+            if(stream != null)
+            items(stream) { token: Token ->
+                Column {
+                    Text(token.matchedToken(ParserState(input.text)).replace(" ","␣"))
+                    Text("(${token.match.start},${token.match.end})")
+                }
+            }
+        }
         LazyColumn(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
             items(parsers.filter { filter in it.second }
                 .sortedBy { it.second.length }) { (parser, name) ->
@@ -232,7 +245,7 @@ fun ParserTester() = PreviewTheme {
                 HorizontalDivider()
             }
             items(parsers.filter { filter !in it.second }
-                .sortedBy { it.second }) { (parser, name) ->
+                .sortedBy { it.second }) { (_, name) ->
                 Text(name, color = MaterialTheme.colorScheme.background)
             }
         }

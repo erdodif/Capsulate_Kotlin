@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
@@ -163,6 +164,7 @@ internal fun codeEdit(): Ui<EditorScreen.State> = ui { state, modifier ->
             state.code,
             state.tokenized,
             modifier,
+            state.focusRequester,
             { state.eventHandler(EditorScreen.Event.OpenUnicodeInput) }
         ) {
             state.eventHandler(EditorScreen.Event.TextInput(it))
@@ -263,6 +265,7 @@ fun EditorPagePreview() = PreviewTheme {
             structorgram,
             true,
             false,
+            FocusRequester(),
             true,
             false,
             OpenFile(),

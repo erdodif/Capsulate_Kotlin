@@ -20,13 +20,10 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
-import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
-import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._anyKeyword
 import com.erdodif.capsulate.lang.util._char
@@ -42,7 +39,6 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
-import kotlin.math.max
 
 fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 
@@ -208,12 +204,10 @@ val sParallel: Parser<Statement> = {
     ) * { stmt, pos -> Parallel(stmt, pos) as Statement })()
 }
 
-class ParseException(reason: String) : Exception(reason)
-
 fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
     ParserState(input).parse(topLevel(program))
 
-fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> =
+fun tokenizeProgram(input: String): ParserResult<List<Token>> =
     ParserState(input)
         .parse(
             topLevel(
@@ -232,37 +226,6 @@ fun tokenizeProgram(input: String): ParserResult<ArrayList<Token>> =
                 )
             )
         )
-
-fun reTokenizeProgram(
-    input: String,
-    previousState: ParserResult<ArrayList<Token>>
-): ParserResult<ArrayList<Token>> = when (previousState) {
-    is Pass -> {
-        val res = tokenizeProgram(input) // TODO: TEMPORAL
-        //Only single caret is supported
-        val tokens = previousState.value
-        val pairs = input.zip(previousState.state.input)
-        val start = max(pairs.indexOfFirst { it.first != it.second }, 0)
-        var end = pairs.reversed().indexOfFirst { it.first != it.second }
-
-        val startIndex = max(tokens.indexOfFirst { it.match.start >= start }, 0)
-        println(tokens)
-        tokens.removeAll { it.match.start >= start && it.match.end <= end }
-        println(tokens)
-        tokens.mapTo(tokens) { if(it.match.start >= start) it.copy(it.match.copy(it.match.start + (start - end), it.match.end+ (start - end))) else it }
-        when (val result = tokenizeProgram(input.substring(start..<(if (end < 0) input.length else end)))) {
-            is Pass -> {
-                tokens.addAll(startIndex, result.value)
-                Pass(tokens, result.state, MatchPos(0, input.length))
-                res // TODO: ONLY UNTIL THE ALGO ISN'T FIXED
-            }
-
-            is Fail -> tokenizeProgram(input) // retry on whole program
-        }
-    }
-
-    is Fail -> tokenizeProgram(input)
-}
 
 fun Env.runProgram(statements: List<Statement>) {
     for (statement in statements) statement.evaluate(this)

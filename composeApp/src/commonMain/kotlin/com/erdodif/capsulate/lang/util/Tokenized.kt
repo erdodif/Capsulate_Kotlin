@@ -5,7 +5,6 @@ package com.erdodif.capsulate.lang.util
 import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.program.grammar.int
 import com.erdodif.capsulate.lang.program.grammar.keywords
-import com.erdodif.capsulate.lang.program.grammar.left
 import com.erdodif.capsulate.lang.program.grammar.lineBreak
 import com.erdodif.capsulate.lang.program.grammar.lineEnd
 import com.erdodif.capsulate.lang.program.grammar.many
@@ -23,7 +22,16 @@ val pLineEnd: Parser<Char> = asum(*lineEnd.map { char(it) }.toTypedArray())
 /**
  * Matches the given [parser], then removes the whitespaces
  */
-inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = left(parser, many(whiteSpace))
+inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = {
+    val firstResult = parser()
+    if(firstResult is Pass){
+        many(whiteSpace)()
+        firstResult.copy(state = this)
+    }
+    else{
+        firstResult
+    }
+}
 
 
 /**

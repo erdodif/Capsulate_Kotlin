@@ -2,20 +2,10 @@
 
 package com.erdodif.capsulate.lang.util
 
-import com.erdodif.capsulate.KParcelable
-import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
-import kotlinx.serialization.Serializable
-
-@KParcelize
-@Serializable
-data class MatchPos(val start: Int, val end: Int) : KParcelable {
-    companion object Constants {
-        val ZERO = MatchPos(0, 0)
-    }
-}
+import kotlin.math.min
 
 open class ParserState(
     val input: String,
@@ -53,7 +43,7 @@ open class ParserState(
     override fun toString(): String = buildString {
         append("pos: $position, text:\"")
         if (position > 1) {
-            append(input.substring(0..<position))
+            append(input.substring(0..<min(position, input.length)))
         }
         if (position < input.length) {
             append(input[position])
@@ -91,13 +81,23 @@ sealed class ParserResult<out T>(open val state: ParserState) {
             is Fail -> this
         }
 
-    fun toEither(): Either<T, String> = when(this){
+    fun toEither(): Either<T, String> = when (this) {
         is Pass -> Left(this.value)
         is Fail -> Right(this.reason)
     }
+
+    fun passOrNull(): Pass<T>? = when (this) {
+        is Pass -> this
+        is Fail -> null
+    }
+
+    fun failOrNull(): Fail? = when (this) {
+        is Fail -> this
+        is Pass -> null
+    }
 }
 
-data class Pass<T>(val value: T, override val state: ParserState, val match: MatchPos) :
+data class Pass<out T>(val value: T, override val state: ParserState, val match: MatchPos) :
     ParserResult<T>(state) {
     override fun toString(): String = "Pass(value: $value, matched:${state[match]}, state: $state)"
 }
@@ -167,7 +167,7 @@ inline operator fun <A, B, C, D, E, R> Parser<Pair<Pair<Pair<Pair<A, B>, C>, D>,
     }
 
 inline operator fun <T, R> Parser<T>.get(
-    crossinline onPass: ParserState.(Pass<out T>) -> ParserResult<R>,
+    crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>,
     crossinline onFail: ParserState.(Fail) -> ParserResult<R>
 ): Parser<R> = {
     val res = this@get()
@@ -177,7 +177,7 @@ inline operator fun <T, R> Parser<T>.get(
 }
 
 inline operator fun <T, R> Parser<T>.get(
-    crossinline onPass: ParserState.(Pass<out T>) -> ParserResult<R>
+    crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>
 ): Parser<R> = {
     when (val res = this@get()) {
         is Pass -> onPass(res)

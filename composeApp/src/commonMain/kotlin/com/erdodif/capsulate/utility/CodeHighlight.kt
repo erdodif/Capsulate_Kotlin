@@ -18,7 +18,6 @@ import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
-import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.fold
 import com.erdodif.capsulate.lang.util.get
@@ -107,18 +106,36 @@ class CodeHighlight private constructor(
     val Token.spanStyle: SpanStyle
         get() = SpanStyle(color = highlight(), fontWeight = weight(), fontStyle = style())
 
-    fun visualTransformation(code: String, tokenStream: ParserResult<ArrayList<Token>>) =
+    fun visualTransformation(code: String, tokenStream: ParserResult<List<Token>>) =
         VisualTransformation {
             tokenStream.toEither().fold({ tokens ->
                 TransformedText(buildAnnotatedString {
-                    withStyle(Token(MatchPos(0, code.length)).spanStyle) {
-                        append(code[0, tokens.firstOrNull()?.match?.start ?: max(0,code.length - 1)])
+                    withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                        append(
+                            code[0, tokens.firstOrNull()?.match?.start ?: max(
+                                0,
+                                code.length - 1
+                            )].replace(" ", "•")
+                        )
                     }
-                    println(code)
-                    for (token in tokens) {
+                    tokens.forEachIndexed { i, token ->
                         withStyle(token.spanStyle) {
-                            println(token)
                             append(code[token.match.start, token.match.end])
+                        }
+                        if (tokens.count() > i + 1) {
+                            withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                                append(
+                                    code[token.match.end, tokens[i + 1].match.start].replace(
+                                        " ",
+                                        "•"
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    if (tokens.isNotEmpty()) {
+                        withStyle(SpanStyle(color = Color.DarkGray)) {
+                            append(code[tokens.last().match.end, code.length].replace(" ", "•"))
                         }
                     }
                 }, OffsetMapping.Identity)

@@ -75,7 +75,8 @@ inline fun stringCaseLess(string: String): Parser<String> = {
 inline fun string(string: String): Parser<String> = {
     val start = position
     if (position + string.length > input.length) {
-        fail("EOF reached")
+        position = input.length
+        Fail("EOF reached", this)
     } else {
         var i = 0
         while (i < string.length && string[i] == input[position + i]) {
@@ -227,7 +228,7 @@ inline fun <T, R> and(
 inline fun <T> record(crossinline parser: Parser<T>): Parser<Pair<T, MatchPos>> = {
     when (val res = parser()) {
         is Fail -> res
-        is Pass -> pass(0, res.value to res.match)
+        is Pass -> Pass(res.value to res.match, this, res.match)
     }
 }
 
@@ -257,7 +258,8 @@ inline fun <T> left(crossinline parser1: Parser<T>, crossinline parser2: Parser<
             result2
         } else {
             result1 as Pass
-            Pass(result1.value, this, MatchPos(result1.match.start, position))
+            result2 as Pass
+            Pass(result1.value, this, MatchPos(result1.match.start, result2.match.end))
         }
     }
 }
@@ -270,13 +272,13 @@ inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser
     if (result1 is Fail) {
         result1
     } else {
-        result1 as Pass
         val result2 = parser2()
         if (result2 is Fail) {
             result2
         } else {
+            result1 as Pass
             result2 as Pass
-            pass(result1.match.start, result2.value)
+            Pass(result2.value, this, MatchPos(result1.match.start, result2.match.end))
         }
     }
 }
@@ -286,9 +288,7 @@ inline fun <T> right(crossinline parser1: Parser<*>, crossinline parser2: Parser
  */
 inline fun <T> middle(
     crossinline left: Parser<*>, crossinline a: Parser<T>, crossinline right: Parser<*>
-)
-
-        : Parser<T> {
+): Parser<T> {
     return right(left, left(a, right))
 }
 
@@ -476,4 +476,6 @@ inline fun <reified T> nonAssoc(
  * Asserts the parser does match the whole input file
  */
 inline fun <T> topLevel(crossinline parser: Parser<T>): Parser<T> =
-    middle(many(whiteSpace), parser, EOF)
+    middle(many(whiteSpace), record(parser), EOF)[{
+        Pass(it.value.first, it.state, it.value.second)
+    }]

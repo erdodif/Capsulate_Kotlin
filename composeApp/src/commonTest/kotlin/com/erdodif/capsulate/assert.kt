@@ -94,19 +94,16 @@ infix fun <T> Parser<T>.fail(text: String): Fail =
 
 
 infix fun <T> ParserResult<T>.at(index: Int): ParserResult<T> = this.also {
-    assertTrue("Ended on different position (assumed $index, but got ${it.state.position})")
+    assertTrue("Ended on different position " +
+            "(assumed $index, but got ${it.state.position})")
     { it.state.position == index }
-}
-
-infix fun <T> Pass<T>.at(pos: MatchPos): ParserResult<T> = this.also {
-    assertTrue("Ended on different position! Assumed (${pos.start}, ${pos.end}), but got (${it.match.start}, ${it.match.end}).")
-    { it.match.start == pos.start && it.match.end == pos.end }
 }
 
 infix fun <T> ParserResult<T>.withValue(value: T) = this.also {
     assertPass(this)
     this as Pass
-    assertTrue("Parser result mismatch, expected $value, but got ${this.value}") { this.value == value }
+    assertTrue("Parser result mismatch, " +
+            "expected $value, but got ${this.value}") { this.value == value }
 }
 
 infix fun <T> Parser<T>.value(value: Pair<String, T>) =
@@ -116,6 +113,52 @@ infix fun <T> Pass<T>.matches(predicate: (Pass<T>) -> Boolean) = this.also {
     assertTrue(predicate(this))
 }
 
-infix fun <T> Pass<T>.match(predicate: (T) -> Boolean): Pass<T> = this.also{
+infix fun <T> Pass<T>.match(predicate: (T) -> Boolean): Pass<T> = this.also {
     assertTrue(predicate(this.value))
+}
+
+infix fun <T> ParserResult<T>.withMatch(match: MatchPos): Pass<T> {
+    assertPass(this)
+    this as Pass
+    assertEquals(
+        match.start, this.match.start, "MatchPos mismatch! " +
+                "Expected (${match.start},${match.end}), " +
+                "but got (${this.match.start},${this.match.end})"
+    )
+    assertEquals(
+        match.end, this.match.end, "MatchPos mismatch! " +
+                "Expected (${match.start},${match.end}), " +
+                "but got (${this.match.start},${this.match.end})"
+    )
+    return this
+}
+
+infix fun <T> ParserResult<T>.withMatch(match: Pair<Int,Int>): Pass<T> {
+    assertPass(this)
+    this as Pass
+    assertEquals(
+        match.first, this.match.start, "MatchPos mismatch! " +
+                "Expected (${match.first},${match.second}), " +
+                "but got (${this.match.start},${this.match.end})"
+    )
+    assertEquals(
+        match.second, this.match.end, "MatchPos mismatch! " +
+                "Expected (${match.first},${match.second}), " +
+                "but got (${this.match.start},${this.match.end})"
+    )
+    return this
+}
+
+fun <T> ParserResult<T>.withMatch(start: Int, end: Int): Pass<T> {
+    assertPass(this)
+    this as Pass
+    assertEquals(start, this.match.start, "MatchPos mismatch! " +
+                "Expected (${start},${end}), " +
+                "but got (${this.match.start},${this.match.end})"
+    )
+    assertEquals(end, this.match.end, "MatchPos mismatch! " +
+            "Expected (${start},${end}), " +
+            "but got (${this.match.start},${this.match.end})"
+    )
+    return this
 }

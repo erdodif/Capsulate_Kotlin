@@ -17,33 +17,37 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.onInterceptKeyBeforeSoftKeyboard
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
-import com.erdodif.capsulate.lang.program.grammar.reTokenizeProgram
 import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
-import com.erdodif.capsulate.lang.util.Fail
-import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserResult
 import kotlinx.coroutines.launch
-import kotlin.math.max
 
 fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
     if (it == '\n') return@mapIndexed pos
     else null
 }.filterNotNull()
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CodeEditor(
     code: TextFieldValue = TextFieldValue(""),
-    tokenizationResult: ParserResult<ArrayList<Token>> = tokenizeProgram(code.text),
+    tokenizationResult: ParserResult<List<Token>> = tokenizeProgram(code.text),
     modifier: Modifier = Modifier,
+    focusRequester: FocusRequester = FocusRequester(),
     onBackSlashEntered: () -> Unit = {},
     onValueChange: ((TextFieldValue) -> Unit)? = null
 ) {
@@ -63,18 +67,28 @@ fun CodeEditor(
             value = code,
             readOnly = onValueChange == null,
             onValueChange = {
-                if (it.text.length >= max(it.selection.start, 1) &&
-                    it.selection.start > 0 && it.text[it.selection.start - 1] == '\\'
-                ) {
-                    onBackSlashEntered()
-                } else if (onValueChange == null) {
+                if (onValueChange == null) {
                     code.copy(selection = it.selection)
                 } else {
                     onValueChange.invoke(it)
                 }
             },
             textStyle = textStyle,
-            modifier = modifier.background(Color(44, 44, 44)),
+            modifier = modifier.background(Color(44, 44, 44)).onInterceptKeyBeforeSoftKeyboard {
+                if (it.utf16CodePoint.toChar() == '\\' && onValueChange != null) {
+                    coroutineScope.launch { onBackSlashEntered() }
+                    true
+                } else {
+                    false
+                }
+            }.onPreviewKeyEvent {
+                if (it.utf16CodePoint.toChar() == '\\' && onValueChange != null) {
+                    coroutineScope.launch { onBackSlashEntered() }
+                    true
+                } else {
+                    false
+                }
+            }.focusRequester(focusRequester),
             cursorBrush = SolidColor(Color.Cyan),
             onTextLayout = {
                 coroutineScope.launch {
