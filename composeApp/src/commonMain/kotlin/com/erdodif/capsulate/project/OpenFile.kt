@@ -37,7 +37,7 @@ data class OpenFile(
         get() = file is Left
 
     suspend fun save(): Boolean = withContext(Dispatchers.IO) {
-        if (file is Left) {
+        if (file is Right) {
             val tmp = FileKit.saveFile(
                 (content ?: "").encodeToByteArray(),
                 "program",
