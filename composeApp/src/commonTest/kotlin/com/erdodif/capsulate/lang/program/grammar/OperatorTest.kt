@@ -96,7 +96,7 @@ class OperatorTest {
             secondChar: Char = 'b'
         ): (Pass<*>) -> Boolean = {
             val calc = it.value as BinaryCalculation<*, *>
-            calc.label == label &&
+            calc.operator.label == label &&
                     (calc.first as TestExp).matchedChar == firstChar &&
                     (calc.second as TestExp).matchedChar == secondChar
         }
@@ -110,8 +110,8 @@ class OperatorTest {
         ): (Pass<*>) -> Boolean = {
             val calc1 = it.value as BinaryCalculation<*, *>
             val calc2 = calc1.first as BinaryCalculation<*, *>
-            calc1.label == label &&
-                    calc2.label == labelSecond &&
+            calc1.operator.label == label &&
+                    calc2.operator.label == labelSecond &&
                     (calc2.first as TestExp).matchedChar == firstChar &&
                     (calc2.second as TestExp).matchedChar == secondChar &&
                     (calc1.second as TestExp).matchedChar == thirdChar
@@ -126,8 +126,8 @@ class OperatorTest {
         ): (Pass<*>) -> Boolean = {
             val calc1 = it.value as BinaryCalculation<*, *>
             val calc2 = calc1.second as BinaryCalculation<*, *>
-            calc1.label == label &&
-                    calc2.label == labelSecond &&
+            calc1.operator.label == label &&
+                    calc2.operator.label == labelSecond &&
                     (calc1.first as TestExp).matchedChar == firstChar &&
                     (calc2.first as TestExp).matchedChar == secondChar &&
                     (calc2.second as TestExp).matchedChar == thirdChar
