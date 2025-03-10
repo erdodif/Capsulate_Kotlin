@@ -152,6 +152,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                     inputValue = event.code
                     file.content = inputValue.text
                     val text = inputValue.text
+                    tokenJob?.cancel()
                     tokenJob = coroutineScope.launch {
                         tokenized = tokenizeProgram(text)
                     }
@@ -189,9 +190,8 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                         )
                     )
                     tokenJob?.cancel()
-                    val text = inputValue.text
                     tokenJob = coroutineScope.launch {
-                        tokenized = tokenizeProgram(text)
+                        tokenized = tokenizeProgram(inputValue.text)
                     }
                 }
             }

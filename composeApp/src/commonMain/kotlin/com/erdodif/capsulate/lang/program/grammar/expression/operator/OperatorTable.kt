@@ -39,7 +39,10 @@ class OperatorTable<T>(private var operators: List<Operator<T>>) {
             lastResult = get(i, atomParser)()
             if (lastResult is Pass<*>) break
             lastResult as Fail
-            stringBuilder.append("\n'${operators[i].label}' (strength: ${operators[i].bindingStrength}) failed at ${lastResult.state.position} with reason: ${lastResult.reason}")
+            stringBuilder.append("\n'${operators[i].label}' " +
+                    "(strength: ${operators[i].bindingStrength}) " +
+                    "failed at ${lastResult.state.position} " +
+                    "with reason: ${lastResult.reason}")
         }
         lastResult
     }

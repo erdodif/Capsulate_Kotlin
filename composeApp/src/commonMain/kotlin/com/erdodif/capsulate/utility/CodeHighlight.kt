@@ -33,7 +33,8 @@ class CodeHighlight private constructor(
     val parenthesis: Color,
     val error: Color,
     val comment: Color,
-    val control: Color
+    val control: Color,
+    var whiteSpace: Color
 ) {
 
     class Builder private constructor() {
@@ -47,6 +48,7 @@ class CodeHighlight private constructor(
         var error: Color = Color(217, 26, 26)
         var comment: Color = Color(90, 90, 90)
         var control: Color = Color(218, 121, 42)
+        var whiteSpace: Color = Color(75,75,75,134)
 
         companion object {
             operator fun invoke(it: (Builder.() -> Unit)): Builder {
@@ -66,7 +68,8 @@ class CodeHighlight private constructor(
             parenthesis = parenthesis,
             error = error,
             comment = comment,
-            control = control
+            control = control,
+            whiteSpace = whiteSpace
         )
     }
 
@@ -110,12 +113,12 @@ class CodeHighlight private constructor(
         VisualTransformation {
             tokenStream.toEither().fold({ tokens ->
                 TransformedText(buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                    withStyle(style = SpanStyle(color = whiteSpace)) {
                         append(
-                            code[0, tokens.firstOrNull()?.match?.start ?: max(
+                            code[
                                 0,
-                                code.length - 1
-                            )].replace(" ", "•")
+                                tokens.firstOrNull()?.match?.start ?: max(0, code.length)
+                            ].replace(" ", "•")
                         )
                     }
                     tokens.forEachIndexed { i, token ->
@@ -123,18 +126,18 @@ class CodeHighlight private constructor(
                             append(code[token.match.start, token.match.end])
                         }
                         if (tokens.count() > i + 1) {
-                            withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                            withStyle(style = SpanStyle(color = whiteSpace)) {
                                 append(
-                                    code[token.match.end, tokens[i + 1].match.start].replace(
-                                        " ",
-                                        "•"
-                                    )
+                                    code[
+                                        token.match.end,
+                                        tokens[i + 1].match.start
+                                    ].replace(" ", "•")
                                 )
                             }
                         }
                     }
                     if (tokens.isNotEmpty()) {
-                        withStyle(SpanStyle(color = Color.DarkGray)) {
+                        withStyle(SpanStyle(color = whiteSpace)) {
                             append(code[tokens.last().match.end, code.length].replace(" ", "•"))
                         }
                     }

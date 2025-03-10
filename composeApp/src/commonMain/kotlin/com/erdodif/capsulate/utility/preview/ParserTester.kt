@@ -33,7 +33,9 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
 import com.erdodif.capsulate.lang.program.grammar.blockOrParallel
+import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
+import com.erdodif.capsulate.lang.program.grammar.expression.operator.builtInOperatorTable
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.Pattern
@@ -46,7 +48,6 @@ import com.erdodif.capsulate.lang.program.grammar.function.sPattern
 import com.erdodif.capsulate.lang.program.grammar.nonParallel
 import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pComment
-import com.erdodif.capsulate.lang.program.grammar.expression.pExp
 import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
@@ -119,7 +120,7 @@ private val parsers: List<Pair<Parser<*>, String>> = listOf(
     pVariable to "variable",
     program to "program",
     halfProgram to "half program",
-    pExp to "expression",
+    builtInOperatorTable.verboseParser(pVariable) to "expression",
     pBoolLit to "boolean literal",
     pIntLit to "integer literal",
     pStrLit to "string literal",
@@ -168,13 +169,13 @@ fun ParserTester() = PreviewTheme {
         HorizontalDivider()
         LazyRow {
             val stream = tokens.passOrNull()?.value
-            if(stream != null)
-            items(stream) { token: Token ->
-                Column {
-                    Text(token.matchedToken(ParserState(input.text)).replace(" ","␣"))
-                    Text("(${token.match.start},${token.match.end})")
+            if (stream != null)
+                items(stream) { token: Token ->
+                    Column {
+                        Text(token.matchedToken(ParserState(input.text)).replace(" ", "␣"))
+                        Text("(${token.match.start},${token.match.end})")
+                    }
                 }
-            }
         }
         LazyColumn(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
             items(parsers.filter { filter in it.second }
@@ -212,12 +213,18 @@ fun ParserTester() = PreviewTheme {
                             RoundedCornerShape(5.dp)
                         ).padding(5.dp)
                         if (result is Left) {
-
                             when (val parserResult = (result as Left<ParserResult<*>>).value) {
-                                is Pass -> Text(
-                                    text = parserResult.value.toString(),
-                                    modifier = modifier
-                                )
+                                is Pass -> {
+                                    var text by remember { mutableStateOf(parserResult.value.toString()) }
+                                    LaunchedEffect(Unit) {
+                                        if (parserResult.value is Exp<*>) text =
+                                            parserResult.value.toString(ParserState(input.text))
+                                    }
+                                    Text(
+                                        text = text,
+                                        modifier = modifier
+                                    )
+                                }
 
                                 is Fail -> Text(
                                     text = parserResult.reason.toString(),

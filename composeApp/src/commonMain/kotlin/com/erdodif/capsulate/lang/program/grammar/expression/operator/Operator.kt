@@ -46,6 +46,11 @@ data class UnaryCalculation<T : Value, R : Value>(
             Fixation.PREFIX -> "${operator.label}${param.toString(state)}"
             Fixation.POSTFIX -> "${param.toString(state)}${operator.label}"
         }
+
+    override fun toString(): String = when (operator.fixation) {
+        Fixation.PREFIX -> "UN({${operator.label}} $param)"
+        Fixation.POSTFIX -> "UN($param {${operator.label}})"
+    }
 }
 
 @KParcelize
@@ -64,6 +69,8 @@ data class BinaryCalculation<T : Value, R : Value>(
 
     override fun toString(state: ParserState): String =
         "${first.toString(state)} ${operator.label} ${second.toString(state)}"
+
+    override fun toString(): String = "BIN($first {${operator.label}} $second)"
 }
 
 
@@ -77,17 +84,16 @@ open class UnaryOperator<T : Value, R : Value>(
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")
-    override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
-        orEither(
-            when (fixation) {
-                Fixation.PREFIX -> right(operatorParser, strongerParser) / {
-                    UnaryCalculation<T, R>(it as Exp<R>, this@UnaryOperator)
-                }
+    private fun producer(a: Exp<*>): UnaryCalculation<T, R> =
+        UnaryCalculation<T, R>(a as Exp<R>, this@UnaryOperator)
 
-                Fixation.POSTFIX -> left(strongerParser, operatorParser) / {
-                    UnaryCalculation<T, R>(it as Exp<R>, this@UnaryOperator)
-                }
-            }, strongerParser)
+    override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = when (fixation) {
+        Fixation.PREFIX ->
+            orEither(right(operatorParser, strongerParser) / { producer(it) }, strongerParser)
+
+        Fixation.POSTFIX ->
+            orEither(left(strongerParser, operatorParser) / { producer(it) }, strongerParser)
+    }
 }
 
 @KParcelize
@@ -100,42 +106,13 @@ open class BinaryOperator<T : Value, R : Value>(
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")
-    override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
-        when (association) {
-            Association.LEFT -> leftAssoc(
-                { a, b ->
-                    BinaryCalculation<T, R>(
-                        a as Exp<R>,
-                        b as Exp<R>,
-                        this@BinaryOperator
-                    )
-                },
-                strongerParser,
-                operatorParser
-            )
+    private fun producer(a: Exp<*>, b: Exp<*>): BinaryCalculation<T, R> =
+        BinaryCalculation<T, R>(a as Exp<R>, b as Exp<R>, this@BinaryOperator)
 
-            Association.RIGHT -> rightAssoc(
-                { a, b ->
-                    BinaryCalculation<T, R>(
-                        a as Exp<R>,
-                        b as Exp<R>,
-                        this@BinaryOperator
-                    )
-                },
-                strongerParser,
-                operatorParser
-            )
+    override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = when (association) {
+        Association.LEFT -> leftAssoc(::producer, strongerParser, operatorParser)
+        Association.RIGHT -> rightAssoc(::producer, strongerParser, operatorParser)
+        Association.NONE -> nonAssoc(::producer, strongerParser, operatorParser)
+    }
 
-            Association.NONE -> nonAssoc(
-                { a, b ->
-                    BinaryCalculation<T, R>(
-                        a as Exp<R>,
-                        b as Exp<R>,
-                        this@BinaryOperator
-                    )
-                },
-                strongerParser,
-                operatorParser
-            )
-        }
 }
