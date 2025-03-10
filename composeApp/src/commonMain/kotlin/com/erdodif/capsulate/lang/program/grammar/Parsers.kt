@@ -425,39 +425,66 @@ inline fun <reified T> delimited(
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainr1(value: Parser<T>, func: Parser<(T, T) -> T>): Parser<T> = (value + { vMatch ->
-    orEither((func + chainr1(value, func)) / {
-        it.first(
-            vMatch.value, it.second
-        )
-    }) { pass(vMatch.match.start, vMatch.value) }
-}) * { a, _ -> a.second }
+inline fun <T> chainr1(
+    crossinline value: Parser<T>,
+    crossinline func: Parser<(T, T) -> T>
+): Parser<T> = {
+    var results: ArrayDeque<ParserResult<T>> = ArrayDeque<ParserResult<T>>()
+    var funResults: ArrayDeque<ParserResult<(T, T) -> T>> = ArrayDeque()
+    results.add(value())
+    while (results.last() is Pass) {
+        val pos = this.position
+        funResults.add(func())
+        results.add(value())
+        if (funResults.last() is Fail || results.last() is Fail) {
+            position = pos
+        }
+    }
+    results.removeLast() // Must be ignored (either value() or func() has failed!)
+    val start = (results.first() as Pass).match.start
+    val end = (results.last() as Pass).match.end
+    var out = (results.removeLast() as Pass).value
+    while (results.isNotEmpty()) {
+        out = (funResults.removeLast() as Pass).value(out, (results.removeLast() as Pass).value)
+    }
+    Pass(out, this, MatchPos(start, end))
+}
 
 /**
  * Left Chaining
  *
  * Tries to recursively(!) call the given [value] parser, and fold it with [func]
  */
-fun <T> chainl1(
-    value: Parser<T>, func: Parser<(T, T) -> T>
-): Parser<T> = value[{ valueFirst ->
-    var pos = position
-    var res = (func + value)()
-    var acc = valueFirst.value
-    while (res is Pass) {
-        acc = res.value.first(acc, res.value.second)
-        pos = position
-        res = (func + value)()
-    }
-    position = pos
-    pass(valueFirst.match.start, acc)
-}]
+inline fun <T> chainl1(
+    crossinline value: Parser<T>, crossinline func: Parser<(T, T) -> T>
+): Parser<T> = {
+    when (val result = value()) {
+        is Pass -> {
+            var pos = position
+            var res = and(func, value)()
+            var acc = result.value
+            while (res is Pass) {
+                acc = res.value.first(acc, res.value.second)
+                pos = position
+                res = and(func, value)()
+            }
+            position = pos
+            pass(result.match.start, acc)
+        }
 
-fun <T> rightAssoc(func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>): Parser<T> =
+        is Fail -> result
+    }
+}
+
+inline fun <T> rightAssoc(
+    noinline func: (T, T) -> T,
+    crossinline parser: Parser<T>,
+    crossinline separator: Parser<*>
+): Parser<T> =
     chainr1(parser, left({ pass(position, func) }, separator))
 
-fun <T> leftAssoc(
-    func: (T, T) -> T, parser: Parser<T>, separator: Parser<*>
+inline fun <T> leftAssoc(
+    noinline func: (T, T) -> T, crossinline parser: Parser<T>, crossinline separator: Parser<*>
 ): Parser<T> = chainl1(parser, left({ pass(position, func) }, separator))
 
 inline fun <reified T> nonAssoc(

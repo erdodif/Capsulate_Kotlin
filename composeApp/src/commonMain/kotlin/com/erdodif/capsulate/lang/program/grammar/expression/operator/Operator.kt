@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.erdodif.capsulate.lang.program.grammar.expression.operator
 
 import com.erdodif.capsulate.KParcelable
@@ -69,6 +71,7 @@ data class BinaryCalculation<T : Value, R : Value>(
 
     override fun toString(state: ParserState): String =
         "${first.toString(state)} ${operator.label} ${second.toString(state)}"
+    //TODO: pls use binding strength to use braces '(' and ')'
 
     override fun toString(): String = "BIN($first {${operator.label}} $second)"
 }
@@ -84,15 +87,18 @@ open class UnaryOperator<T : Value, R : Value>(
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")
-    private fun producer(a: Exp<*>): UnaryCalculation<T, R> =
+    fun producer(a: Exp<*>): UnaryCalculation<T, R> =
         UnaryCalculation<T, R>(a as Exp<R>, this@UnaryOperator)
 
-    override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = when (fixation) {
-        Fixation.PREFIX ->
-            orEither(right(operatorParser, strongerParser) / { producer(it) }, strongerParser)
+    @Suppress("OVERRIDE_BY_INLINE")
+    final override inline fun parse(crossinline strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = {
+        when (fixation) {
+            Fixation.PREFIX -> strongerParser()
+            //orEither(right(operatorParser, strongerParser) / { producer(it) }, strongerParser)
 
-        Fixation.POSTFIX ->
-            orEither(left(strongerParser, operatorParser) / { producer(it) }, strongerParser)
+            Fixation.POSTFIX -> strongerParser()
+            //orEither(left(strongerParser, operatorParser) / { producer(it) }, strongerParser)
+        }
     }
 }
 
@@ -106,13 +112,15 @@ open class BinaryOperator<T : Value, R : Value>(
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")
-    private fun producer(a: Exp<*>, b: Exp<*>): BinaryCalculation<T, R> =
+    fun producer(a: Exp<*>, b: Exp<*>): BinaryCalculation<T, R> =
         BinaryCalculation<T, R>(a as Exp<R>, b as Exp<R>, this@BinaryOperator)
 
-    override fun parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = when (association) {
-        Association.LEFT -> leftAssoc(::producer, strongerParser, operatorParser)
-        Association.RIGHT -> rightAssoc(::producer, strongerParser, operatorParser)
-        Association.NONE -> nonAssoc(::producer, strongerParser, operatorParser)
-    }
+    @Suppress("OVERRIDE_BY_INLINE")
+    final override inline fun parse(noinline strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
+        when (association) {
+            Association.LEFT -> leftAssoc(::producer, strongerParser, operatorParser)
+            Association.RIGHT -> rightAssoc(::producer, strongerParser, operatorParser)
+            Association.NONE -> nonAssoc(::producer, strongerParser, operatorParser)
+        }
 
 }

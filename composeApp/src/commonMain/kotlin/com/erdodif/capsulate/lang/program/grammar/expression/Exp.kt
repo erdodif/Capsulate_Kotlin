@@ -167,4 +167,4 @@ inline fun pAtom(): ExParser = {
     )() as ParserResult<Exp<Value>>
 }
 
-val pExp: Parser<Exp<Value>> = builtInOperatorTable.parser(pAtom())
+val pExp: Parser<Exp<Value>> = builtInOperatorTable.parser()

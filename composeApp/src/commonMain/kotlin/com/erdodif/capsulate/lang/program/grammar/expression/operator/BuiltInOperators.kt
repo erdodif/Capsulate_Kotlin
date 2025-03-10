@@ -7,6 +7,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
 import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.expression.pAtom
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.or
 import com.erdodif.capsulate.lang.program.grammar.orEither
@@ -127,7 +128,7 @@ object Equal : BinaryOperator<Value, Value>(
 object And : BinaryOperator<VBool, VBool>(
     6,
     "∧",
-    orEither(_char('&'),_char('∧')),
+    orEither(_char('&'),_char(/*'∧'*/ '^')),
     Association.LEFT,
     { a, b -> VBool(a.value && b.value) }
 )
@@ -160,11 +161,11 @@ object Not : UnaryOperator<VBool, VBool>(
 )
 
 val builtInOperators = arrayListOf(
-    Add, Sub, Sign, Mul, Div,
-    And, Or, Not,
+    Add, Sub, /*Sign,*/ Mul, Div,
+    And, Or, //Not,
     SmallerEq, LargerEq, Smaller, Larger, Equal
 )
 
 @Suppress("UNCHECKED_CAST")
 val builtInOperatorTable: OperatorTable<Exp<Value>> =
-    OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>)
+    OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>, pAtom())

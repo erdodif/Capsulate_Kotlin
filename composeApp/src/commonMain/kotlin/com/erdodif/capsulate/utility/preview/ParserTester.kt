@@ -36,7 +36,6 @@ import com.erdodif.capsulate.lang.program.grammar.blockOrParallel
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.builtInOperatorTable
-import com.erdodif.capsulate.lang.program.grammar.expression.pAtom
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.Pattern
@@ -121,7 +120,7 @@ private val parsers: List<Pair<Parser<*>, String>> = listOf(
     pVariable to "variable",
     program to "program",
     halfProgram to "half program",
-    builtInOperatorTable.verboseParser(pAtom()) to "expression",
+    builtInOperatorTable.verboseParser() to "expression",
     pBoolLit to "boolean literal",
     pIntLit to "integer literal",
     pStrLit to "string literal",
