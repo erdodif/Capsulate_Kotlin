@@ -14,12 +14,12 @@ class BuiltInOperatorTest {
 
     @Test
     fun `addition with subtraction`(){
-        builtInOperatorTable.parser(pVariable) pass "a + b"
+        builtInOperatorTable.parser() pass "a + b"
     }
 
     @Test
     fun `negation single`(){
-        builtInOperatorTable.parser(pVariable) pass "!a" matches {
+        builtInOperatorTable.parser() pass "!a" matches {
             assertIs<UnaryCalculation<*,*>>(it.value)
             assertIs<Not>(it.value.operator)
             assertIs<Variable>(it.value.param)

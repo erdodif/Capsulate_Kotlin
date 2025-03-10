@@ -72,10 +72,6 @@ class OperatorTest {
         val weakNone = BinaryOperator<TestValue, TestValue>(5, "=", _char('='), Association.NONE)
         { _, _ -> TestValue('=') }
 
-        val operatorsConflict = OperatorTable(
-            strongLeft, strongRight, weakLeft, weakRight, unaryPreLeft,
-            unaryPre, unaryPostLeft, unaryPost, strongNone, weakNone
-        )
         val testAtom: Parser<Exp<TestValue>> = tok(
             asum(
                 char('a'),
@@ -84,11 +80,22 @@ class OperatorTest {
                 char('d')
             )
         ) / { TestExp(it) }
+        val operatorsConflict = OperatorTable(
+            strongLeft, strongRight, weakLeft, weakRight, unaryPreLeft,
+            unaryPre, unaryPostLeft, unaryPost, strongNone, weakNone, atomParser = testAtom
+        )
         val operatorsSimple =
-            OperatorTable<Exp<TestValue>>(weakLeft, weakRight, weakNone, unaryPre, unaryPost)
+            OperatorTable<Exp<TestValue>>(
+                weakLeft,
+                weakRight,
+                weakNone,
+                unaryPre,
+                unaryPost,
+                atomParser = testAtom
+            )
 
         fun OperatorTable<Exp<TestValue>>.parse(text: String) =
-            ParserState(text).parse(topLevel(verboseParser(testAtom)))
+            ParserState(text).parse(topLevel(verboseParser()))
 
         fun expectForSingle(
             label: String,
@@ -144,11 +151,11 @@ class OperatorTest {
     fun single_value_Pass() {
         assertTrue(
             { it.value is TestExp && it.value.matchedChar == 'a' },
-            operatorsSimple.parser(testAtom)(ParserState("a"))
+            operatorsSimple.parser()(ParserState("a"))
         )
         assertTrue(
             { it.value is TestExp && it.value.matchedChar == 'b' },
-            operatorsConflict.parser(testAtom)(ParserState("b"))
+            operatorsConflict.parser()(ParserState("b"))
         )
     }
 

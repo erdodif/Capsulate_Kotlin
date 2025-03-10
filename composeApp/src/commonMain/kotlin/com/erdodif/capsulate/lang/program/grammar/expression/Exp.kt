@@ -32,8 +32,8 @@ import com.erdodif.capsulate.lang.util._integer
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
-import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.on
 import com.erdodif.capsulate.lang.util.times
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -150,21 +150,16 @@ val pVariable: Parser<Variable> = _nonKeyword[{
     if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
     else pass(it.match.start, Variable(it.value, it.match))
 }]
-val litOrder: Array<Parser<Exp<*>>> = arrayOf(
-    pIntLit,
-    pBoolLit,
-    pStrLit,
-    pVariable
-)
+
 typealias ExParser = Parser<Exp<Value>>
 
 @Suppress("UNCHECKED_CAST")
 inline fun pAtom(): ExParser = {
     // Can't be directly assigned, or else the pExp reference -|
     //                                               v___v-----| would be null
-    asum(
-        sFunctionCall, *litOrder, middle(_char('('), pExp, _char(')'))
-    )() as ParserResult<Exp<Value>>
+    (sFunctionCall on pIntLit on pBoolLit on pStrLit on pVariable on middle(
+        _char('('), pExp, _char(')')
+    ))() as ParserResult<Exp<Value>>
 }
 
 val pExp: Parser<Exp<Value>> = builtInOperatorTable.parser()

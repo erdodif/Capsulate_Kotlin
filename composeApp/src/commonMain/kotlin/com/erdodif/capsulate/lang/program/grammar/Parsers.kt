@@ -432,7 +432,7 @@ inline fun <T> chainr1(
     var results: ArrayDeque<ParserResult<T>> = ArrayDeque<ParserResult<T>>()
     var funResults: ArrayDeque<ParserResult<(T, T) -> T>> = ArrayDeque()
     results.add(value())
-    while (results.last() is Pass) {
+    while (results.last() is Pass && (funResults.isEmpty() || funResults.last() is Pass)) {
         val pos = this.position
         funResults.add(func())
         results.add(value())
@@ -440,14 +440,25 @@ inline fun <T> chainr1(
             position = pos
         }
     }
-    results.removeLast() // Must be ignored (either value() or func() has failed!)
-    val start = (results.first() as Pass).match.start
-    val end = (results.last() as Pass).match.end
-    var out = (results.removeLast() as Pass).value
-    while (results.isNotEmpty()) {
-        out = (funResults.removeLast() as Pass).value(out, (results.removeLast() as Pass).value)
+    val result = results.last()
+    if (result is Fail) {
+        results.removeLast() // Must be ignored (either value() or func() has failed!)
     }
-    Pass(out, this, MatchPos(start, end))
+    if (funResults.isNotEmpty() && funResults.last() is Fail) {
+        funResults.removeLast()
+    }
+    if (results.isEmpty()) {
+        result // Fail
+    } else {
+        val start = (results.first() as Pass).match.start
+        val end = (results.last() as Pass).match.end
+        var out = (results.removeLast() as Pass).value
+        while (results.isNotEmpty() && funResults.isNotEmpty()) {
+            out = (funResults.removeLast() as Pass).value((results.removeLast() as Pass).value, out)
+        }
+        Pass(out, this, MatchPos(start, end))
+
+    }
 }
 
 /**

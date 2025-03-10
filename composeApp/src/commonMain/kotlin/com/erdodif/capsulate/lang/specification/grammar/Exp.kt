@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.erdodif.capsulate.lang.specification.grammar
 
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
@@ -28,9 +30,9 @@ import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._natural
 import com.erdodif.capsulate.lang.util._nonKeyword
-import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.on
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.specification.coc.Type as CocType
 
@@ -59,16 +61,8 @@ fun Context.sConst(): Parser<Variable> = sVar[{
 }]
 
 fun Context.sTerm(): Parser<Sort> = {
-    asum(
-        lambda(),
-        forall(),
-        assumption(),
-        definition(),
-        shortDefinition(),
-        sSort,
-        sConst(),
-        app()
-    )()
+    (lambda() on forall() on assumption() on
+            definition() on shortDefinition() on sSort on sConst() on app())()
 }
 
 fun Context.app(): Parser<App> = (sTerm() + middle(_char('('), sTerm(), _char(')')))[{

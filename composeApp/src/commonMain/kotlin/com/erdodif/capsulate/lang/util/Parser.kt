@@ -17,14 +17,14 @@ open class ParserState(
     /**
      * Runs the parser on this context
      */
-    fun <T> parse(parser: Parser<T>): ParserResult<T> = parser()
+    inline fun <T> parse(crossinline parser: Parser<T>): ParserResult<T> = parser()
 
     /**
      * Tries to run the parser
      *
      * On failure, the position is reset
      */
-    fun <T> tryParse(parser: Parser<T>): ParserResult<T> {
+    inline fun <T> tryParse(crossinline parser: Parser<T>): ParserResult<T> {
         val pos = position
         val result = parser()
         if (result is Fail) {
@@ -58,7 +58,7 @@ open class ParserState(
     }
 
     operator fun get(start: Int, end: Int): String = input[start, end]
-    operator fun get(match: MatchPos): String = input.get(match.start, match.end)
+    operator fun get(match: MatchPos): String = input[match.start, match.end]
 }
 
 sealed class ParserResult<out T>(open val state: ParserState) {
@@ -201,6 +201,11 @@ inline fun <T, R> Parser<T?>.applyIfPos(crossinline lambda: ParserState.(T, Matc
         if (it == null) null else lambda(it as T, pos)
     }
 
+@Deprecated(
+    "Inlining is not possible when vararg is used, consider using [on], chaining the known parsers together",
+    ReplaceWith("on", "com.erdodif.capsulate.lang.util"),
+    DeprecationLevel.WARNING
+)
 inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {
     val pos = position
     var result: ParserResult<T> = fail("Nothing matched")
@@ -218,4 +223,15 @@ inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {
         }
     }
     result
+}
+
+inline infix fun <T> Parser<T>.on(crossinline other: Parser<T>): Parser<T> = {
+    val pos = position
+    when (val result = this@on()) {
+        is Pass<T> -> result
+        else -> {
+            position = pos
+            other()
+        }
+    }
 }

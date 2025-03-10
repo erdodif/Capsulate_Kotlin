@@ -32,10 +32,10 @@ import com.erdodif.capsulate.lang.util._lineBreak
 import com.erdodif.capsulate.lang.util._lineEnd
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
-import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.freeChar
 import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.on
 import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
@@ -46,23 +46,10 @@ fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 fun <T> newLined(parser: Parser<T>): Parser<T> = left(parser, many(_lineBreak))
 
 val nonParallel: Parser<Statement> = {
-    asum(
-        sMethodCall,
-        sReturn,
-        sSkip,
-        sAbort,
-        sWait,
-        sAssign,
-        sSelect,
-        sParallelAssign,
-        sWhen,
-        sIf,
-        sWhile,
-        sDoWhile,
-        sExpression,
-        sAtom,
-    )()
+    (sMethodCall on sReturn on sSkip on sAbort on sWait on sAssign on sSelect on
+            sParallelAssign on sWhen on sIf on sWhile on sDoWhile on sExpression on sAtom)()
 }
+
 
 val statement: Parser<Statement> = { orEither(sParallel, nonParallel)() }
 
@@ -81,9 +68,9 @@ val statementOrBlock: Parser<ArrayList<out Statement>> =
 
 val program: Parser<ArrayList<Statement>> = {
     right(
-        many(asum(_lineEnd, sMethod, sFunction)),
+        many(_lineEnd on sMethod on sFunction),
         orEither(
-            delimited(statement, some(_lineBreak) + asum(sMethod, sFunction)),
+            delimited(statement, some(_lineBreak + (sMethod on sFunction))),
             newLined(statement) / { arrayListOf(it) }),
     )()
 }
@@ -212,17 +199,15 @@ fun tokenizeProgram(input: String): ParserResult<List<Token>> =
         .parse(
             topLevel(
                 many(
-                    asum(
-                        (_lineEnd * { it, pos -> LineEnd(it, pos) }) as Parser<Token>,
-                        pVariable as Parser<Token>,
-                        pComment as Parser<Token>,
-                        pIntLit as Parser<Token>,
-                        pBoolLit as Parser<Token>,
-                        pStrLit as Parser<Token>,
-                        (_anyKeyword * { it, pos -> KeyWord(it, pos) }) as Parser<Token>,
-                        (tok(reservedChar) * { it, pos -> Symbol(it, pos) }) as Parser<Token>,
-                        (tok(some(freeChar)) * { _, pos -> Token(pos) }),
-                    )
+                    (_lineEnd * { it, pos -> LineEnd(it, pos) }) as Parser<Token> on
+                            pVariable as Parser<Token> on
+                            pComment as Parser<Token> on
+                            pIntLit as Parser<Token> on
+                            pBoolLit as Parser<Token> on
+                            pStrLit as Parser<Token> on
+                            (_anyKeyword * { it, pos -> KeyWord(it, pos) }) as Parser<Token> on
+                            (tok(reservedChar) * { it, pos -> Symbol(it, pos) }) as Parser<Token> on
+                            (tok(some(freeChar)) * { _, pos -> Token(pos) })
                 )
             )
         )

@@ -64,9 +64,7 @@ data class BinaryCalculation<T : Value, R : Value>(
 
     override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
         (first to second).withValue(context) { a: R, b: R ->
-            Left(
-                operator.operation(context, a, b)
-            )
+            Left(operator.operation(context, a, b))
         }
 
     override fun toString(state: ParserState): String =
@@ -91,15 +89,18 @@ open class UnaryOperator<T : Value, R : Value>(
         UnaryCalculation<T, R>(a as Exp<R>, this@UnaryOperator)
 
     @Suppress("OVERRIDE_BY_INLINE")
-    final override inline fun parse(crossinline strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = {
+    final override inline fun parse(crossinline strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
         when (fixation) {
-            Fixation.PREFIX -> strongerParser()
-            //orEither(right(operatorParser, strongerParser) / { producer(it) }, strongerParser)
+            Fixation.PREFIX -> orEither(
+                right(operatorParser, strongerParser) / { producer(it) },
+                strongerParser
+            )
 
-            Fixation.POSTFIX -> strongerParser()
-            //orEither(left(strongerParser, operatorParser) / { producer(it) }, strongerParser)
+            Fixation.POSTFIX -> orEither(
+                left(strongerParser, operatorParser) / { producer(it) },
+                strongerParser
+            )
         }
-    }
 }
 
 @KParcelize
@@ -116,7 +117,7 @@ open class BinaryOperator<T : Value, R : Value>(
         BinaryCalculation<T, R>(a as Exp<R>, b as Exp<R>, this@BinaryOperator)
 
     @Suppress("OVERRIDE_BY_INLINE")
-    final override inline fun parse(noinline strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
+    final override inline fun parse(crossinline strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
         when (association) {
             Association.LEFT -> leftAssoc(::producer, strongerParser, operatorParser)
             Association.RIGHT -> rightAssoc(::producer, strongerParser, operatorParser)

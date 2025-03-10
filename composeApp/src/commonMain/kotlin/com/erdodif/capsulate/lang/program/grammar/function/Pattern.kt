@@ -20,8 +20,8 @@ import com.erdodif.capsulate.lang.util._anyKeyword
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._lineEnd
 import com.erdodif.capsulate.lang.util.asString
-import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.on
 import com.erdodif.capsulate.lang.util.tok
 
 @KParcelize
@@ -60,7 +60,8 @@ val patternComparator = Comparator<Pattern> { a, b ->
 val sPattern: Parser<Pattern> = (many(
     tok(
         right(
-            not(asum(_anyKeyword, char('$'), char('{'), char('}'), whiteSpace, _lineEnd)), anyChar
+            not(_anyKeyword on char('$') on char('{') on char('}') on whiteSpace on _lineEnd),
+            anyChar
         )
     )
 ) + many(
@@ -69,7 +70,7 @@ val sPattern: Parser<Pattern> = (many(
                 many(
                     right(
                         not(
-                            asum(_anyKeyword, char('$'), char('{'), char('}'), whiteSpace, _lineEnd)
+                            _anyKeyword on char('$') on char('{') on char('}') on whiteSpace on _lineEnd
                         ),
                         anyChar
                     )
