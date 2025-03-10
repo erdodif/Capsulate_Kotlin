@@ -16,6 +16,7 @@ import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.getEither
 import com.erdodif.capsulate.lang.util.times
+import kotlinx.coroutines.MainScope
 
 inline val anyChar: Parser<Char>
     get() = {
@@ -461,16 +462,36 @@ fun <T> leftAssoc(
 
 inline fun <reified T> nonAssoc(
     crossinline func: (T, T) -> T,
-    noinline parser: Parser<T>,
+    crossinline parser: Parser<T>,
     crossinline separator: Parser<*>
-): Parser<T> = delimited(parser, separator)[{
-    when (it.value.size) {
-        0 -> Fail("No association found.", it.state)
-        1 -> Pass(it.value[0], it.state, it.match)
-        2 -> Pass(func(it.value[0], it.value[1]), it.state, it.match)
-        else -> Fail("Too many association found.", it.state)
+): Parser<T> = {
+    when (val result1 = parser()) {
+        is Pass -> {
+            val pos = position
+            when (val result2 = right(separator, parser)()) {
+                is Pass -> {
+                    val pos = position
+                    if (separator() is Pass) {
+                        Fail("Too many association found.", this)
+                    } else {
+                        position = pos
+                        Pass(
+                            func(result1.value, result2.value), this,
+                            MatchPos(result1.match.start, result2.match.end)
+                        )
+                    }
+                }
+
+                is Fail -> {
+                    position = pos
+                    result1
+                }
+            }
+        }
+
+        is Fail -> result1
     }
-}]
+}
 
 /**
  * Asserts the parser does match the whole input file
