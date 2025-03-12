@@ -16,19 +16,18 @@ import com.erdodif.capsulate.lang.program.grammar.stringCaseLess
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace
 import com.erdodif.capsulate.lang.program.grammar.whiteSpaceChars
 
-val pLineBreak: Parser<Char> = asum(*lineBreak.map { char(it) }.toTypedArray())
-val pLineEnd: Parser<Char> = asum(*lineEnd.map { char(it) }.toTypedArray())
+val pLineBreak: Parser<Char> = charOf(lineBreak)
+val pLineEnd: Parser<Char> = charOf(lineEnd)
 
 /**
  * Matches the given [parser], then removes the whitespaces
  */
 inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = {
     val firstResult = parser()
-    if(firstResult is Pass){
+    if (firstResult is Pass) {
         many(whiteSpace)()
-        firstResult.copy(state = this)
-    }
-    else{
+        Pass(firstResult.value, this, firstResult.match)
+    } else {
         firstResult
     }
 }
@@ -43,7 +42,18 @@ val freeChar: Parser<Char> =
 /**
  * Looks for a word made of non reserved characters
  */
-val freeWord: Parser<String> = some(freeChar) / { it.asString() }
+val freeWord: Parser<String> = {
+    when (val result = some(freeChar)()) {
+        is Pass ->
+            if (result.value.first().isDigit()) {
+                Fail("Word cannot start with a digit!", result.state)
+            } else {
+                Pass(buildString { result.value.map(::append) }, result.state, result.match)
+            }
+
+        is Fail -> result
+    }
+}
 
 inline fun _char(char: Char): Parser<Char> = tok(char(char))
 
@@ -51,11 +61,11 @@ inline fun _keyword(string: String): Parser<String> = tok(stringCaseLess(string)
 
 val _anyKeyword: Parser<String> = asum(*keywords.map { _keyword(it) }.toTypedArray())
 
-val reservedChar: Parser<Char> = asum(*reservedChars.map { char(it) }.toTypedArray())
+val reservedChar: Parser<Char> = charOf(reservedChars)
 val _reservedChar: Parser<Char> = tok(reservedChar)
 
 val _nonKeyword: Parser<String> = tok(freeWord)[{
-    if ( it.value in keywords) {
+    if (it.value in keywords) {
         fail("The word '${it.value}' is reserved!")
     } else {
         it

@@ -5,6 +5,7 @@ package com.erdodif.capsulate.lang.util
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
+import com.erdodif.capsulate.lang.program.grammar.satisfy
 import kotlin.math.min
 
 open class ParserState(
@@ -200,6 +201,11 @@ inline fun <T, R> Parser<T?>.applyIfPos(crossinline lambda: ParserState.(T, Matc
         @Suppress("UNCHECKED_CAST")
         if (it == null) null else lambda(it as T, pos)
     }
+
+/**
+ * Accepts any character from the given [reference]
+ */
+inline fun charOf(reference: String): Parser<Char> = satisfy { it in reference }
 
 @Deprecated(
     "Inlining is not possible when vararg is used, consider using [on], chaining the known parsers together",
