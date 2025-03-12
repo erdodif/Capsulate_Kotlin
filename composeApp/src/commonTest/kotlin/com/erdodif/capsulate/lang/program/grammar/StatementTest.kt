@@ -2,10 +2,16 @@ package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.at
+import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
+import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.matches
 import com.erdodif.capsulate.pass
+import com.erdodif.capsulate.withMatch
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class StatementTest {
     private val comment = topLevel(pComment)
@@ -50,8 +56,14 @@ class StatementTest {
 
     @Test
     fun `assignment passes`(){
-        assign pass "a := 1"
-        assign pass "a := a"
+        with(assign pass "a := 1"  withMatch (0 to 6) at 6) {
+            assertIs<Pass<*>>(this)
+            assertIs<Assign>(this.value)
+            assertIs<IntLit>(this.value.value)
+            assertEquals(5, this.value.value.match.start)
+            assertEquals(6, this.value.value.match.end)
+        }
+        assign pass "a := a" withMatch (0 to 6) at 6
     }
 
     @Test

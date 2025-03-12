@@ -79,15 +79,6 @@ val blockOrParallel: (ParserState) -> ParserResult<ArrayList<out Statement>> = {
 val statementOrBlock: Parser<ArrayList<out Statement>> =
     orEither(blockOrParallel, nonParallel / { arrayListOf(it) })
 
-val program: Parser<ArrayList<Statement>> = {
-    right(
-        many(asum(_lineEnd, sMethod, sFunction)),
-        orEither(
-            delimited(statement, some(_lineBreak) + asum(sMethod, sFunction)),
-            newLined(statement) / { arrayListOf(it) }),
-    )()
-}
-
 val sError: Parser<LineError> =
     delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
 
@@ -181,22 +172,6 @@ val sSelect: Parser<Statement> =
         Select(label, set.toString(), pos)
     }
 
-typealias NamedHalfProgram = Pair<String?, ArrayList<Either<Statement, LineError>>>
-typealias Declarations = ArrayList<Either<Method, Function<Value>>>
-
-val sNamed: Parser<NamedHalfProgram> =
-    {
-        delimit(
-            optional(right(_keyword("program"), _nonKeyword)) + many(
-                right(many(_lineEnd), or(statement, sError))
-            )
-        )()
-    }
-
-val halfProgram: Parser<Pair<Declarations, NamedHalfProgram>> =
-    topLevel(delimit(many(or(sMethod, sFunction))) + sNamed)
-
-
 val sParallel: Parser<Statement> = {
     (delimited2(
         middle(newLined(_char('{')), many(delimit(statement)), newLined(_char('}'))),
@@ -204,29 +179,3 @@ val sParallel: Parser<Statement> = {
     ) * { stmt, pos -> Parallel(stmt, pos) as Statement })()
 }
 
-fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
-    ParserState(input).parse(topLevel(program))
-
-fun tokenizeProgram(input: String): ParserResult<List<Token>> =
-    ParserState(input)
-        .parse(
-            topLevel(
-                many(
-                    asum(
-                        (_lineEnd * { it, pos -> LineEnd(it, pos) }) as Parser<Token>,
-                        pVariable as Parser<Token>,
-                        pComment as Parser<Token>,
-                        pIntLit as Parser<Token>,
-                        pBoolLit as Parser<Token>,
-                        pStrLit as Parser<Token>,
-                        (_anyKeyword * { it, pos -> KeyWord(it, pos) }) as Parser<Token>,
-                        (tok(reservedChar) * { it, pos -> Symbol(it, pos) }) as Parser<Token>,
-                        (tok(some(freeChar)) * { _, pos -> Token(pos) }),
-                    )
-                )
-            )
-        )
-
-fun Env.runProgram(statements: List<Statement>) {
-    for (statement in statements) statement.evaluate(this)
-}
