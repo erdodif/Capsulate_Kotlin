@@ -467,14 +467,14 @@ inline fun <reified T> nonAssoc(
 ): Parser<T> = {
     when (val result1 = parser()) {
         is Pass -> {
-            val pos = position
+            val firstPos = position
             when (val result2 = right(separator, parser)()) {
                 is Pass -> {
-                    val pos = position
-                    if (separator() is Pass) {
+                    val secondPos = position
+                    if (right(separator, parser)() is Pass) {
                         Fail("Too many association found.", this)
                     } else {
-                        position = pos
+                        position = secondPos
                         Pass(
                             func(result1.value, result2.value), this,
                             MatchPos(result1.match.start, result2.match.end)
@@ -483,7 +483,7 @@ inline fun <reified T> nonAssoc(
                 }
 
                 is Fail -> {
-                    position = pos
+                    position = firstPos
                     result1
                 }
             }

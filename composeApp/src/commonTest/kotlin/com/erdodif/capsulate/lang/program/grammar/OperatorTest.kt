@@ -243,7 +243,7 @@ class OperatorTest {
     @Test
     fun weakNone_Fail() {
         operatorsSimple fail "a = b = c" at 9
-        operatorsSimple fail "a =" at 3
+        operatorsSimple fail "a =" at 2
         operatorsSimple fail "= a" at 0
         operatorsSimple fail "a + b = a - b = c" at 17
     }
