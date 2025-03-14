@@ -166,5 +166,5 @@ val builtInOperators = arrayListOf(
 )
 
 @Suppress("UNCHECKED_CAST")
-val builtInOperatorTable: OperatorTable<Exp<Value>> =
+val builtInOperatorTable: OperatorTable<Value> =
     OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>)

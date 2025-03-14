@@ -121,7 +121,7 @@ private val parsers: List<Pair<Parser<*>, String>> = listOf(
     pVariable to "variable",
     program to "program",
     halfProgram to "half program",
-    builtInOperatorTable.verboseParser(pAtom()) to "expression",
+    builtInOperatorTable.parser(pAtom()) to "expression",
     pBoolLit to "boolean literal",
     pIntLit to "integer literal",
     pStrLit to "string literal",

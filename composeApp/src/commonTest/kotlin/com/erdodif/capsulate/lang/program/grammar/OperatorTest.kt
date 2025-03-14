@@ -41,7 +41,7 @@ class OperatorTest {
         @KParcelize
         private data class TestExp(val matchedChar: Char) : Exp<TestValue> {
             override fun evaluate(context: Env) = Left(TestValue(matchedChar))
-            override fun toString(state: ParserState) = matchedChar.toString()
+            override fun toString(state: ParserState, parentStrength: Int) = matchedChar.toString()
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == matchedChar) ||
                         (other is TestValue && other.char == matchedChar)
@@ -60,12 +60,12 @@ class OperatorTest {
         { _, _ -> TestValue('+') }
         val unaryPreLeft = UnaryOperator<TestValue, TestValue>(20, "-", _char('-'), Fixation.PREFIX)
         { _ -> TestValue('~') }
-        val unaryPre = UnaryOperator<TestValue, TestValue>(20, "~", _char('@'), Fixation.PREFIX)
+        val unaryPre = UnaryOperator<TestValue, TestValue>(20, "@", _char('@'), Fixation.PREFIX)
         { _ -> TestValue('~') }
         val unaryPostLeft =
-            UnaryOperator<TestValue, TestValue>(20, "~", _char('*'), Fixation.POSTFIX)
+            UnaryOperator<TestValue, TestValue>(20, "~*", _char('*'), Fixation.POSTFIX)
             { _ -> TestValue('~') }
-        val unaryPost = UnaryOperator<TestValue, TestValue>(20, "~", _char('#'), Fixation.POSTFIX)
+        val unaryPost = UnaryOperator<TestValue, TestValue>(20, "#", _char('#'), Fixation.POSTFIX)
         { _ -> TestValue('~') }
         val strongNone = BinaryOperator<TestValue, TestValue>(10, "_", _char('_'), Association.NONE)
         { _, _ -> TestValue('_') }
@@ -85,10 +85,10 @@ class OperatorTest {
             )
         ) / { TestExp(it) }
         val operatorsSimple =
-            OperatorTable<Exp<TestValue>>(weakLeft, weakRight, weakNone, unaryPre, unaryPost)
+            OperatorTable<TestValue>(weakLeft, weakRight, weakNone, unaryPre, unaryPost)
 
-        fun OperatorTable<Exp<TestValue>>.parse(text: String) =
-            ParserState(text).parse(topLevel(verboseParser(testAtom)))
+        fun OperatorTable<TestValue>.parse(text: String) =
+            ParserState(text).parse(topLevel(parser(testAtom)))
 
         fun expectForSingle(
             label: String,
@@ -133,10 +133,10 @@ class OperatorTest {
                     (calc2.second as TestExp).matchedChar == thirdChar
         }
 
-        infix fun OperatorTable<Exp<TestValue>>.pass(text: String): Pass<Exp<TestValue>> =
+        infix fun OperatorTable<TestValue>.pass(text: String): Pass<Exp<TestValue>> =
             this.parse(text).let(::assertPass)
 
-        infix fun OperatorTable<Exp<TestValue>>.fail(text: String): Fail =
+        infix fun OperatorTable<TestValue>.fail(text: String): Fail =
             this.parse(text).let(::assertFail)
     }
 
@@ -216,7 +216,7 @@ class OperatorTest {
     }
 
     @Test
-    fun unaryPreLeft_Pass() {
+    fun unaryPre_Pass() {
         val expectPredicate: (Pass<Exp<TestValue>>) -> Boolean =
             { it.value is UnaryCalculation<*, *> && ((it.value as UnaryCalculation<*, *>).param as TestExp).matchedChar == 'a' }
         operatorsSimple pass "@a" matches expectPredicate
@@ -225,10 +225,23 @@ class OperatorTest {
     }
 
     @Test
-    fun unaryPostRight_Fail() {
+    fun unaryPre_Fail() {
         operatorsSimple fail "a@" at 1
-        operatorsSimple fail "@\n a" at 0
-        operatorsSimple fail "b @ a " at 2
+        operatorsSimple fail "a @" at 2
+        operatorsSimple fail "a @ b" at 2
+    }
+
+    @Test
+    fun unaryPost_Pass() {
+        operatorsSimple pass "a#" at 2
+        operatorsSimple pass "a #" at 3
+    }
+
+    @Test
+    fun unaryPost_Fail() {
+        operatorsSimple fail "#a" at 1
+        operatorsSimple fail "a\n #" at 1
+        operatorsSimple fail "b # a " at 4
     }
 
     @Test
@@ -248,5 +261,15 @@ class OperatorTest {
         operatorsSimple fail "a + b = a - b = c" at 17
     }
 
-    //TODO: Mixing binding strengths
+    @Test
+    fun `multiple unary on the same operand`(){
+        operatorsConflict pass "-a"
+        operatorsConflict pass "@a"
+        operatorsConflict pass "-@a"
+        operatorsConflict pass "@-a"
+        operatorsConflict pass "a*"
+        operatorsConflict pass "a#"
+        operatorsConflict pass "a*#"
+        operatorsConflict pass "a#*"
+    }
 }

@@ -1,11 +1,10 @@
 package com.erdodif.capsulate.lang.program.grammar.expression.operator
 
-import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.program.grammar.expression.Exp
+import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.util.Parser
-import com.erdodif.capsulate.lang.util.ParserResult
-import com.erdodif.capsulate.lang.util.Pass
 
-abstract class Operator<T>(
+sealed class Operator<T : Exp<*>>(
     open val bindingStrength: Int,
     open val label: String,
     open val operatorParser: Parser<*>
@@ -16,34 +15,24 @@ abstract class Operator<T>(
     abstract fun parse(strongerParser: Parser<T>): Parser<T>
 }
 
-class OperatorTable<T>(private var operators: List<Operator<T>>) {
-    constructor(vararg operators: Operator<T>) : this(operators.toList())
+class OperatorTable<T : Value>(private var operators: Map<Int, List<Operator<Exp<T>>>>) {
+    constructor(vararg operators: Operator<Exp<T>>) : this(operators.groupBy { it.bindingStrength })
+    constructor(operators: List<Operator<Exp<T>>>) : this(operators.groupBy { it.bindingStrength })
 
-    init {
-        operators = operators.sortedBy { it.bindingStrength }
-    }
+    private val maxKey = operators.keys.max()
 
-    operator fun get(index: Int, atomParser: Parser<T>): Parser<T> =
-        if (index > operators.lastIndex - 1) {
+    operator fun get(index: Int, atomParser: Parser<Exp<T>>): Parser<Exp<T>> =
+        (if (index >= operators.keys.count()) {
             atomParser
+        } else if (operators[operators.keys.sorted()[index]] == null ||
+            operators[operators.keys.sorted()[index]]!!.isEmpty()
+        ) {
+            get(index + 1, atomParser)
         } else {
-            operators[index].parse(get(index + 1, atomParser))
-        }
+            operators[operators.keys.sorted()[index]]!!.parse<T>(
+                get(index + 1, atomParser) as Parser<Exp<T>>
+            )
+        })
 
-    fun parser(atomParser: Parser<T>): Parser<T> = this[0, atomParser]
-
-    fun verboseParser(atomParser: Parser<T>): Parser<T> = {
-        val stringBuilder = StringBuilder()
-        var lastResult: ParserResult<T> = fail("OperatorTable empty.")
-        for (i in operators.indices) {
-            lastResult = get(i, atomParser)()
-            if (lastResult is Pass<*>) break
-            lastResult as Fail
-            stringBuilder.append("\n'${operators[i].label}' " +
-                    "(strength: ${operators[i].bindingStrength}) " +
-                    "failed at ${lastResult.state.position} " +
-                    "with reason: ${lastResult.reason}")
-        }
-        lastResult
-    }
+    fun parser(atomParser: Parser<Exp<T>>): Parser<Exp<T>> = this[0, atomParser]
 }

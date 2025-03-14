@@ -68,7 +68,7 @@ class FunctionCall<T : Value>(
     override fun evaluate(context: Env): Right<PendingExpression<Value, T>> =
         Right(PendingExpression(this as FunctionCall<Value>) { Left(it as T) })
 
-    override fun toString(state: ParserState): String =
+    override fun toString(state: ParserState, parentStrength: Int): String =
         "${function.name}(" + buildString {
             values.forEach {
                 append(it.toString(state))

@@ -65,7 +65,7 @@ open class PendingExpression<R : Value, T : Value>(
 interface Exp<T : Value> : KParcelable {
 
     fun evaluate(context: Env): Either<T, PendingExpression<Value, T>>
-    fun toString(state: ParserState): String
+    fun toString(state: ParserState, parentStrength: Int = 0): String
 }
 
 fun <R : Value, T : Value> Exp<T>.withRawValue(

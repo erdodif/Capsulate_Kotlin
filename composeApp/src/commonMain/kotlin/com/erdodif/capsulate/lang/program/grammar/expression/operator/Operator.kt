@@ -14,10 +14,15 @@ import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.withRawValue
 import com.erdodif.capsulate.lang.program.grammar.expression.withValue
+import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
+import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import kotlinx.serialization.Serializable
 
@@ -31,48 +36,6 @@ enum class Fixation {
     PREFIX,
     POSTFIX
 }
-
-@KParcelize
-data class UnaryCalculation<T : Value, R : Value>(
-    val param: Exp<R>,
-    val operator: UnaryOperator<T, R>
-) : Exp<T> {
-
-    override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
-        param.withRawValue(context) { a: R -> operator.operation(context, a) }
-
-    override fun toString(state: ParserState): String =
-        when (operator.fixation) {
-            Fixation.PREFIX -> "${operator.label}${param.toString(state)}"
-            Fixation.POSTFIX -> "${param.toString(state)}${operator.label}"
-        }
-
-    override fun toString(): String = when (operator.fixation) {
-        Fixation.PREFIX -> "UN({${operator.label}} $param)"
-        Fixation.POSTFIX -> "UN($param {${operator.label}})"
-    }
-}
-
-@KParcelize
-data class BinaryCalculation<T : Value, R : Value>(
-    val first: Exp<R>,
-    val second: Exp<R>,
-    val operator: BinaryOperator<T, R>
-) : Exp<T>, KParcelable {
-
-    override fun evaluate(context: Env): Either<T, PendingExpression<Value, T>> =
-        (first to second).withValue(context) { a: R, b: R ->
-            Left(
-                operator.operation(context, a, b)
-            )
-        }
-
-    override fun toString(state: ParserState): String =
-        "${first.toString(state)} ${operator.label} ${second.toString(state)}"
-
-    override fun toString(): String = "BIN($first {${operator.label}} $second)"
-}
-
 
 @KParcelize
 open class UnaryOperator<T : Value, R : Value>(
@@ -93,6 +56,11 @@ open class UnaryOperator<T : Value, R : Value>(
 
         Fixation.POSTFIX ->
             orEither(left(strongerParser, operatorParser) / { producer(it) }, strongerParser)
+    }
+
+    override fun toString(): String = when(fixation){
+        Fixation.PREFIX -> "$label\$ $bindingStrength"
+        Fixation.POSTFIX -> "\$$label $bindingStrength"
     }
 }
 
@@ -115,4 +83,62 @@ open class BinaryOperator<T : Value, R : Value>(
         Association.NONE -> nonAssoc(::producer, strongerParser, operatorParser)
     }
 
+    override fun toString(): String = when(association){
+        Association.LEFT -> "\$$label\$ L$bindingStrength"
+        Association.RIGHT -> "\$$label\$ R$bindingStrength"
+        Association.NONE -> "\$$label\$ N$bindingStrength"
+    }
+
 }
+
+fun <T : Value> List<BinaryOperator<T, *>>.build(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> =
+    when {
+        isEmpty() -> strongerParser
+        else -> this.drop(1).build(first().parse(strongerParser))
+    }
+
+fun <T : Value> List<Operator<Exp<T>>>.parse(strongerParser: Parser<Exp<T>>): Parser<Exp<T>> = {
+    val pres = filter { it is UnaryOperator<*, *> && it.fixation == Fixation.PREFIX }
+        .map { it as UnaryOperator<T, *> }
+    val posts = filter { it is UnaryOperator<*, *> && it.fixation == Fixation.POSTFIX }
+        .map { it as UnaryOperator<T, *> }
+    val bis = filter { it is BinaryOperator<*, *> }
+        .map { it as BinaryOperator<T, *> }
+    val preResults =
+        many(asum(*pres.mapIndexed { i, op -> op.operatorParser / { i } }.toTypedArray()))()
+    val midResult = bis.build(strongerParser)()
+    val postResults =
+        many(asum(*posts.mapIndexed { i, op -> op.operatorParser / { i } }.toTypedArray()))()
+
+    when (midResult) {
+        is Pass<*> -> {
+            var res = midResult.value
+            preResults.value.reversed().forEach { index ->
+                res = UnaryCalculation<Value, Value>(
+                    res as Exp<Value>,
+                    pres[index] as UnaryOperator<Value, Value>
+                )
+            }
+            postResults.value.reversed().forEach { index ->
+                res = UnaryCalculation<Value, Value>(
+                    res as Exp<Value>,
+                    posts[index] as UnaryOperator<Value, Value>
+                )
+            }
+            Pass(res as Exp<T>, this, MatchPos(preResults.match.start, postResults.match.end))
+        }
+
+        is Fail -> midResult
+    }
+}
+
+inline fun <T> List<T>.split(crossinline predicate: (T) -> Boolean): Pair<List<T>, List<T>> {
+    var second: List<T>
+    val first: List<T> = first@ buildList<T> {
+        second = second@ buildList<T> {
+            this.forEach { if (predicate(it)) first@ add(it) else second@ add(it) }
+        }
+    }
+    return first to second
+}
+

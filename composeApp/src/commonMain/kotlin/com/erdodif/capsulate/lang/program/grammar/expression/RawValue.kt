@@ -16,28 +16,28 @@ sealed class RawValue<T : Value>(override val match: MatchPos) : Exp<T>, Token(m
 @KParcelize
 class StrLit(val value: String, override val match: MatchPos) : RawValue<VStr>(match) {
     override fun get(context: Env): VStr = VStr(value)
-    override fun toString(state: ParserState): String = state[match]
+    override fun toString(state: ParserState, parentStrength: Int): String = state[match]
     override fun toString(): String = "StrLit:$value"
 }
 
 @KParcelize
 class IntLit(val value: Int, override val match: MatchPos) : RawValue<VWhole>(match) {
     override fun get(context: Env): VWhole = VWhole(value)
-    override fun toString(state: ParserState): String = state[match]
+    override fun toString(state: ParserState, parentStrength: Int): String = state[match]
     override fun toString(): String = "IntLit:$value"
 }
 
 @KParcelize
 class NatLit(val value: UInt, override val match: MatchPos) : RawValue<VNat>(match) {
     override fun get(context: Env): VNat = VNat(value)
-    override fun toString(state: ParserState): String = state[match]
+    override fun toString(state: ParserState, parentStrength: Int): String = state[match]
     override fun toString(): String = "NatLit:$value"
 }
 
 @KParcelize
 class BoolLit(val value: Boolean, override val match: MatchPos) : RawValue<VBool>(match) {
     override fun get(context: Env): VBool = VBool(value)
-    override fun toString(state: ParserState): String = state[match]
+    override fun toString(state: ParserState, parentStrength: Int): String = state[match]
     override fun toString(): String = "BoolLit:$value"
 }
 
@@ -52,6 +52,6 @@ class Variable(val id: String, override val match: MatchPos) : RawValue<Value>(m
         }
     }
 
-    override fun toString(state: ParserState): String = state[match]
+    override fun toString(state: ParserState, parentStrength: Int): String = state[match]
     override fun toString(): String = "Variable:$id"
 }
