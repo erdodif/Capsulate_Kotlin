@@ -124,10 +124,21 @@ object Equal : BinaryOperator<Value, Value>(
 )
 
 @KParcelize
+object NotEqual : BinaryOperator<Value, Value>(
+    4,
+    "≠",
+    or(_keyword("!="), _char('≠')),
+    Association.NONE,
+    { a, b ->
+        VBool(a != b)
+    }
+)
+
+@KParcelize
 object And : BinaryOperator<VBool, VBool>(
     6,
     "∧",
-    orEither(_char('&'),_char('∧')),
+    orEither(_char('&'), _char('∧')),
     Association.LEFT,
     { a, b -> VBool(a.value && b.value) }
 )
@@ -154,7 +165,7 @@ object Sign : UnaryOperator<VNum, VWhole>(
 object Not : UnaryOperator<VBool, VBool>(
     20,
     "¬",
-    orEither(_char('!'),_char('¬')),
+    orEither(_char('!'), _char('¬')),
     Fixation.PREFIX,
     { VBool(!it.value) }
 )
@@ -162,7 +173,7 @@ object Not : UnaryOperator<VBool, VBool>(
 val builtInOperators = arrayListOf(
     Add, Sub, Sign, Mul, Div,
     And, Or, Not,
-    SmallerEq, LargerEq, Smaller, Larger, Equal
+    SmallerEq, LargerEq, Smaller, Larger, Equal, NotEqual
 )
 
 @Suppress("UNCHECKED_CAST")
