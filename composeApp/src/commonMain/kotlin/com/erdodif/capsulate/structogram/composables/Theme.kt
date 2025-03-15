@@ -106,7 +106,7 @@ fun StatementText(
     centered: Boolean = true,
     modifier: Modifier = Modifier.padding(Theme.commandPadding)
 ) = Text(
-    text = text,
+    text = text.replace("\n", " "),
     modifier = Theme.commandModifier.then(modifier),
     color = MaterialTheme.colorScheme.onPrimary,
     fontSize = TextUnit.Unspecified,
@@ -123,12 +123,12 @@ fun StatementText(
 )
 
 @Composable
-fun HorizontalBorder() = Spacer(
-    Modifier.fillMaxWidth().height(Theme.borderWidth).background(Theme.borderColor)
+fun HorizontalBorder(modifier: Modifier = Modifier) = Spacer(
+    modifier.fillMaxWidth().height(Theme.borderWidth).background(Theme.borderColor)
 )
 
 @Composable
-fun VerticalBorder() = Spacer(
-    Modifier.fillMaxHeight().width(Theme.borderWidth).background(Theme.borderColor)
+fun VerticalBorder(modifier: Modifier = Modifier) = Spacer(
+    modifier.fillMaxHeight().width(Theme.borderWidth).background(Theme.borderColor)
 )
 

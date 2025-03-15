@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -88,32 +88,33 @@ class LoopStatement(
         val backgroundColor = if (active) MaterialTheme.colorScheme.tertiary
         else MaterialTheme.colorScheme.primary
         Column(
-            modifier.dim(dragging).fillMaxWidth().height(IntrinsicSize.Min)
+            modifier.dim(dragging).fillMaxWidth()//.height(IntrinsicSize.Min)
                 .background(backgroundColor).onDpSize(density) { size = it }
         ) {
-            if (inOrder) { // TODO: This does not work
+            if (inOrder) {
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)
                 {
                     dragging = it
                     Condition(condition, Modifier.fillMaxWidth(), active)
                 }
+                HorizontalBorder(Modifier.padding(start = 32.dp))
             }
-            Row(Modifier.weight(1f, true)) {
-                Spacer(Modifier.width(32.dp).fillMaxHeight())
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Spacer(Modifier.width(32.dp).background(Color.Cyan))
                 VerticalBorder()
                 Column(Modifier.fillMaxWidth()) {
-                    if (inOrder) HorizontalBorder()
                     StackWithSeparator(
                         statements,
                         {
                             it.Show(Modifier.fillMaxWidth(), draggable, activeStatement)
                         }) { HorizontalBorder() }
-                    if (!inOrder) HorizontalBorder()
                 }
             }
             if (!inOrder) {
+                HorizontalBorder(Modifier.padding(start = 32.dp))
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)
                 {
+                    dragging = it
                     Condition(condition, Modifier.fillMaxWidth(), active)
                 }
             }
