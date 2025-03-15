@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,14 +78,16 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
         content: @Composable (Boolean) -> Unit = { Box(modifier) }
     ) = if (draggable) {
         val state = LocalDraggingStatement.current
-        DraggableItem(modifier = if (draggable) modifier else
-            modifier.pointerHoverIcon(PointerIcon.Hand, true),
+        DraggableItem(
+            modifier = if (draggable) modifier else
+                modifier.pointerHoverIcon(PointerIcon.Hand, true),
             key = this@ComposableStatement,
             state = state.state,
             data = this@ComposableStatement,
             dragAfterLongPress = onMobile,
             draggableContent = {
-                val active = remember { MutableTransitionState(false).apply { targetState = true } }
+                val active =
+                    remember { MutableTransitionState(false).apply { targetState = true } }
                 val animationSpec: AnimationSpec<*> = tween<Any>(150)
                 AnimatedVisibility(
                     active,
