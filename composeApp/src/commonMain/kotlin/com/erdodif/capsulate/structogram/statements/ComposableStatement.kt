@@ -132,7 +132,7 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
         get() = this.draggedItem != null && this.draggedItem != this@ComposableStatement
 
     @Composable
-    protected fun DropTarget(state: StatementDragState, pos: Int, replicate: Boolean = false) {
+    protected fun DropTarget(state: StatementDragState, pos: Int) {
         if (state.draggingInProgress && state.draggedItem?.data != this) {
             val coroScope = rememberCoroutineScope()
             var job: Job? by remember { mutableStateOf(null) }
