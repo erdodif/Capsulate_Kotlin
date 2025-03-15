@@ -120,6 +120,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                     }
                 } else {
                     inputValue = inputValue.copy(text = file.content!!)
+                    tokenized = tokenizeProgram(inputValue.text)
                 }
                 loading = false
             }
