@@ -5,10 +5,12 @@ package com.erdodif.capsulate.lang.util
 import com.erdodif.capsulate.lang.program.grammar.char
 import com.erdodif.capsulate.lang.program.grammar.int
 import com.erdodif.capsulate.lang.program.grammar.keywords
+import com.erdodif.capsulate.lang.program.grammar.left
 import com.erdodif.capsulate.lang.program.grammar.lineBreak
 import com.erdodif.capsulate.lang.program.grammar.lineEnd
 import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.program.grammar.natural
+import com.erdodif.capsulate.lang.program.grammar.not
 import com.erdodif.capsulate.lang.program.grammar.reservedChars
 import com.erdodif.capsulate.lang.program.grammar.satisfy
 import com.erdodif.capsulate.lang.program.grammar.some
@@ -47,7 +49,7 @@ val freeWord: Parser<String> = some(freeChar) / { it.asString() }
 
 inline fun _char(char: Char): Parser<Char> = tok(char(char))
 
-inline fun _keyword(string: String): Parser<String> = tok(stringCaseLess(string))
+inline fun _keyword(string: String): Parser<String> = tok(left(stringCaseLess(string), not(freeChar)))
 
 val _anyKeyword: Parser<String> = asum(*keywords.map { _keyword(it) }.toTypedArray())
 

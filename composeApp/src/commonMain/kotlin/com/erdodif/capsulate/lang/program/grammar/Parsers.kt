@@ -149,7 +149,7 @@ inline fun <reified T> many(crossinline parser: Parser<T>): SuccessParser<ArrayL
 /**
  * Inverts the outcome of the match
  *
- * On [parser] fail, the state's position is reset
+ * On [parser] fail, the state's position is reset, and returns [Unit]
  */
 inline fun <T> not(crossinline parser: Parser<T>): Parser<Unit> = {
     val pos = position

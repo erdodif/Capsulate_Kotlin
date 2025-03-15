@@ -1,31 +1,14 @@
 package com.erdodif.capsulate.lang.program.grammar
 
-import com.erdodif.capsulate.lang.program.grammar.expression.KeyWord
-import com.erdodif.capsulate.lang.program.grammar.expression.LineEnd
-import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
-import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
-import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
-import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pExp
-import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
-import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
-import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
-import com.erdodif.capsulate.lang.program.grammar.function.sFunction
-import com.erdodif.capsulate.lang.program.grammar.function.sMethod
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
-import com.erdodif.capsulate.lang.util.Either
-import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.grammar.expression.Value
-import com.erdodif.capsulate.lang.program.grammar.function.Function
-import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
-import com.erdodif.capsulate.lang.util._anyKeyword
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._lineBreak
@@ -34,9 +17,7 @@ import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
-import com.erdodif.capsulate.lang.util.freeChar
 import com.erdodif.capsulate.lang.util.get
-import com.erdodif.capsulate.lang.util.reservedChar
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
 
@@ -52,7 +33,6 @@ val nonParallel: Parser<Statement> = {
         sSkip,
         sAbort,
         sWait,
-        sAssign,
         sSelect,
         sParallelAssign,
         sWhen,
@@ -154,11 +134,15 @@ val sParallelAssign: Parser<Statement> =
         val (params, values) = it.value
         if (values.count() != params.count())
             fail("The number of parameters does not match the number of values to assign.")
-        else
+        else if (values.count() == 1){
+            pass(it.match.start, Assign(params.first(), values.first(), it.match))
+        }
+        else{
             pass(
                 it.match.start,
                 ParallelAssign(params.zip(values) as ArrayList, it.match),
             )
+        }
     }]
 
 val sAssign: Parser<Statement> =

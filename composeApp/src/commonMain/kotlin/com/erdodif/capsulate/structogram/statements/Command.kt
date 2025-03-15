@@ -58,9 +58,9 @@ class Command(
             is Abort -> "ABORT"
             is Expression -> "EXP: ${statement.expression.toString(state)}"
             is Assign -> "${statement.label} := ${statement.value.toString(state)}"
-            is ParallelAssign -> statement.assigns.map { it.first }.toString() + " := " +
-                    statement.assigns.map { it.second.toString(state) }.toString()
-
+            is ParallelAssign -> statement.assigns.map { it.first }.toString().drop(1)
+                .dropLast(1) + " := " +
+                    statement.assigns.map { it.second.toString(state) }.toString().drop(1).dropLast(1)
             is MethodCall -> statement.toString(state)
             is Return<*> -> "RETURN ${statement.value.toString(state)}"
             else -> "UNSUPPORTED $statement"
@@ -76,7 +76,7 @@ class Command(
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
         DraggableArea(modifier, draggable, size) { dragging ->
-            Column(Modifier.height(IntrinsicSize.Min)){
+            Column(Modifier.height(IntrinsicSize.Min)) {
                 if (!dragging && draggable) {
                     DropTarget(LocalDraggingStatement.current, statement.match.start)
                 }
