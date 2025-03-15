@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
@@ -60,20 +61,24 @@ class AwaitStatement(
     ) {
         var size by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current
-        DraggableArea(Modifier, draggable, size) { dragging ->
-            Column(modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)) {
-                Row {
-                    StatementText(
-                        condition,
-                        modifier = Modifier.conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
+        var isDragging by remember { mutableStateOf(false) }
+        Column(modifier.fillMaxSize().onDpSize(density) { size = it }) {
+            DraggableArea(Modifier, draggable, size) { dragging ->
+                isDragging = dragging
+                StatementText(
+                    condition,
+                    modifier = Modifier.dim(dragging)
+                        .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) {
                             statement.id == activeStatement
                         }.clip(RectangleShape).fillMaxWidth().awaitIndicator()
-                            .padding(Theme.commandPadding)
-                    )
+                        .padding(Theme.commandPadding)
+                )
+                if (!dragging && draggable) {
+                    DropTarget(LocalDraggingStatement.current, statement.match.start)
                 }
-                HorizontalBorder()
-                atomic.Show(Modifier, draggable, activeStatement)
             }
+            HorizontalBorder()
+            atomic.Show(Modifier, draggable && !isDragging, activeStatement)
         }
     }
 }

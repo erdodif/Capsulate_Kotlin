@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.If
 import com.erdodif.capsulate.lang.program.grammar.Skip
@@ -73,14 +74,17 @@ open class IfStatement(
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
         var conditionHeight by remember { mutableStateOf(0.dp) }
-        var dragging by remember { mutableStateOf(false) }
+        var isDragging by remember { mutableStateOf(false) }
         Column(
-            modifier.dim(dragging).onDpSize(density) { size = it }.clip(RectangleShape)
+            modifier.dim(isDragging).onDpSize(density) { size = it }.clip(RectangleShape)
                 .fillMaxWidth().defaultMinSize(Dp.Unspecified, max(conditionHeight + 10.dp, 50.dp))
 
         ) {
-            DraggableArea(Modifier, draggable, size) {
-                dragging = it
+            if (!isDragging && draggable) {
+                DropTarget(LocalDraggingStatement.current, statement.match.start)
+            }
+            DraggableArea(Modifier, draggable, size) { dragging ->
+                isDragging = dragging
                 StatementText(
                     condition,
                     modifier = Modifier.fillMaxWidth()
@@ -104,7 +108,7 @@ open class IfStatement(
                     StackWithSeparator(
                         trueBranch,
                         {
-                            it.Show(Modifier.fillMaxWidth(), draggable, activeStatement)
+                            it.Show(Modifier.fillMaxWidth(), draggable && isDragging, activeStatement)
                         },
                         {
                             commandPlaceHolder(
@@ -120,7 +124,7 @@ open class IfStatement(
                     StackWithSeparator(
                         falseBranch,
                         {
-                            it.Show(Modifier.fillMaxWidth(), draggable, activeStatement)
+                            it.Show(Modifier.fillMaxWidth(), draggable && isDragging, activeStatement)
                         },
                         {
                             commandPlaceHolder(

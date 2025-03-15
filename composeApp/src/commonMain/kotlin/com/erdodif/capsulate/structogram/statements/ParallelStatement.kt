@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Skip
@@ -76,50 +77,59 @@ class ParallelStatement(
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
-        var dragging by remember { mutableStateOf(false) }
-        Row(
-            modifier.dim(dragging).background(MaterialTheme.colorScheme.primary)
-                .defaultMinSize(Dp.Unspecified, 30.dp).height(IntrinsicSize.Min)
-                .fillMaxWidth().onGloballyPositioned {
-                    with(density) {
-                        size = DpSize(it.size.width.toDp(), it.size.height.toDp())
-                    }
-                }
-        ) {
-            StackWithSeparator(
-                blocks,
-                {
-                    Column(Modifier.weight(1f, true).defaultMinSize(30.dp, Dp.Unspecified)) {
-                        StackWithSeparator(
-                            it,
-                            { statement ->
-                                statement.Show(
-                                    Modifier.fillMaxWidth(),
-                                    draggable,
-                                    activeStatement
-                                )
-                            }, {
-                                commandPlaceHolder(Modifier)
-                            }) {
-                            HorizontalBorder()
+        var isDragging by remember { mutableStateOf(false) }
+        Column {
+            if (!isDragging && draggable) {
+                DropTarget(LocalDraggingStatement.current, statement.match.start)
+            }
+            Row(
+                modifier.dim(isDragging).background(MaterialTheme.colorScheme.primary)
+                    .defaultMinSize(Dp.Unspecified, 30.dp).height(IntrinsicSize.Min)
+                    .fillMaxWidth().onGloballyPositioned {
+                        with(density) {
+                            size = DpSize(it.size.width.toDp(), it.size.height.toDp())
                         }
                     }
-                }) {
-                DraggableArea(Modifier.width(Theme.borderWidth * 4), draggable, size) {
-                    dragging = it
-                    Row(
-                        Modifier.width(Theme.borderWidth * 4).conditional(
-                            Modifier.background(
-                                MaterialTheme.colorScheme.tertiary
-                            )
+            ) {
+                StackWithSeparator(
+                    blocks,
+                    {
+                        Column(Modifier.weight(1f, true).defaultMinSize(30.dp, Dp.Unspecified)) {
+                            StackWithSeparator(
+                                it,
+                                { statement ->
+                                    statement.Show(
+                                        Modifier.fillMaxWidth(),
+                                        draggable && !isDragging,
+                                        activeStatement
+                                    )
+                                }, {
+                                    commandPlaceHolder(Modifier)
+                                }) {
+                                HorizontalBorder()
+                            }
+                        }
+                    }) {
+                    DraggableArea(
+                        Modifier.width(Theme.borderWidth * 4),
+                        draggable,
+                        size
+                    ) { dragging ->
+                        isDragging = dragging
+                        Row(
+                            Modifier.width(Theme.borderWidth * 4).conditional(
+                                Modifier.background(
+                                    MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                statement.id == activeStatement
+                            },
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            statement.id == activeStatement
-                        },
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        VerticalBorder()
-                        Spacer(Modifier.width(Theme.borderWidth * 2))
-                        VerticalBorder()
+                            VerticalBorder()
+                            Spacer(Modifier.width(Theme.borderWidth * 2))
+                            VerticalBorder()
+                        }
                     }
                 }
             }

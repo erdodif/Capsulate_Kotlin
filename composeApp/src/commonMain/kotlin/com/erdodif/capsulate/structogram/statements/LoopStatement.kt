@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.DoWhile
 import com.erdodif.capsulate.lang.program.grammar.Loop
@@ -88,9 +90,12 @@ class LoopStatement(
         val backgroundColor = if (active) MaterialTheme.colorScheme.tertiary
         else MaterialTheme.colorScheme.primary
         Column(
-            modifier.dim(dragging).fillMaxWidth()//.height(IntrinsicSize.Min)
+            modifier.dim(dragging).fillMaxWidth()
                 .background(backgroundColor).onDpSize(density) { size = it }
         ) {
+            if (!dragging && draggable && statements.isNotEmpty()) {
+                DropTarget(LocalDraggingStatement.current, statement.match.start)
+            }
             if (inOrder) {
                 DraggableArea(Modifier.fillMaxWidth(), draggable, size)
                 {
@@ -100,14 +105,28 @@ class LoopStatement(
                 HorizontalBorder(Modifier.padding(start = 32.dp))
             }
             Row(Modifier.height(IntrinsicSize.Min)) {
-                Spacer(Modifier.width(32.dp).background(Color.Cyan))
+                if (draggable && !dragging) {
+                    DraggableArea(Modifier.width(32.dp).fillMaxHeight(), draggable, size)
+                    {
+                        dragging = it
+                    }
+                } else {
+                    Spacer(Modifier.width(32.dp))
+                }
                 VerticalBorder()
                 Column(Modifier.fillMaxWidth()) {
                     StackWithSeparator(
                         statements,
                         {
-                            it.Show(Modifier.fillMaxWidth(), draggable, activeStatement)
+                            it.Show(
+                                Modifier.fillMaxWidth(),
+                                draggable && !dragging,
+                                activeStatement
+                            )
                         }) { HorizontalBorder() }
+                    if(statements.isEmpty()){
+                        DropTarget(LocalDraggingStatement.current, statement.match.end - 2)
+                    }
                 }
             }
             if (!inOrder) {

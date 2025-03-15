@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -45,19 +46,21 @@ class AtomicStatement(
             MaterialTheme.colorScheme.primary
         }
         val innerModifier = Modifier.fillMaxWidth().border(Theme.borderWidth / 2, Theme.borderColor)
-        Column(
-            modifier
-                .background(background)
-                .padding(Theme.borderWidth * 3)
-                .border(Theme.borderWidth, Theme.borderColor)
-        ) {
-            if (statements.isEmpty()) Command("", Skip(MatchPos.ZERO)).Show(innerModifier)
-            for (statement in statements) {
-                statement.Show(
-                    innerModifier,
-                    draggable,
-                    activeStatement
-                )
+        Column{
+            Column(
+                modifier
+                    .background(background)
+                    .padding(Theme.borderWidth * 3)
+                    .border(Theme.borderWidth, Theme.borderColor)
+            ) {
+                if (statements.isEmpty()) Command("", Skip(MatchPos.ZERO)).Show(innerModifier)
+                for (statement in statements) {
+                    statement.Show(
+                        innerModifier,
+                        draggable,
+                        activeStatement
+                    )
+                }
             }
         }
     }

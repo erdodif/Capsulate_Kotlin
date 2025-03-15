@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.structogram.composables.Theme
 import com.erdodif.capsulate.structogram.statements.DropStatement
 import kotlin.math.max
@@ -42,6 +43,7 @@ fun StatementDrawer(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier.padding(25.dp, 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        userScrollEnabled = LocalDraggingStatement.current.dragAmount == null
     ) {
         item { DropStatement("skip\n").Show(statementModifier) }
         item { DropStatement("if true {\n  skip\n} else {\n  skip\n}\n").Show(statementModifier) }

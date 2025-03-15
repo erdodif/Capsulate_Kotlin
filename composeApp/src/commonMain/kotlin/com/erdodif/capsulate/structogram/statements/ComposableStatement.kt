@@ -1,10 +1,13 @@
 package com.erdodif.capsulate.structogram.statements
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,6 +17,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,14 +26,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.LocalDraggingStatement
@@ -41,6 +54,7 @@ import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.When
 import com.erdodif.capsulate.lang.program.grammar.While
+import com.erdodif.capsulate.lang.program.grammar.expression.pAtom
 import com.erdodif.capsulate.lang.program.grammar.function.MethodCall
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.onMobile
@@ -53,6 +67,7 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Month
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -78,6 +93,8 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
         content: @Composable (Boolean) -> Unit = { Box(modifier) }
     ) = if (draggable) {
         val state = LocalDraggingStatement.current
+        val iconSize = DpSize(100.dp, 65.dp)
+        val offset = (size - iconSize) / 2
         DraggableItem(
             modifier = if (draggable) modifier else
                 modifier.pointerHoverIcon(PointerIcon.Hand, true),
@@ -91,7 +108,7 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
                 val animationSpec: AnimationSpec<*> = tween<Any>(150)
                 AnimatedVisibility(
                     active,
-                    Modifier.requiredSize(size.width, size.height)
+                    Modifier.requiredSize(iconSize).offset(offset.width, offset.height)
                         .alpha(if (state.preview) 0.15f else 1f),
                     enter = scaleIn(animationSpec as FiniteAnimationSpec<Float>, .5f)
                 ) {
@@ -115,8 +132,8 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
         get() = this.draggedItem != null && this.draggedItem != this@ComposableStatement
 
     @Composable
-    protected fun DropTarget(state: StatementDragState, pos: Int) {
-        if (state.draggingInProgress) {
+    protected fun DropTarget(state: StatementDragState, pos: Int, replicate: Boolean = false) {
+        if (state.draggingInProgress && state.draggedItem?.data != this) {
             val coroScope = rememberCoroutineScope()
             var job: Job? by remember { mutableStateOf(null) }
             val dropHandler = LocalStructogramDropHandler.current
@@ -126,7 +143,7 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
                     state = state.state,
                     onDragEnter = {
                         job = coroScope.launch {
-                            delay(250)
+                            delay(150)
                             state.preview = true
                         }
                     },
@@ -140,15 +157,25 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
                     onDragExit = { job?.cancel(); state.preview = false },
                 ).defaultMinSize(minHeight = 20.dp).background(Color.Magenta)
             ) {
-                if (state.preview) {
-                    if (state.draggedItem != null && state.state.hoveredDropTargetKey == statement) {
-                        Column {
-                            state.draggedItem!!.data.Show(Modifier.background(Color.Gray), false)
-                            HorizontalBorder()
-                            Show(Modifier, false, null)
-                        }
+                Column {
+                    AnimatedVisibility(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        visible = state.preview && state.draggedItem != null && state.state.hoveredDropTargetKey == statement,
+                        enter = expandIn(tween(300), Alignment.Center),
+                        exit = fadeOut(tween(0))
+                    ) {
+                        state.draggedItem!!.data.Show(
+                            Modifier.background(Color.Gray).alpha(0.6f),
+                            false
+                        )
+                    }
+                    if (state.preview && state.draggedItem != null && state.state.hoveredDropTargetKey == statement) {
+                        HorizontalBorder()
                     } else {
-                        Box(Modifier.fillMaxWidth().height(2.dp).background(Color.Magenta))
+                        Box(
+                            Modifier.fillMaxWidth().height(2.dp)
+                                .background(Color.Magenta.copy(alpha = 0.5f))
+                        )
                     }
                 }
             }

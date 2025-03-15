@@ -6,8 +6,10 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -70,42 +72,28 @@ class Command(
         modifier: Modifier,
         draggable: Boolean,
         activeStatement: Uuid?
-    ) =
-        key(this) {
-            var size by remember { mutableStateOf(DpSize.Zero) }
-            val density = LocalDensity.current
-            if (draggable)
-                DraggableArea(modifier, draggable, size) { dragging ->
-                    StatementText(
-                        text,
-                        false,
-                        Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
-                            .conditional(
-                                Modifier.background(MaterialTheme.colorScheme.tertiary)
-                                    .border(3.dp, MaterialTheme.colorScheme.tertiaryContainer)
-                            ) {
-                                statement.id == activeStatement
-                            }.padding(Theme.commandPadding)
-                    )
-                    if (!dragging) {
-                        DropTarget(LocalDraggingStatement.current, statement.match.start)
-                    }
+    ) = key(this) {
+        var size by remember { mutableStateOf(DpSize.Zero) }
+        val density = LocalDensity.current
+        DraggableArea(modifier, draggable, size) { dragging ->
+            Column(Modifier.height(IntrinsicSize.Min)){
+                if (!dragging && draggable) {
+                    DropTarget(LocalDraggingStatement.current, statement.match.start)
                 }
-            else {
-                Column(modifier) {
-                    StatementText(
-                        text,
-                        false,
-                        Modifier.fillMaxWidth().conditional(
+                StatementText(
+                    text,
+                    false,
+                    Modifier.fillMaxSize().onDpSize(density) { size = it }.dim(dragging)
+                        .conditional(
                             Modifier.background(MaterialTheme.colorScheme.tertiary)
                                 .border(3.dp, MaterialTheme.colorScheme.tertiaryContainer)
                         ) {
                             statement.id == activeStatement
                         }.padding(Theme.commandPadding)
-                    )
-                }
+                )
             }
         }
+    }
 }
 
 @Preview

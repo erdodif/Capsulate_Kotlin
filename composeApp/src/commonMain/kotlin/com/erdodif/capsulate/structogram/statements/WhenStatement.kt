@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.When
@@ -78,68 +79,78 @@ class WhenStatement(
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
-        var dragging by remember { mutableStateOf(false) }
+        var isDragging by remember { mutableStateOf(false) }
         val blocks by remember {
             derivedStateOf { blocks.takeWhile { it.condition != "else" }.toTypedArray() }
         }
         val elseBranch by remember { derivedStateOf { this.blocks.firstOrNull { it.condition == "else" } } }
-        Row(modifier.dim(dragging).clip(RectangleShape).fillMaxWidth().height(IntrinsicSize.Min)
-            .onDpSize(density) { size = it }
-            .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) { statement.id == activeStatement }
-        ) {
-            var maxHeight by remember { mutableStateOf(0.dp) }
-            StackWithSeparator(blocks, {
-                Column(Modifier.weight(1f, true)) {
-                    DraggableArea(Modifier, draggable, size) { drag ->
-                        dragging = drag
-                        Row(Modifier.height(IntrinsicSize.Min)) {
-                            StatementText(
-                                it.condition, modifier = Modifier.onSizeChanged {
-                                    maxHeight = max(
-                                        maxHeight, (it.height.toFloat() / density.density).dp
-                                    )
-                                }.caseIndicator().fillMaxWidth()
-                                    .defaultMinSize(minHeight = maxHeight)
-                                    .padding(Theme.casePadding)
-                            )
+        Column {
+            if (!isDragging && draggable) {
+                DropTarget(LocalDraggingStatement.current, statement.match.start)
+            }
+            Row(
+                modifier.dim(isDragging).clip(RectangleShape).fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .onDpSize(density) { size = it }
+                    .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) { statement.id == activeStatement }
+            ) {
+                var maxHeight by remember { mutableStateOf(0.dp) }
+                StackWithSeparator(blocks, {
+                    Column(Modifier.weight(1f, true)) {
+                        DraggableArea(Modifier, draggable, size) { dragging ->
+                            isDragging = dragging
+                            Row(Modifier.height(IntrinsicSize.Min)) {
+                                StatementText(
+                                    it.condition, modifier = Modifier.onSizeChanged {
+                                        maxHeight = max(
+                                            maxHeight, (it.height.toFloat() / density.density).dp
+                                        )
+                                    }.caseIndicator().fillMaxWidth()
+                                        .defaultMinSize(minHeight = maxHeight)
+                                        .padding(Theme.casePadding)
+                                )
+                            }
+                        }
+                        HorizontalBorder()
+                        Column(Modifier.fillMaxSize()) {
+                            StackWithSeparator(it.statements, {
+                                it.Show(Modifier.fillMaxSize(), draggable && !isDragging)
+                            }, {
+                                commandPlaceHolder(Modifier.fillMaxSize())
+                            }) { HorizontalBorder() }
                         }
                     }
-                    HorizontalBorder()
-                    Column(Modifier.fillMaxSize()) {
-                        StackWithSeparator(it.statements, {
-                            it.Show(Modifier.fillMaxSize(), draggable)
+                }, {
+                    DraggableArea(
+                        Modifier.fillMaxWidth().defaultMinSize(40.dp, 25.dp), draggable, size
+                    ) {}
+                }) { VerticalBorder() }
+                if (elseBranch != null) {
+                    VerticalBorder()
+                    Column(Modifier.weight(1f, true)) {
+                        DraggableArea(Modifier, draggable, size) { dragging ->
+                            Row(Modifier.dim(dragging)) {
+                                StatementText(
+                                    "", modifier = Modifier.onSizeChanged {
+                                        maxHeight = max(
+                                            maxHeight, (it.height.toFloat() / density.density).dp
+                                        )
+                                    }.elseIndicator().fillMaxWidth()
+                                        .defaultMinSize(minHeight = maxHeight)
+                                        .padding(Theme.elsePadding)
+                                )
+                            }
+                        }
+                        HorizontalBorder()
+                        StackWithSeparator(elseBranch!!.statements, {
+                            it.Show(
+                                Modifier.fillMaxWidth().weight(1f, true),
+                                draggable && !isDragging
+                            )
                         }, {
-                            commandPlaceHolder(Modifier.fillMaxSize())
+                            commandPlaceHolder(Modifier.fillMaxWidth().weight(1f, true))
                         }) { HorizontalBorder() }
                     }
-                }
-            }, {
-                DraggableArea(
-                    Modifier.fillMaxWidth().defaultMinSize(40.dp, 25.dp), draggable, size
-                ) {}
-            }) { VerticalBorder() }
-            if (elseBranch != null) {
-                VerticalBorder()
-                Column(Modifier.weight(1f, true)) {
-                    DraggableArea(Modifier, draggable, size) { dragging ->
-                        Row(Modifier.dim(dragging)) {
-                            StatementText(
-                                "", modifier = Modifier.onSizeChanged {
-                                    maxHeight = max(
-                                        maxHeight, (it.height.toFloat() / density.density).dp
-                                    )
-                                }.elseIndicator().fillMaxWidth()
-                                    .defaultMinSize(minHeight = maxHeight)
-                                    .padding(Theme.elsePadding)
-                            )
-                        }
-                    }
-                    HorizontalBorder()
-                    StackWithSeparator(elseBranch!!.statements, {
-                        it.Show(Modifier.fillMaxWidth().weight(1f, true), draggable)
-                    }, {
-                        commandPlaceHolder(Modifier.fillMaxWidth().weight(1f, true))
-                    }) { HorizontalBorder() }
                 }
             }
         }
