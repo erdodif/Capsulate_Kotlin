@@ -59,7 +59,7 @@ data class Function<T>(
     }
 
     fun onFormat(formatting: Formatting, state: ParserState): Int = with(formatting) {
-        print(parameters.joinToString(", ", prefix = "function $name(", postfix = ") {"))
+        print(parameters.joinToString(", ", prefix = "function $name(", postfix = ") {") { it.id })
         val result = preFormat { body.fencedForEach { it.onFormat(this, state) } }
         val lines = result.count()
         if (lines == 0) {
@@ -70,7 +70,7 @@ data class Function<T>(
             indent {
                 appendAll(result)
             }
-            printLine("}")
+            append("}")
         }
     }
 }

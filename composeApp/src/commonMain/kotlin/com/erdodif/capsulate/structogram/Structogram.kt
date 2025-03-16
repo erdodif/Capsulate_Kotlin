@@ -180,10 +180,12 @@ class Structogram private constructor(
         functions.map { it.function }.fencedForEach {
             it.onFormat(this, state)
         }
+        if (functions.isNotEmpty()) breakLine()
         methods.map { it.method }.fencedForEach {
             it.onFormat(this, state)
         }
-        if(name != null){
+        if (methods.isNotEmpty()) breakLine()
+        if (name != null) {
             printLine("program $name")
         }
         statements.map { it.statement }.fencedForEach {

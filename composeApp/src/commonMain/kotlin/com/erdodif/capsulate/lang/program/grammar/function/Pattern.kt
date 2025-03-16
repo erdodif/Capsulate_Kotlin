@@ -47,15 +47,20 @@ data class Pattern(
     }
 
     fun toString(state: ParserState): String = buildString {
-        append(prefix)
+        append(prefix ?: "")
         variables.zip(delimiters).map { (variable, delim) ->
+            append('$')
             append(variable.toString(state))
             append(delim)
         }
-        if (variables.count() == delimiters.count() + 1) {
+        if (variables.count() > delimiters.count()) {
+            append('$')
             append(variables.last().toString(state))
         }
-        append(postfix)
+        if (variables.count() < delimiters.count()) {
+            append(delimiters.last().toString())
+        }
+        append(postfix ?: "")
     }
 }
 
@@ -92,7 +97,7 @@ val sPattern: Parser<Pattern> = (many(
     val (prefix, mixed) = it.value
     val variables = mixed.map { it.first }
     val delimiters = mixed.map { it.second.asString() }
-    val post = delimiters.getOrNull(variables.count())
+    val post = delimiters.getOrNull(variables.count()-1)
     if (variables.isEmpty() && prefix.isEmpty()) {
         Fail("Matched an empty Pattern!", it.state)
     } else if (prefix.isEmpty() && delimiters.take(variables.count()).all { it.count() == 0 }) {

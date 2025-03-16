@@ -38,14 +38,15 @@ data class Method(
         val result = preFormat { program.fencedForEach { it.onFormat(this, state) } }
         val lines = result.count()
         if (lines == 0) {
+            print(" {")
             appendAll(result)
             print(" }")
         } else {
-            breakLine()
+            print(" {")
             indent {
                 appendAll(result)
             }
-            printLine("}")
+            append("}")
         }
     }
 
@@ -66,8 +67,11 @@ data class MethodCall(
 
     fun toString(state: ParserState): String = state[match]
 
-    override fun Formatting.format(state: ParserState): Int = print(state[match])
-
+    override fun Formatting.format(state: ParserState): Int = try {
+        print(state[match].trim())
+    } finally {
+        0
+    }
 }
 
 val sMethod: Parser<Method> =
