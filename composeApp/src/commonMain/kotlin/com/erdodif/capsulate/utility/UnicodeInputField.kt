@@ -80,6 +80,10 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
         val focusRequester = remember { FocusRequester() }
         var value by remember { mutableStateOf(TextFieldValue("\\ ", TextRange(1))) }
         var index by remember { mutableStateOf(0) }
+        if (value.text.length < 2) {
+            navigator.finish(' ')
+            return
+        }
         val word = value.text.substring(1, value.text.length - 1)
         val match = escapes[word] ?: latexEscapes[word]
         var extraMatches by remember { mutableStateOf(CharArray(0)) }

@@ -21,6 +21,7 @@ import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
+import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.div
@@ -55,6 +56,22 @@ data class Function<T>(
             append(parameters[parameters.count() - 1].id)
         }
         append(')')
+    }
+
+    fun onFormat(formatting: Formatting, state: ParserState): Int = with(formatting) {
+        print(parameters.joinToString(", ", prefix = "function $name(", postfix = ") {"))
+        val result = preFormat { body.fencedForEach { it.onFormat(this, state) } }
+        val lines = result.count()
+        if (lines == 0) {
+            appendAll(result)
+            print(" }")
+        } else {
+            breakLine()
+            indent {
+                appendAll(result)
+            }
+            printLine("}")
+        }
     }
 }
 
@@ -101,6 +118,9 @@ data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     override fun evaluate(env: Env): EvaluationResult = value.join(env) { returnValue: T ->
         ReturnEvaluation(returnValue)
     }
+
+    override fun Formatting.format(state: ParserState): Int =
+        print("return " + value.toString(state))
 }
 
 val sReturn: Parser<Statement> = right(_keyword("return"), pExp) * { value, pos ->

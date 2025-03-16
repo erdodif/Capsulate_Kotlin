@@ -9,6 +9,7 @@ import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.program.grammar.not
 import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.lang.program.grammar.plus
+import com.erdodif.capsulate.lang.program.grammar.program
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace
 import com.erdodif.capsulate.lang.util.Fail
@@ -43,6 +44,18 @@ data class Pattern(
             append("\nVariables: ")
             variables.forEach { append(it.id, " ") }
         }
+    }
+
+    fun toString(state: ParserState): String = buildString {
+        append(prefix)
+        variables.zip(delimiters).map { (variable, delim) ->
+            append(variable.toString(state))
+            append(delim)
+        }
+        if (variables.count() == delimiters.count() + 1) {
+            append(variables.last().toString(state))
+        }
+        append(postfix)
     }
 }
 

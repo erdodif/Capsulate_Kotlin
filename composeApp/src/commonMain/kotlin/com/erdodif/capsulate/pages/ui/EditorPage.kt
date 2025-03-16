@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -58,6 +59,7 @@ import com.slack.circuit.overlay.OverlayEffect
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Month
 import kotlin.uuid.ExperimentalUuidApi
 
 class EditorPage() : Ui<EditorScreen.State> {
@@ -85,32 +87,41 @@ class EditorPage() : Ui<EditorScreen.State> {
                             )
                         }
                     } else {
-                        ContentWithOverlays(
-                            (Modifier.padding(max(imePaddingValues, innerPadding))).fillMaxSize()
-                        ) {
-                            Column(
-                                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                codeEdit().Content(
-                                    state, Modifier.fillMaxWidth().heightIn(50.dp, 500.dp)
-                                )
-                                if (state.showCode && state.showStructogram)
-                                    Spacer(
-                                        Modifier.fillMaxWidth().padding(3.dp, 2.dp)
-                                            .background(MaterialTheme.colorScheme.surface)
-                                            .height(3.dp)
+                        ContentWithOverlays(Modifier.fillMaxSize()) {
+                            Box(Modifier.imePadding()) {
+                                Column(
+                                    Modifier.verticalScroll(rememberScrollState())
+                                        .padding(innerPadding),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    codeEdit().Content(
+                                        state, Modifier.fillMaxWidth().heightIn(50.dp, 500.dp)
                                     )
-                                structogram().Content(
-                                    state,
-                                    Modifier.heightIn(250.dp, 500.dp)
-                                )
+                                    if (state.showCode && state.showStructogram)
+                                        Spacer(
+                                            Modifier.fillMaxWidth().padding(3.dp, 2.dp)
+                                                .background(MaterialTheme.colorScheme.surface)
+                                                .height(3.dp)
+                                        )
+                                    structogram().Content(
+                                        state,
+                                        Modifier.heightIn(250.dp, 500.dp)
+                                    )
+                                }
                                 if (keyboardUp && !state.input) {
-                                    Row(Modifier.fillMaxWidth()) {
+                                    Row(
+                                        Modifier.fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                            .align(Alignment.BottomCenter),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
                                         Button({
                                             state.eventHandler(EditorScreen.Event.OpenUnicodeInput)
                                         }) { Text("\\escape") }
+                                        Button({
+                                            state.eventHandler(EditorScreen.Event.Format)
+                                        }) { Text("Format") }
                                     }
                                 }
                             }
@@ -233,6 +244,13 @@ internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
                 contentPadding = PaddingValues(2.dp)
             ) {
                 Text("X") // STOPSHIP: Locale
+            }
+            Button(
+                { state.eventHandler(EditorScreen.Event.Format) },
+                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                contentPadding = PaddingValues(2.dp)
+            ) {
+                Text("Format") // STOPSHIP: Locale
             }
             Button(
                 { state.eventHandler(EditorScreen.Event.Run) },

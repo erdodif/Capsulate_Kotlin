@@ -8,8 +8,10 @@ import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.fold
 import kotlin.uuid.ExperimentalUuidApi
@@ -96,6 +98,11 @@ data class PendingFunctionEvaluation<T : Value>(
 
     operator fun plus(transform: (EvaluationResult) -> EvaluationResult): PendingFunctionEvaluation<T> =
         copy(callback = { transform(callback(it)) })
+
+    /**
+     * This is an internal representation, formatting makes no sense
+     */
+    override fun Formatting.format(state: ParserState): Int = error("formatted: $this")
 }
 
 @OptIn(ExperimentalUuidApi::class)
@@ -137,6 +144,11 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
             else -> this
         }
     }
+
+    /**
+     * This is an internal representation, formatting makes no sense
+     */
+    override fun Formatting.format(state: ParserState): Int = error("formatted: $this")
 }
 
 @KParcelize

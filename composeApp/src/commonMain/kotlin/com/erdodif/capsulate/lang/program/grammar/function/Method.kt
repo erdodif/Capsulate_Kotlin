@@ -13,6 +13,7 @@ import com.erdodif.capsulate.lang.program.grammar.statementOrBlock
 import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
+import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
@@ -31,6 +32,23 @@ data class Method(
     override fun toString(): String =
         "Method $pattern, { ... ${program.count()} statements}"
 
+
+    fun onFormat(formatting: Formatting, state: ParserState): Int = with(formatting) {
+        print("method " + pattern.toString(state))
+        val result = preFormat { program.fencedForEach { it.onFormat(this, state) } }
+        val lines = result.count()
+        if (lines == 0) {
+            appendAll(result)
+            print(" }")
+        } else {
+            breakLine()
+            indent {
+                appendAll(result)
+            }
+            printLine("}")
+        }
+    }
+
 }
 
 @KParcelize
@@ -47,11 +65,14 @@ data class MethodCall(
     override fun toString(): String = "Call on $method"
 
     fun toString(state: ParserState): String = state[match]
+
+    override fun Formatting.format(state: ParserState): Int = print(state[match])
+
 }
 
 val sMethod: Parser<Method> =
     (right(_keyword("method"), sPattern) + delimit(statementOrBlock)) / { pattern, block ->
-        val method = Method(pattern, block )
+        val method = Method(pattern, block)
         methods.add(method)
         method
     }

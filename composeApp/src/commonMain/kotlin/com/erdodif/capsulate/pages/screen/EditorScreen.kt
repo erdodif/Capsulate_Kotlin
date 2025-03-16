@@ -74,6 +74,7 @@ data class EditorScreen(val file: OpenFile, val fileChannel: ChannelEntry<OpenFi
         data object Close : Event
         data object Save : Event
         data object Run : Event
+        data object Format : Event
         data object ToggleCode : Event
         data object ToggleStructogram : Event
         data object ToggleStatementDrag : Event
@@ -156,6 +157,14 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                     tokenJob?.cancel()
                     tokenJob = coroutineScope.launch {
                         tokenized = tokenizeProgram(text)
+                    }
+                }
+
+                is Event.Format -> {
+                    coroutineScope.launch {
+                        inputValue =
+                            inputValue.copy(text = structogram.format(ParserState(inputValue.text)))
+                        tokenized = tokenizeProgram(inputValue.text)
                     }
                 }
 

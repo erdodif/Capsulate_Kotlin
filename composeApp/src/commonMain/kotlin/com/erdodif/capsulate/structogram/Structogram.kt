@@ -32,6 +32,7 @@ import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.halfProgram
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
@@ -173,6 +174,22 @@ class Structogram private constructor(
         ): Structogram {
             return Structogram(statements.toTypedArray(), name = name)
         }
+    }
+
+    fun format(state: ParserState): String = with(Formatting(0)) {
+        functions.map { it.function }.fencedForEach {
+            it.onFormat(this, state)
+        }
+        methods.map { it.method }.fencedForEach {
+            it.onFormat(this, state)
+        }
+        if(name != null){
+            printLine("program $name")
+        }
+        statements.map { it.statement }.fencedForEach {
+            it.onFormat(this, state)
+        }
+        finalize()
     }
 }
 
