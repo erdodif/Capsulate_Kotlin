@@ -2,6 +2,10 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.fold
 import kotlin.jvm.JvmInline
 
 interface Value : KParcelable {
@@ -38,6 +42,40 @@ value class VStr(val value: String) : Value {  // 𝕊
 @JvmInline
 value class VBool(val value: Boolean) : Value {
     override fun toString(): String = value.toString()
+}
+
+/**
+ * Value to
+ */
+data object UNSET : Value
+
+@KParcelize
+data class VArray<T : Value>(
+    private val value: Array<Either<T, UNSET>>,
+    val type: Type
+) : Value {
+    constructor(size: Int, type: Type) : this(Array(size) { Right(UNSET) }, type)
+
+    fun unsafeGet(index: Int): T =
+        value[index].fold(
+            { it },
+            { throw IllegalStateException("Value uninitialized at [$index]") })
+
+    operator fun get(index: Int): Value = value[index].fold({ it }, { it })
+
+    operator fun set(index: Int, value: T) {
+        this.value[index] = Left(value)
+    }
+
+    override fun equals(other: Any?): Boolean = when {
+        this === other -> true
+        other == null || other !is Value || other !is VArray<*> ||
+                type != other.type -> false
+
+        else -> value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int = value.contentHashCode()
 }
 
 @KParcelize
