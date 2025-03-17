@@ -55,3 +55,4 @@ class Variable(val id: String, override val match: MatchPos) : RawValue<Value>(m
     override fun toString(state: ParserState, parentStrength: Int): String = state[match]
     override fun toString(): String = "Variable:$id"
 }
+

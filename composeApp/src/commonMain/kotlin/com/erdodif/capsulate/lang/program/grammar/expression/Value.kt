@@ -2,9 +2,13 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.fold
 import kotlin.jvm.JvmInline
 
-interface Value: KParcelable {
+interface Value : KParcelable {
     override operator fun equals(other: Any?): Boolean
 }
 
@@ -31,6 +35,40 @@ value class VStr(val value: String) : Value   // 𝕊
 @JvmInline
 value class VBool(val value: Boolean) : Value
 
+/**
+ * Value to
+ */
+data object UNSET : Value
+
+@KParcelize
+data class VArray<T : Value>(
+    private val value: Array<Either<T, UNSET>>,
+    val type: Type
+) : Value {
+    constructor(size: Int, type: Type) : this(Array(size) { Right(UNSET) }, type)
+
+    fun unsafeGet(index: Int): T =
+        value[index].fold(
+            { it },
+            { throw IllegalStateException("Value uninitialized at [$index]") })
+
+    operator fun get(index: Int): Value = value[index].fold({ it }, { it })
+
+    operator fun set(index: Int, value: T) {
+        this.value[index] = Left(value)
+    }
+
+    override fun equals(other: Any?): Boolean = when {
+        this === other -> true
+        other == null || other !is Value || other !is VArray<*> ||
+                type != other.type -> false
+
+        else -> value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int = value.contentHashCode()
+}
+
 @KParcelize
 @JvmInline
 value class VCharacter(val value: Char) : Value   // ℂ
@@ -40,8 +78,8 @@ enum class Type {
     STRING,
     BOOL,
     CHAR,
-    FILE,
     ARRAY,
+    FILE,
     STREAM,
     TUPLE,
     SET,
@@ -54,8 +92,8 @@ fun Value.type(): Type = when (this) {
     is VStr -> Type.STRING
     is VBool -> Type.BOOL
     is VCharacter -> Type.CHAR
+    is VArray<*> -> Type.ARRAY
     /*is VFile -> Type.FILE
-    is VArray -> Type.ARRAY
     is VStream -> Type.STREAM
     is VTuple -> Type.TUPLE
     is VSet -> Type.SET*/
