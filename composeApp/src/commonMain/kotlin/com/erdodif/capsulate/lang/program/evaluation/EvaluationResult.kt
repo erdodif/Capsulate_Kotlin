@@ -7,6 +7,7 @@ import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
+import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
@@ -20,7 +21,7 @@ import kotlin.uuid.Uuid
 sealed interface EvaluationResult : KParcelable
 
 class FunctionState<R : Value, T : Value>(
-    val env: Env,
+    val env: Environment,
     exp: PendingExpression<R, T>
 ) : PendingExpression<R, T>(exp.call, exp.onValue) {
     val context = EvaluationContext(
@@ -60,14 +61,34 @@ class FunctionState<R : Value, T : Value>(
 }
 
 @KParcelize
+data class PendingMethodEvaluation(
+    val method: Method,
+    val context: EvaluationContext
+) : EvaluationResult, Statement(match = MatchPos.ZERO) {
+    constructor(method: Method, env: ProxyEnv) :
+            this(method, EvaluationContext(env, EvalSequence(method.program), env.seed))
+
+    override fun evaluate(env: Environment): EvaluationResult {
+        context.step()
+        return when {
+            context.error != null -> AbortEvaluation(context.error!!)
+            context.head == null -> Finished
+            else -> this
+        }
+    }
+
+    override fun Formatting.format(state: ParserState): Int = error("formatted method: $this")
+}
+
+@KParcelize
 data class PendingFunctionEvaluation<T : Value>(
     val expression: PendingExpression<Value, T>,
-    val callback: Env.(T) -> EvaluationResult
+    val callback: Environment.(T) -> EvaluationResult
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
     val head: Statement?
         get() = if (expression is FunctionState) expression.head else Skip(MatchPos.ZERO)
 
-    override fun evaluate(env: Env): EvaluationResult = try {
+    override fun evaluate(env: Environment): EvaluationResult = try {
         when (expression) {
             is FunctionState -> when (val result = expression.step()) {
                 is Right -> when (result.value) {
@@ -102,7 +123,7 @@ data class PendingFunctionEvaluation<T : Value>(
     /**
      * This is an internal representation, formatting makes no sense
      */
-    override fun Formatting.format(state: ParserState): Int = error("formatted: $this")
+    override fun Formatting.format(state: ParserState): Int = error("formatted function: $this")
 }
 
 @OptIn(ExperimentalUuidApi::class)
@@ -114,7 +135,7 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
 
     constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
-    override fun evaluate(env: Env): EvaluationResult {
+    override fun evaluate(env: Environment): EvaluationResult {
         val result = statements.removeFirst().evaluate(env)
         return if (statements.isEmpty()) {
             result
@@ -135,6 +156,11 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
 
         is EvalSequence -> {
             statements.addAll(0, result.statements)
+            this
+        }
+
+        is PendingMethodEvaluation ->{
+            statements.add(0, result)
             this
         }
 

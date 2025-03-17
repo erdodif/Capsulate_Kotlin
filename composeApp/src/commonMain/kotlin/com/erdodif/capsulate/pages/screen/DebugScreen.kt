@@ -9,7 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
@@ -31,7 +31,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
     data class State @OptIn(ExperimentalUuidApi::class) constructor(
         val structogram: Structogram,
         val activeStatement: Uuid?,
-        val env: Env,
+        val env: Environment,
         val stepCount: Int,
         val seed: Int,
         val error: String?,
@@ -60,7 +60,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         var step by remember { mutableStateOf(0) }
         var debug by remember {
             mutableStateOf(
-                EvaluationContext(Env.EMPTY, EvalSequence(screen.structogram.program))
+                EvaluationContext(Environment.EMPTY, EvalSequence(screen.structogram.program))
             )
         }
         var error: String? by remember { mutableStateOf(null) }
@@ -94,7 +94,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
 
                 is Event.Reset -> {
                     debug = EvaluationContext(
-                        Env.EMPTY,
+                        Environment.EMPTY,
                         EvalSequence(screen.structogram.program),
                         debug.seed
                     )
@@ -103,7 +103,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                 }
 
                 is Event.ResetRenew -> {
-                    debug = EvaluationContext(Env.EMPTY, EvalSequence(screen.structogram.program))
+                    debug = EvaluationContext(Environment.EMPTY, EvalSequence(screen.structogram.program))
                     step = 0
                     error = null
                 }

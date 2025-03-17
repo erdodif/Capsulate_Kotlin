@@ -5,13 +5,18 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
@@ -42,14 +47,33 @@ class DebugPage : Ui<State> {
         if (state.overlayStructogram != null) {
             FunctionModal(state)
         }
-        Scaffold(bottomBar = {
-            Stats(state)
-        }) {
-            state.structogram.Content(
-                modifier = Modifier.fillMaxWidth(),
-                draggable = false,
-                activeStatement = state.activeStatement,
-            )
+        Scaffold(modifier = modifier.fillMaxSize(), bottomBar = { Stats(state) }) {
+            LazyRow(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(5.dp)) {
+                item {
+                    Box(
+                        Modifier.fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                    ) {
+                        state.structogram.Content(
+                            modifier = Modifier.fillMaxWidth(),
+                            draggable = false,
+                            activeStatement = state.activeStatement,
+                        )
+                    }
+                }
+                items(state.structogram.methods) { method ->
+                    Box(
+                        Modifier.fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                    ) {
+                        method.asStructogram().Content(
+                            modifier = Modifier.fillMaxWidth(),
+                            draggable = false,
+                            activeStatement = state.activeStatement,
+                        )
+                    }
+                }
+            }
         }
         if (state.error != null) {
             ErrorDialog(state)
@@ -57,7 +81,7 @@ class DebugPage : Ui<State> {
     }
 
     @Composable
-    private fun FunctionModal(state: State){
+    private fun FunctionModal(state: State) {
         ModalBottomSheet({ state.eventHandler(Event.StepOver) }) {
             Column(Modifier, verticalArrangement = Arrangement.SpaceBetween) {
                 state.overlayStructogram?.Content(
@@ -78,7 +102,7 @@ class DebugPage : Ui<State> {
 
 
     @Composable
-    private fun Stats(state: State){
+    private fun Stats(state: State) {
         Column(Modifier.safeContentPadding(), verticalArrangement = Arrangement.SpaceBetween) {
             if (state.env.parameters.isEmpty()) {
                 Text("() : Empty Environment!", color = MaterialTheme.colorScheme.error)
@@ -122,7 +146,7 @@ class DebugPage : Ui<State> {
     }
 
     @Composable
-    private fun ErrorDialog(state: State){
+    private fun ErrorDialog(state: State) {
         val scrollState = rememberScrollState(0)
         BasicAlertDialog({ state.eventHandler(Event.Close) }, Modifier) {
             Column(

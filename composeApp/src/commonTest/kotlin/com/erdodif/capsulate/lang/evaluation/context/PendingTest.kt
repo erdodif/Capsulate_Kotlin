@@ -3,7 +3,7 @@
 package com.erdodif.capsulate.lang.evaluation.context
 
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.FunctionState
 import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
@@ -36,7 +36,7 @@ class PendingTest {
             listOf(Return(StrLit("value", MatchPos.ZERO), match = MatchPos.ZERO))
         )
         val exp = FunctionState(
-            Env.EMPTY, PendingExpression<Value, Value>(
+            Environment.EMPTY, PendingExpression<Value, Value>(
                 FunctionCall<Value>(
                     function,
                     listOf(),
@@ -63,7 +63,7 @@ class PendingTest {
             listOf(Abort(MatchPos.ZERO))
         )
         val exp = FunctionState(
-            Env.EMPTY, PendingExpression<Value, Value>(
+            Environment.EMPTY, PendingExpression<Value, Value>(
                 FunctionCall<Value>(
                     function,
                     listOf(),
@@ -87,7 +87,7 @@ class PendingTest {
             listOf()
         )
         val exp = FunctionState(
-            Env.EMPTY, PendingExpression<Value, Value>(
+            Environment.EMPTY, PendingExpression<Value, Value>(
                 FunctionCall<Value>(
                     function,
                     listOf(),

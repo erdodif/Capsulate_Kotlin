@@ -11,7 +11,7 @@ import kotlin.random.Random
 
 @KParcelize
 data class EvaluationContext(
-    var env: Env,
+    var env: Environment,
     private var currentStatement: Statement?,
     val seed: Int = Random.Default.nextInt(),
 ) : KParcelable {
@@ -87,6 +87,10 @@ data class EvaluationContext(
             is SingleStatement -> entries.add(stack.next)
             is ParallelEvaluation -> entries.addAll(stack.entries)
             is PendingFunctionEvaluation<*> -> functionOngoing = stack
+            is PendingMethodEvaluation -> {
+                env = (stack.context.env as ProxyEnv).env
+                entries.add(stack)
+            }
         }
         currentStatement =
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))

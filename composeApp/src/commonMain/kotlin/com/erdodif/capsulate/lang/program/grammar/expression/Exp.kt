@@ -19,7 +19,7 @@ import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.util.Either
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.function.sFunctionCall
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -41,10 +41,10 @@ import kotlinx.serialization.Serializable
 @KParcelize
 open class PendingExpression<R : Value, T : Value>(
     open val call: FunctionCall<R>,
-    open val onValue: @Serializable Env.(R) -> Either<T, PendingExpression<Value, T>>
+    open val onValue: @Serializable Environment.(R) -> Either<T, PendingExpression<Value, T>>
 ) : KParcelable {
 
-    fun <S : Value> map(transform: Env.(T) -> S): PendingExpression<R, S> =
+    fun <S : Value> map(transform: Environment.(T) -> S): PendingExpression<R, S> =
         PendingExpression(call) {
             when (val result = onValue(it)) {
                 is Left -> Left(transform(this, result.value))
@@ -52,7 +52,7 @@ open class PendingExpression<R : Value, T : Value>(
             }
         }
 
-    fun <S : Value> addTransform(transform: Env.(T) -> Either<S, PendingExpression<Value, S>>): PendingExpression<R, S> =
+    fun <S : Value> addTransform(transform: Environment.(T) -> Either<S, PendingExpression<Value, S>>): PendingExpression<R, S> =
         PendingExpression(call) _env@{
             when (val result = onValue(it)) {
                 is Left -> transform(this, result.value)
@@ -64,13 +64,13 @@ open class PendingExpression<R : Value, T : Value>(
 
 interface Exp<T : Value> : KParcelable {
 
-    fun evaluate(context: Env): Either<T, PendingExpression<Value, T>>
+    fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>>
     fun toString(state: ParserState, parentStrength: Int = 0): String
 }
 
 fun <R : Value, T : Value> Exp<T>.withRawValue(
-    env: Env,
-    onValue: Env.(T) -> R
+    env: Environment,
+    onValue: Environment.(T) -> R
 ): Either<R, PendingExpression<Value, R>> =
     when (val result = evaluate(env)) {
         is Right -> Right(result.value.map(onValue))
@@ -78,8 +78,8 @@ fun <R : Value, T : Value> Exp<T>.withRawValue(
     }
 
 fun <R : Value, T : Value> Exp<T>.withValue(
-    env: Env,
-    onValue: Env.(T) -> Either<R, PendingExpression<Value, R>>
+    env: Environment,
+    onValue: Environment.(T) -> Either<R, PendingExpression<Value, R>>
 ): Either<R, PendingExpression<Value, R>> =
     when (val result = evaluate(env)) {
         is Left -> onValue(env, result.value)
@@ -88,8 +88,8 @@ fun <R : Value, T : Value> Exp<T>.withValue(
 
 
 fun <R : Value, T : Value, S : Value> Pair<Exp<T>, Exp<S>>.withValue(
-    env: Env,
-    onValue: Env.(T, S) -> Either<R, PendingExpression<Value, R>>
+    env: Environment,
+    onValue: Environment.(T, S) -> Either<R, PendingExpression<Value, R>>
 ): Either<R, PendingExpression<Value, R>> = first.withValue(env) { a ->
     second.withValue(env) { b ->
         onValue(a, b)
