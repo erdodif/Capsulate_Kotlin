@@ -75,12 +75,8 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
     private val values: MutableList<Parameter> = mutableListOf()
 
     override val parameters: ImmutableList<Parameter>
-        get() = (values.map {
-            if (renames.containsKey(it.id)) it.copy(id = "${it.id}(shadowed)") else it.copy("${it.id}(local)")
-        } + env.parameters.map {
-            if (renames.containsKey(it.id)) it.copy(id = "${it.id}(locally '${renames[it.id]}')") else it.copy(
-                id = "${it.id}(hidden)"
-            )
+        get() = (values.map { it.copy("${it.id}⭑") } + env.parameters.mapNotNull {
+            if (renames.containsKey(it.id)) it.copy(id = "⦃${it.id}⩬${renames[it.id]}⦄") else null
         }).toImmutableList()
 
     override fun present(id: String): Boolean =

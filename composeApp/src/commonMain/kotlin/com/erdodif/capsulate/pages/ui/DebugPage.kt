@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
@@ -35,19 +38,33 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
+import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
 import kotlin.uuid.ExperimentalUuidApi
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
+import com.erdodif.capsulate.structogram.ComposableMethod
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
 class DebugPage : Ui<State> {
@@ -56,44 +73,8 @@ class DebugPage : Ui<State> {
 
     @Composable
     override fun Content(state: State, modifier: Modifier) {
-        if (state.overlayStructogram != null) {
-            FunctionModal(state)
-        }
         Scaffold(modifier = modifier.fillMaxSize(), bottomBar = { Stats(state) }) { paddingValues ->
-            BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {
-                val itemModifier = Modifier.width(maxWidth).height(maxHeight)
-                    .padding(15.dp)
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainerLow,
-                        RoundedCornerShape(15.dp)
-                    )
-                    .padding(15.dp)
-                val listState = rememberLazyListState()
-                LazyRow(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    flingBehavior = rememberSnapFlingBehavior(listState)
-                ) {
-                    item {
-                        Box(itemModifier) {
-                            state.structogram.Content(
-                                modifier = Modifier.fillMaxWidth(),
-                                draggable = false,
-                                activeStatement = state.activeStatement,
-                            )
-                        }
-                    }
-                    items(state.structogram.methods) { method ->
-                        Box(itemModifier) {
-                            method.asStructogram().Content(
-                                modifier = Modifier.fillMaxWidth(),
-                                draggable = false,
-                                activeStatement = state.activeStatement,
-                            )
-                        }
-                    }
-                }
-            }
+            StructogramList(state, paddingValues)
         }
         if (state.error != null) {
             ErrorDialog(state)
@@ -101,25 +82,103 @@ class DebugPage : Ui<State> {
     }
 
     @Composable
-    private fun FunctionModal(state: State) {
-        ModalBottomSheet({ state.eventHandler(Event.StepOver) }) {
-            Column(Modifier, verticalArrangement = Arrangement.SpaceBetween) {
-                state.overlayStructogram?.Content(
-                    Modifier.scrollable(rememberScrollState(0), Orientation.Vertical)
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 250.dp),
-                    false,
-                    state.activeStatement
+    private fun StructogramList(state: State, paddingValues: PaddingValues) {
+        BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {
+            val itemModifier = Modifier.width(maxWidth).height(maxHeight)
+                .padding(15.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerLow,
+                    RoundedCornerShape(15.dp)
                 )
-                Row(Modifier.fillMaxWidth()) {
-                    Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
-                    Button({ state.eventHandler(Event.StepOver) }) { Text("Step over") }
-                    Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                .padding(15.dp)
+            LazyRow(
+                state = state.strucListState,
+                modifier = Modifier.fillMaxSize(),
+                flingBehavior = rememberSnapFlingBehavior(state.strucListState)
+            ) {
+                item {
+                    Box(itemModifier) {
+                        state.structogram.Content(
+                            modifier = Modifier.fillMaxWidth(),
+                            draggable = false,
+                            activeStatement = state.activeStatement,
+                        )
+                    }
+                }
+                items(state.structogram.methods) { method ->
+                    Box(itemModifier) {
+                        method.asStructogram().Content(
+                            modifier = Modifier.fillMaxWidth(),
+                            draggable = false,
+                            activeStatement = state.activeStatement,
+                        )
+                    }
+                }
+                items(state.structogram.functions) { function ->
+                    Box(itemModifier) {
+                        function.asStructogram().Content(
+                            modifier = Modifier.fillMaxWidth(),
+                            draggable = false,
+                            activeStatement = state.activeStatement,
+                        )
+                    }
                 }
             }
         }
     }
 
+    @Composable
+    private fun CallStack(trace: List<EvaluationContext.StackTraceEntry>) {
+        val listState = rememberLazyListState()
+        val textModifier = Modifier.padding(horizontal = 5.dp)
+        LazyRow(
+            state = listState,
+            flingBehavior = rememberSnapFlingBehavior(listState),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(trace) { entry ->
+                Column(
+                    Modifier
+                        .padding(2.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainerLow,
+                            RoundedCornerShape(5.dp)
+                        )
+                        .border(1.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(5.dp))
+                        .widthIn(min = 100.dp, max = 350.dp)
+                        .height(150.dp)
+                        .padding(5.dp)
+                ) {
+                    Text(entry.scope)
+                    LazyColumn {
+                        items(entry.variables) { variable ->
+                            Row {
+                                Text(
+                                    "${variable.id} : ${variable.type.label}",
+                                    modifier = textModifier
+                                )
+                                Text(
+                                    variable.value.toString(),
+                                    modifier = textModifier,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        if (entry.variables.isEmpty()) {
+                            item {
+                                Text(
+                                    "Empty Environment!",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
 
     @Composable
     private fun Stats(state: State) {
@@ -127,26 +186,14 @@ class DebugPage : Ui<State> {
             Modifier.safeDrawingPadding().padding(horizontal = 5.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            if (state.env.parameters.isEmpty()) {
-                Text("() : Empty Environment!", color = MaterialTheme.colorScheme.error)
-            } else {
-                Column(Modifier.border(1.dp, Color.Red).padding(5.dp)) {
-                    for (parameter in state.env.parameters) {
-                        Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(parameter.id)
-                            Text(parameter.value.toString())
-                            Text(parameter.type.toString())
-                        }
-                    }
-                }
-            }
+            CallStack(state.stackTrace)
             Column {
                 Text("Seed: ${state.seed}")
                 if (state.activeStatement == null) {
                     Row {
-                        Button({ state.eventHandler(Event.Reset) }) { Text("Reset") }
-                        Button({ state.eventHandler(Event.ResetRenew) }) { Text("Reset with new seed") }
-                        Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                        TextButton({ state.eventHandler(Event.Reset) }) { Text("Reset") }
+                        TextButton({ state.eventHandler(Event.ResetRenew) }) { Text("Reset with new seed") }
+                        TextButton({ state.eventHandler(Event.Close) }) { Text("Close") }
                     }
                     Text(
                         "Finished in ${state.stepCount + 1} steps!",
@@ -159,9 +206,9 @@ class DebugPage : Ui<State> {
                         color = MaterialTheme.colorScheme.secondary
                     )
                     Row {
-                        Button({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
-                        Button({ state.eventHandler(Event.StepOver) }) { Text("Step over") }
-                        Button({ state.eventHandler(Event.Close) }) { Text("Close") }
+                        TextButton({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
+                        TextButton({ state.eventHandler(Event.StepOver) }) { Text("Step over") }
+                        TextButton({ state.eventHandler(Event.Close) }) { Text("Close") }
                     }
                 }
             }

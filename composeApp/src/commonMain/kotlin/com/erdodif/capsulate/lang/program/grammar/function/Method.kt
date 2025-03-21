@@ -62,7 +62,7 @@ data class MethodCall(
         method,
         env.proxyWith(values.mapIndexed { i, variable -> variable.id to method.pattern.variables[i].id }
             .associate { it })
-    ).evaluate(env)
+    )
 
     override fun toString(): String = "Call on $method"
 

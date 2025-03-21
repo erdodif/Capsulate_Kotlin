@@ -43,8 +43,13 @@ data class Pattern(
     }
 
     override fun toString(): String = buildString {
-        append(toPatternString())
-        variables.forEach { append(it.id, " ") }
+        prefix?.split("_")?.map { append(it) }
+        if(variables.isNotEmpty()) append(" ")
+        delimiters.forEachIndexed { i, d -> append("${variables[i].id} $d ") }
+        if (variables.isNotEmpty()) {
+            append(variables.last().id)
+        }
+        postfix?.split("_")?.map { append(" $it") }
     }
 
 

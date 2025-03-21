@@ -165,6 +165,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                         inputValue =
                             inputValue.copy(text = structogram.format(ParserState(inputValue.text)))
                         tokenized = tokenizeProgram(inputValue.text)
+                        file.content = inputValue.text
                     }
                 }
 

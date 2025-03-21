@@ -65,6 +65,9 @@ data class PendingMethodEvaluation(
     val method: Method,
     val context: EvaluationContext
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
+    @OptIn(ExperimentalUuidApi::class)
+    override val id: Uuid
+        get() = context.head?.id ?: super.id
     val head: Statement?
         get() = context.head
 
@@ -127,6 +130,10 @@ data class PendingFunctionEvaluation<T : Value>(
      * This is an internal representation, formatting makes no sense
      */
     override fun Formatting.format(state: ParserState): Int = error("formatted function: $this")
+
+    fun getCallStack(): List<EvaluationContext.StackTraceEntry> =
+        if (expression is FunctionState) expression.context.getCallStack(expression.call.function.name)
+        else emptyList()
 }
 
 @OptIn(ExperimentalUuidApi::class)
