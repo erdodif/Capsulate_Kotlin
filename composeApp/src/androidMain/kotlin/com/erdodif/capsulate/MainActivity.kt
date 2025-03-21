@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.Wallpapers
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.project.OpenFile
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
         FileKit.init(this)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         Napier.base(DebugAntilog())
         hideSystemUI()
         scope.launch {

@@ -68,59 +68,13 @@ private val temporalColors: ButtonColors
 class ProjectPage : Ui<State> {
     companion object Factory : Ui.Factory by screenUiFactory<ProjectScreen>(::ProjectPage)
 
-    @OptIn(ExperimentalUuidApi::class)
     @Composable
     override fun Content(
         state: State, modifier: Modifier
     ) {
         Scaffold(
             modifier = modifier,
-            topBar = {
-                ScrollableLazyRow(
-                    modifier = Modifier.padding(3.dp).background(MaterialTheme.colorScheme.surface)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    itemsIndexed(state.project.openFiles) { index, openFile ->
-                        val color = if (openFile.hasFile) MaterialTheme.colorScheme.secondary
-                        else MaterialTheme.colorScheme.tertiary
-                        Button(
-                            modifier = Modifier,
-                            onClick = { state.eventHandler(Event.OpenN(index)) },
-                            shape = RectangleShape,
-                            enabled = state.opened.file.valueOrNull != openFile,
-                            colors = if (state.opened == openFile) openedColors else regularColors
-                        ) {
-                            Text(
-                                (openFile.file.valueOrNull?.getName()
-                                    ?: "New File (${state.project.namelessCount(index)})") + " *",
-                                modifier = Modifier.padding(1.dp, 2.dp),
-                                color = color
-                            ) // STOPSHIP - Locale
-                        }
-                    }
-                    items(state.project.listFiles().filter {
-                        it.getName() !in state.project.openFiles.mapNotNull {
-                            it.file.valueOrNull?.getName()
-                        }
-                    }) {
-                        Button(
-                            modifier = Modifier,
-                            onClick = { state.eventHandler(Event.OpenAFile(it.getName())) },
-                            shape = RectangleShape,
-                            enabled = state.opened.file != it,
-                            colors = regularColors
-                        ) {
-                            Text(it.getName(), Modifier.padding(1.dp, 2.dp))
-                        }
-                    }
-                    item {
-                        IconButton({ state.eventHandler(Event.New) }) {
-                            Icon(Icons.Filled.Add, "")
-                        }
-                    }
-                }
-            }
+            topBar = { TopBar(state) }
         ) { paddingValues ->
             NavigableCircuitContent(
                 navigator = state.editorNavigator,
@@ -129,6 +83,55 @@ class ProjectPage : Ui<State> {
                     .consumeWindowInsets(paddingValues),
                 unavailableRoute = defaultScreenError
             )
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Composable
+    private fun TopBar(state: State) {
+        ScrollableLazyRow(
+            modifier = Modifier.padding(3.dp).background(MaterialTheme.colorScheme.surface)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            itemsIndexed(state.project.openFiles) { index, openFile ->
+                val color = if (openFile.hasFile) MaterialTheme.colorScheme.secondary
+                else MaterialTheme.colorScheme.tertiary
+                Button(
+                    modifier = Modifier,
+                    onClick = { state.eventHandler(Event.OpenN(index)) },
+                    shape = RectangleShape,
+                    enabled = state.opened.file.valueOrNull != openFile,
+                    colors = if (state.opened == openFile) openedColors else regularColors
+                ) {
+                    Text(
+                        (openFile.file.valueOrNull?.getName()
+                            ?: "New File (${state.project.namelessCount(index)})") + " *",
+                        modifier = Modifier.padding(1.dp, 2.dp),
+                        color = color
+                    ) // STOPSHIP - Locale
+                }
+            }
+            items(state.project.listFiles().filter {
+                it.getName() !in state.project.openFiles.mapNotNull {
+                    it.file.valueOrNull?.getName()
+                }
+            }) {
+                Button(
+                    modifier = Modifier,
+                    onClick = { state.eventHandler(Event.OpenAFile(it.getName())) },
+                    shape = RectangleShape,
+                    enabled = state.opened.file != it,
+                    colors = regularColors
+                ) {
+                    Text(it.getName(), Modifier.padding(1.dp, 2.dp))
+                }
+            }
+            item {
+                IconButton({ state.eventHandler(Event.New) }) {
+                    Icon(Icons.Filled.Add, "")
+                }
+            }
         }
     }
 }

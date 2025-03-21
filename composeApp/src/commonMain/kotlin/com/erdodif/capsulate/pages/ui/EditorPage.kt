@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -45,6 +46,7 @@ import com.erdodif.capsulate.StatementDragProvider
 import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.pages.screen.EditorScreen
+import com.erdodif.capsulate.pages.screen.EditorScreen.State
 import com.erdodif.capsulate.presets.presets
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.structogram.Structogram
@@ -63,12 +65,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Month
 import kotlin.uuid.ExperimentalUuidApi
 
-class EditorPage() : Ui<EditorScreen.State> {
+class EditorPage() : Ui<State> {
 
     companion object Factory : Ui.Factory by screenUiFactory<EditorScreen>(::EditorPage)
 
     @Composable
-    override fun Content(state: EditorScreen.State, modifier: Modifier) {
+    override fun Content(state: State, modifier: Modifier) {
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         ContentWithOverlays(Modifier.fillMaxSize()) {
             StatementDragProvider {
@@ -76,7 +78,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                     Scaffold(
                         modifier,
                         contentWindowInsets = WindowInsets.ime,
-                        bottomBar = { bottomBar().Content(state, Modifier) }
+                        bottomBar = { BottomBar(state, Modifier) }
                     ) { innerPadding ->
                         if (state.loading) {
                             Box(Modifier.fillMaxSize().padding(innerPadding)) {
@@ -110,20 +112,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                                     )
                                 }
                                 if (keyboardUp && !state.input) {
-                                    Row(
-                                        Modifier.fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                            .align(Alignment.BottomCenter)
-                                            .imePadding(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Button({
-                                            state.eventHandler(EditorScreen.Event.OpenUnicodeInput)
-                                        }) { Text("\\escape") }
-                                        Button({
-                                            state.eventHandler(EditorScreen.Event.Format)
-                                        }) { Text("Format") }
-                                    }
+                                    KeyBoardExtension(state)
                                 }
                             }
                         }
@@ -133,18 +122,106 @@ class EditorPage() : Ui<EditorScreen.State> {
         }
     }
 
+    @Composable
+    private fun BottomBar(state: State, modifier: Modifier) {
+        BottomAppBar {
+            val scrollState = rememberScrollState(0)
+            Row(
+                modifier.fillMaxWidth().horizontalScroll(scrollState),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    Modifier.padding(5.dp, 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Code") // STOPSHIP: Locale
+                    Switch(
+                        state.showCode,
+                        { state.eventHandler(EditorScreen.Event.ToggleCode) },
+                        Modifier.padding(5.dp, 1.dp)
+                    )
+                }
+                Row(
+                    Modifier.padding(5.dp, 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Struk") // STOPSHIP: Locale
+                    Switch(
+                        state.showStructogram,
+                        { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
+                        Modifier.padding(5.dp, 1.dp)
+                    )
+                }
+                Row(
+                    Modifier.padding(5.dp, 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Drag") // STOPSHIP: Locale
+                    Switch(
+                        state.dragStatements,
+                        { state.eventHandler(EditorScreen.Event.ToggleStatementDrag) },
+                        Modifier.padding(5.dp, 1.dp)
+                    )
+                }
+                Button(
+                    { state.eventHandler(EditorScreen.Event.Close) },
+                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                    contentPadding = PaddingValues(2.dp)
+                ) {
+                    Text("X") // STOPSHIP: Locale
+                }
+                Button(
+                    { state.eventHandler(EditorScreen.Event.Format) },
+                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                    contentPadding = PaddingValues(2.dp)
+                ) {
+                    Text("Format") // STOPSHIP: Locale
+                }
+                Button(
+                    { state.eventHandler(EditorScreen.Event.Run) },
+                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                    contentPadding = PaddingValues(2.dp)
+                ) {
+                    Text("Run") // STOPSHIP: Locale
+                }
+                Button(
+                    { state.eventHandler(EditorScreen.Event.Save) },
+                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                    contentPadding = PaddingValues(2.dp)
+                ) {
+                    Text("Save file") // STOPSHIP: Locale
+                }
+            }
+        }
+    }
+
+
+    @Composable
+    private fun BoxScope.KeyBoardExtension(state: State) {
+        Row(
+            Modifier.fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .align(Alignment.BottomCenter)
+                .imePadding(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button({
+                state.eventHandler(EditorScreen.Event.OpenUnicodeInput)
+            }) { Text("\\escape") }
+            Button({
+                state.eventHandler(EditorScreen.Event.Format)
+            }) { Text("Format") }
+        }
+    }
+
 }
 
 @OptIn(ExperimentalUuidApi::class)
-internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
+internal fun structogram(): Ui<State> = ui { state, modifier ->
     val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     if (state.showStructogram)
         Column(
-            modifier.fillMaxWidth()
-                /*.heightIn(
-                    10.dp,
-                    if (state.showCode) 1200.dp else Dp.Unspecified
-                )*/.verticalScroll(rememberScrollState()),
+            modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -170,7 +247,7 @@ internal fun structogram(): Ui<EditorScreen.State> = ui { state, modifier ->
         }
 }
 
-internal fun codeEdit(): Ui<EditorScreen.State> = ui { state, modifier ->
+internal fun codeEdit(): Ui<State> = ui { state, modifier ->
     if (state.showCode)
         CodeEditor(
             state.code,
@@ -199,78 +276,6 @@ internal fun codeEdit(): Ui<EditorScreen.State> = ui { state, modifier ->
         }
 }
 
-internal fun bottomBar(): Ui<EditorScreen.State> = ui { state, modifier ->
-    BottomAppBar {
-        val scrollState = rememberScrollState(0)
-        Row(
-            modifier.fillMaxWidth().horizontalScroll(scrollState),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                Modifier.padding(5.dp, 0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Code") // STOPSHIP: Locale
-                Switch(
-                    state.showCode,
-                    { state.eventHandler(EditorScreen.Event.ToggleCode) },
-                    Modifier.padding(5.dp, 1.dp)
-                )
-            }
-            Row(
-                Modifier.padding(5.dp, 0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Struk") // STOPSHIP: Locale
-                Switch(
-                    state.showStructogram,
-                    { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
-                    Modifier.padding(5.dp, 1.dp)
-                )
-            }
-            Row(
-                Modifier.padding(5.dp, 0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Drag") // STOPSHIP: Locale
-                Switch(
-                    state.dragStatements,
-                    { state.eventHandler(EditorScreen.Event.ToggleStatementDrag) },
-                    Modifier.padding(5.dp, 1.dp)
-                )
-            }
-            Button(
-                { state.eventHandler(EditorScreen.Event.Close) },
-                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                contentPadding = PaddingValues(2.dp)
-            ) {
-                Text("X") // STOPSHIP: Locale
-            }
-            Button(
-                { state.eventHandler(EditorScreen.Event.Format) },
-                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                contentPadding = PaddingValues(2.dp)
-            ) {
-                Text("Format") // STOPSHIP: Locale
-            }
-            Button(
-                { state.eventHandler(EditorScreen.Event.Run) },
-                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                contentPadding = PaddingValues(2.dp)
-            ) {
-                Text("Run") // STOPSHIP: Locale
-            }
-            Button(
-                { state.eventHandler(EditorScreen.Event.Save) },
-                Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                contentPadding = PaddingValues(2.dp)
-            ) {
-                Text("Save file") // STOPSHIP: Locale
-            }
-        }
-    }
-}
-
 @Preview
 @Composable
 fun EditorPagePreview() = PreviewTheme {
@@ -278,7 +283,7 @@ fun EditorPagePreview() = PreviewTheme {
     val structorgram =
         (runBlocking { Structogram.fromString(code.text) } as Left<Structogram>).value
     EditorPage().Content(
-        EditorScreen.State(
+        State(
             code,
             tokenizeProgram(code.text),
             structorgram,

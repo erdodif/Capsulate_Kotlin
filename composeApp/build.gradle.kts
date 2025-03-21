@@ -80,6 +80,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlin.test.junit)
+            implementation(libs.material)
         }
         iosMain.dependencies {
         }

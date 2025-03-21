@@ -44,7 +44,6 @@ data class ProjectScreen(val project: Project) : Screen {
 
     @Immutable
     sealed interface Event : CircuitUiEvent {
-        data class ProjectSelected(val path: PlatformDirectory) : Event
         data object Close : Event
         data class OpenAFile(val name: String) : Event
         data class OpenN(val index: Int) : Event
@@ -61,7 +60,6 @@ class ProjectPresenter(
     @Composable
     override fun present(): ProjectScreen.State {
         // the backstack and the state must point to the same object or else the navigation breaks
-        var path by rememberRetained { mutableStateOf(screen.project.directory) }
         var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) {
             mutableStateOf(screen.project.openFiles.firstOrNull() ?: screen.project.openEmptyFile())
         }
@@ -78,13 +76,10 @@ class ProjectPresenter(
         }
         return ProjectScreen.State(project, opened, editorNavigator, backStack) { event ->
             when (event) {
-                is Event.ProjectSelected -> path = event.path
                 is Event.Close -> navigator.pop()
                 is Event.OpenAFile -> {
                     opened = project.getFile(event.name)
-                    editorNavigator.resetRoot(
-                        EditorScreen(project.getFile(event.name), channel)
-                    )
+                    editorNavigator.resetRoot(EditorScreen(project.getFile(event.name), channel))
                 }
 
                 is Event.New -> {
