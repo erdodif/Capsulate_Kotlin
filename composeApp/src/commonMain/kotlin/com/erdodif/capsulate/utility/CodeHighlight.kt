@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.utility
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -48,10 +50,11 @@ class CodeHighlight private constructor(
         var error: Color = Color(217, 26, 26)
         var comment: Color = Color(90, 90, 90)
         var control: Color = Color(218, 121, 42)
-        var whiteSpace: Color = Color(75,75,75,134)
+        var whiteSpace: Color = Color(75, 75, 75, 134)
 
         companion object {
-            operator fun invoke(it: (Builder.() -> Unit)): Builder {
+            @Composable
+            operator fun invoke(it: (@Composable Builder.() -> Unit)): Builder {
                 val builder = Builder()
                 builder.it()
                 return builder
@@ -151,4 +154,20 @@ class CodeHighlight private constructor(
         }
 }
 
-val defaultCodeHighLight = CodeHighlight.Builder {}.build()
+val defaultCodeHighLight
+    @Composable
+    get() = CodeHighlight.Builder {
+        if (!isSystemInDarkTheme()) {
+            constant = Color(6, 110, 122)
+            variable = Color(141, 18, 169)
+            number = Color(0, 119, 230)
+            string = Color(49, 109, 41)
+            stringEscape = Color(0, 0, 128)
+            operator = Color(97, 6, 102)
+            parenthesis = Color(43, 43, 43)
+            error = Color(175, 5, 5)
+            comment = Color(48, 48, 48)
+            control = Color(202, 106, 9)
+            whiteSpace = Color(146, 146, 146)
+        }
+    }.build()

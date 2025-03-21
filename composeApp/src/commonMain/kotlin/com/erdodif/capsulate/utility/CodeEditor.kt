@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.utility
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -74,7 +76,10 @@ fun CodeEditor(
                 }
             },
             textStyle = textStyle,
-            modifier = modifier.background(Color(44, 44, 44)).onInterceptKeyBeforeSoftKeyboard {
+            modifier = modifier.background(
+                if (isSystemInDarkTheme()) Color(44, 44, 44)
+                else MaterialTheme.colorScheme.surfaceContainerHigh
+            ).onInterceptKeyBeforeSoftKeyboard {
                 if (it.utf16CodePoint.toChar() == '\\' && onValueChange != null) {
                     coroutineScope.launch { onBackSlashEntered() }
                     true
