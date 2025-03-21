@@ -22,6 +22,7 @@ import com.erdodif.capsulate.utility.saver.stateListSaver
 import com.erdodif.capsulate.utility.saver.OpenFileSaver
 import com.slack.circuit.backstack.SaveableBackStack
 import com.slack.circuit.backstack.rememberSaveableBackStack
+import com.slack.circuit.foundation.Navigator
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.CircuitUiEvent
@@ -57,9 +58,11 @@ class ProjectPresenter(
 ) : Presenter<ProjectScreen.State> {
     object Factory : Presenter.Factory by screenPresenterFactory<ProjectScreen>(::ProjectPresenter)
 
+    // NOTE: The backstack and the navigator must be recreated on `opened` change
+    // or else the navigation breaks
+
     @Composable
     override fun present(): ProjectScreen.State {
-        // the backstack and the state must point to the same object or else the navigation breaks
         var opened by rememberSaveable(saver = mutableSaverOf(OpenFileSaver)) {
             mutableStateOf(screen.project.openFiles.firstOrNull() ?: screen.project.openEmptyFile())
         }
@@ -68,8 +71,8 @@ class ProjectPresenter(
         val openFiles = rememberSaveable(saver = stateListSaver<OpenFile>()) {
             mutableStateListOf<OpenFile>(*screen.project.openFiles.toTypedArray())
         }
-        val backStack = rememberSaveableBackStack(root = EditorScreen(opened, channel))
-        val editorNavigator = rememberCircuitNavigator(backStack, navigator::pop)
+        val backStack = remember(opened) { SaveableBackStack(root = EditorScreen(opened, channel)) }
+        val editorNavigator = remember(backStack) { Navigator(backStack, navigator::pop) }
         val project = Project(screen.project.directory, openFiles)
         LaunchedEffect(channel) {
             opened = channel.receive()
