@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -27,11 +28,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +51,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -104,6 +115,7 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
             MatchStatus.NoMatchButPrefix -> MaterialTheme.colorScheme.tertiary
             MatchStatus.Nothing -> MaterialTheme.colorScheme.error
         }
+        var xHeight by remember { mutableStateOf(0.dp) }
         LaunchedEffect(value) {
             prefixes = getFromPrefix(word) + getFromLatexPrefix(word)
             matchStatus = when {
@@ -115,29 +127,54 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                 prefixes.mapNotNull { escapes[it] ?: latexEscapes[it] }.flatMap { it.toList() }
                     .filter { it !in (match ?: "") }.toCharArray()
         }
-        Column(
-            modifier.background(
+        Scaffold(
+            modifier.fillMaxSize().imePadding().background(
                 MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f),
                 RoundedCornerShape(5.dp)
             ),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Row(
-                Modifier.fillMaxWidth()
-                    .weight(if (match != null || extraMatches.isNotEmpty()) 1f else 3f),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.Top
-            ) {
-                IconButton({ navigator.finish(0.toChar()) }) {
-                    Icon(Icons.Filled.Close, "Close")
+            containerColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
+            bottomBar = {
+                Column(Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+                    LazyRow(
+                        Modifier.fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.tertiaryContainer)
+                            .padding(if (prefixes.isEmpty()) 0.dp else 10.dp)
+                    ) {
+                        items(prefixes) {
+                            Text(
+                                "\\$it ",
+                                fontFamily = FontFamily(Font(Res.font.jet_brains_mono_italic)),
+                                modifier = Modifier.padding(5.dp, 2.dp).clickable {
+                                    index = 0
+                                    value =
+                                        value.copy("\\$it ", selection = TextRange(it.length + 1))
+                                },
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                style = TextStyle(fontFeatureSettings = "liga 0")
+                            )
+                        }
+                    }
+                    InputBar(
+                        value, index, selectedChar, match, extraMatches,
+                        { index = it },
+                        { value = it },
+                        borderColor,
+                        navigator,
+                        focusRequester
+                    )
                 }
             }
+        ) { innerPadding ->
             if (match != null || extraMatches.isNotEmpty()) {
                 FlowRow(
-                    Modifier.weight(2f).clip(RectangleShape)
+                    Modifier.clip(RectangleShape).padding(innerPadding)
                         .verticalScroll(rememberScrollState(0), true),
                     horizontalArrangement = Arrangement.Start
                 ) {
+                    key(xHeight) {
+                        Spacer(modifier.height(xHeight).fillMaxWidth())
+                    }
                     match?.forEachIndexed { i, char ->
                         Text(
                             text = char.toString(),
@@ -180,102 +217,108 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                     }
                 }
             }
-            Column(
-                Modifier.weight(1f)
+            Row(
+                Modifier.fillMaxWidth().onDpSize(LocalDensity.current) { xHeight = it.height },
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.Top
             ) {
-                LazyRow(
-                    Modifier.fillMaxWidth().padding(10.dp)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                OutlinedIconButton(
+                    onClick = { navigator.finish(0.toChar()) },
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                    colors = IconButtonDefaults.iconButtonColors()
+                        .copy(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
-                    items(prefixes) {
-                        Text(
-                            "\\$it ",
-                            fontFamily = FontFamily(Font(Res.font.jet_brains_mono_italic)),
-                            modifier = Modifier.padding(5.dp, 2.dp).clickable {
-                                index = 0
-                                value = value.copy("\\$it ", selection = TextRange(it.length + 1))
-                            },
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            style = TextStyle(fontFeatureSettings = "liga 0")
-                        )
-                    }
-                }
-                Row(
-                    Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 60.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Spacer(Modifier.height(5.dp))
-                    BasicTextField(
-                        value,
-                        {
-                            if (it.text == " ") {
-                                navigator.finish(0.toChar())
-                                return@BasicTextField
-                            }
-                            if (it.text == value.text) {
-                                if (!onMobile &&
-                                    it.selection.collapsed &&
-                                    it.selection.start != value.selection.start &&
-                                    !match.isNullOrEmpty()
-                                ) {
-                                    val maxIndex = match.length + extraMatches.size
-                                    index =
-                                        (index + it.selection.start - value.selection.start + maxIndex) % maxIndex
-                                }
-                            } else {
-                                index = 0
-                            }
-                            value = it.copy(it.text, selection = TextRange(it.text.length - 1))
-                        },
-                        Modifier.weight(4f).defaultMinSize(150.dp, 30.dp)
-                            .padding(10.dp)
-                            .border(2.dp, borderColor)
-                            .focusRequester(focusRequester)
-                            .background(Color.Transparent),
-                        singleLine = true,
-                        enabled = true,
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            autoCorrectEnabled = false,
-                            keyboardType = KeyboardType.Ascii,
-                            imeAction = ImeAction.Send
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSend = {
-                                if (match != null) navigator.finish(selectedChar) else navigator.finish(
-                                    0.toChar()
-                                )
-                            }
-                        ),
-                        textStyle = TextStyle(
-                            color = if (match != null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
-                            fontSize = 30.sp,
-                            fontFeatureSettings = "liga 0"
-                        ),
-                        cursorBrush = SolidColor(Color.Transparent)
-                    )
-                    if (match != null || extraMatches.isNotEmpty()) {
-                        Text(
-                            selectedChar.toString(),
-                            fontSize = 40.sp,
-                            modifier = Modifier
-                                .clickable { navigator.finish(selectedChar) }
-                                .weight(1f).height(50.dp)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontFamily = FontFamily(Font(Res.font.jet_brains_mono_bold)),
-                            textAlign = TextAlign.Center
-                        )
-                    } else {
-                        Spacer(
-                            Modifier.weight(1f).background(MaterialTheme.colorScheme.error)
-                                .height(50.dp)
-                        )
-                    }
+                    Icon(Icons.Filled.Close, "Close")
                 }
             }
         }
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
     }
 }
+
+@Composable
+private fun InputBar(
+    value: TextFieldValue,
+    index: Int,
+    selectedChar: Char,
+    match: String?,
+    extraMatches: CharArray,
+    onIndexChange: (Int) -> Unit,
+    onValueChange: (TextFieldValue) -> Unit,
+    borderColor: Color,
+    navigator: OverlayNavigator<Char>,
+    focusRequester: FocusRequester
+) {
+    Row(
+        Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified, 60.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        BasicTextField(
+            value = value,
+            {
+                if (it.text == " ") {
+                    navigator.finish(0.toChar())
+                    return@BasicTextField
+                }
+                if (it.text == value.text) {
+                    if (!onMobile &&
+                        it.selection.collapsed &&
+                        it.selection.start != value.selection.start &&
+                        !match.isNullOrEmpty()
+                    ) {
+                        val maxIndex = match.length + extraMatches.size
+                        onIndexChange((index + it.selection.start - value.selection.start + maxIndex) % maxIndex)
+                    }
+                } else {
+                    onIndexChange(0)
+                }
+                onValueChange(it.copy(it.text, selection = TextRange(it.text.length - 1)))
+            },
+            modifier = Modifier.weight(4f).defaultMinSize(150.dp, 30.dp)
+                .padding(10.dp)
+                .border(2.dp, borderColor)
+                .focusRequester(focusRequester)
+                .background(Color.Transparent),
+            singleLine = true,
+            enabled = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                autoCorrectEnabled = false,
+                keyboardType = KeyboardType.Ascii,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    if (match != null) navigator.finish(selectedChar) else navigator.finish(
+                        0.toChar()
+                    )
+                }
+            ),
+            textStyle = TextStyle(
+                color = if (match != null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                fontSize = 30.sp,
+                fontFeatureSettings = "liga 0"
+            ),
+            cursorBrush = SolidColor(Color.Transparent)
+        )
+        if (match != null || extraMatches.isNotEmpty()) {
+            Text(
+                selectedChar.toString(),
+                fontSize = 40.sp,
+                modifier = Modifier
+                    .clickable { navigator.finish(selectedChar) }
+                    .weight(1f).height(50.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontFamily = FontFamily(Font(Res.font.jet_brains_mono_bold)),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Spacer(
+                Modifier.weight(1f).background(MaterialTheme.colorScheme.error)
+                    .height(50.dp)
+            )
+        }
+    }
+}
+

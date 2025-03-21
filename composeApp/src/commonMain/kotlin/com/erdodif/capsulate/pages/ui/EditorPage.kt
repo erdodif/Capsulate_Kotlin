@@ -70,24 +70,24 @@ class EditorPage() : Ui<EditorScreen.State> {
     @Composable
     override fun Content(state: EditorScreen.State, modifier: Modifier) {
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-        StatementDragProvider {
-            DragAndDropContainer(LocalDraggingStatement.current.state) {
-                Scaffold(
-                    modifier,
-                    contentWindowInsets = WindowInsets.ime,
-                    bottomBar = { bottomBar().Content(state, Modifier) }
-                ) { innerPadding ->
-                    if (state.loading) {
-                        Box(Modifier.fillMaxSize().padding(innerPadding)) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.Center).size(60.dp),
-                                strokeWidth = 5.dp,
-                                color = MaterialTheme.colorScheme.onSecondary,
-                                trackColor = MaterialTheme.colorScheme.secondary
-                            )
-                        }
-                    } else {
-                        ContentWithOverlays(Modifier.fillMaxSize()) {
+        ContentWithOverlays(Modifier.fillMaxSize()) {
+            StatementDragProvider {
+                DragAndDropContainer(LocalDraggingStatement.current.state) {
+                    Scaffold(
+                        modifier,
+                        contentWindowInsets = WindowInsets.ime,
+                        bottomBar = { bottomBar().Content(state, Modifier) }
+                    ) { innerPadding ->
+                        if (state.loading) {
+                            Box(Modifier.fillMaxSize().padding(innerPadding)) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.align(Alignment.Center).size(60.dp),
+                                    strokeWidth = 5.dp,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    trackColor = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        } else {
                             Box(Modifier.fillMaxSize()) {
                                 Column(
                                     Modifier.verticalScroll(rememberScrollState())
