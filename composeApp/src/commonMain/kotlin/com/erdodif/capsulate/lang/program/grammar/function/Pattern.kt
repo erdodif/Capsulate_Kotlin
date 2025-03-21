@@ -9,8 +9,8 @@ import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.program.grammar.not
 import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.lang.program.grammar.plus
-import com.erdodif.capsulate.lang.program.grammar.program
 import com.erdodif.capsulate.lang.program.grammar.right
+import com.erdodif.capsulate.lang.program.grammar.string
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Parser
@@ -23,6 +23,7 @@ import com.erdodif.capsulate.lang.util._lineEnd
 import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.get
+import com.erdodif.capsulate.lang.util.isWordChar
 import com.erdodif.capsulate.lang.util.tok
 
 @KParcelize
@@ -32,19 +33,20 @@ data class Pattern(
     val variables: List<Variable>,
     val postfix: String?
 ) : KParcelable {
-    override fun toString(): String {
-        return buildString {
-            append("Pattern: ")
-            prefix?.apply(::append)
-            delimiters.forEachIndexed { i, d -> append("\$${i + 1}$d") }
-            if (variables.isNotEmpty()) {
-                append("\$${delimiters.count() + 1}")
-            }
-            postfix?.apply(::append)
-            append("\nVariables: ")
-            variables.forEach { append(it.id, " ") }
+    fun toPatternString(): String = buildString {
+        prefix?.apply(::append)
+        delimiters.forEachIndexed { i, d -> append("\$${i + 1}$d") }
+        if (variables.isNotEmpty()) {
+            append("\$${delimiters.count() + 1}")
         }
+        postfix?.apply(::append)
     }
+
+    override fun toString(): String = buildString {
+        append(toPatternString())
+        variables.forEach { append(it.id, " ") }
+    }
+
 
     fun toString(state: ParserState): String = buildString {
         append(prefix ?: "")
@@ -68,8 +70,11 @@ val patternComparator = Comparator<Pattern> { a, b ->
     when {
         // Prefix must come first or else 'constant' method calls would be weaker
         a.prefix != b.prefix -> (a.prefix?.length ?: 0) - (b.prefix?.length ?: 0)
+        // Postfix-only patterns can only be made compile time, good for built in patterns
         a.postfix != b.postfix -> (a.postfix?.length ?: 0) - (b.postfix?.length ?: 0)
+        // More variables are stronger
         a.variables.count() != b.variables.count() -> a.variables.count() - b.variables.count()
+        // If all else fails, look at the delimiter length
         else -> a.delimiters.flatMap { it.asIterable() }
             .count() - b.delimiters.flatMap { it.asIterable() }.count()
     }
@@ -97,7 +102,7 @@ val sPattern: Parser<Pattern> = (many(
     val (prefix, mixed) = it.value
     val variables = mixed.map { it.first }
     val delimiters = mixed.map { it.second.asString() }
-    val post = delimiters.getOrNull(variables.count()-1)
+    val post = delimiters.getOrNull(variables.count() - 1)
     if (variables.isEmpty() && prefix.isEmpty()) {
         Fail("Matched an empty Pattern!", it.state)
     } else if (prefix.isEmpty() && delimiters.take(variables.count()).all { it.count() == 0 }) {
@@ -116,68 +121,90 @@ val sPattern: Parser<Pattern> = (many(
     }
 }]
 
-private fun ParserState.tryPattern(pattern: Pattern): List<Variable>? {
+private fun ParserState.trySubWords(word: String): ParserResult<Unit> {
+    val start = this.position
+    for (subWord in word.split("_")) {
+        if (!isWordChar(subWord.lastOrNull() ?: ' ')) {
+            val result = tryParse(tok(string(subWord)))
+            if (result is Fail) {
+                return result
+            }
+
+        } else {
+            val result = tryParse(_keyword(subWord))
+            if (result is Fail) {
+                return result
+            }
+        }
+    }
+    return pass(start)
+}
+
+fun ParserState.sSinglePattern(pattern: Pattern): ParserResult<List<Variable>> {
     var start = this.position
     var params: MutableList<Variable> = mutableListOf()
+    val failed = "\"Pattern \"${pattern.toPatternString()}\" failed"
     if (pattern.prefix != null) {
-        for (subWord in pattern.prefix.split("_")) {
-            if (tryParse(_keyword(subWord)) is Fail) {
-                this.position = start
-                return null
+        trySubWords(pattern.prefix).apply {
+            if (this is Fail) {
+                return copy("$failed on prefix \"${pattern.prefix}\" with reason:" + reason)
             }
         }
     }
     if (pattern.variables.isNotEmpty()) {
-        val delimiterResult = tryParse(pVariable)
-        if (delimiterResult is Pass) {
-            params.add(delimiterResult.value)
-        } else {
-            this.position = start
-            return null
+        when (val variableResult = tryParse(pVariable)) {
+            is Pass -> params.add(variableResult.value)
+            is Fail -> return fail("$failed on first variable with reason: ${variableResult.reason}")
         }
         for (delimiter in pattern.delimiters) {
-            for (subWord in delimiter.split("_")) {
-                if (tryParse(_keyword(subWord)) is Fail) {
-                    this.position = start
-                    return null
+            trySubWords(delimiter).apply {
+                if (this is Fail) {
+                    return fail("Pattern \"${pattern.toPatternString()}\" failed on delimiter \"${delimiter}\"")
                 }
             }
-            val delimiterResult = tryParse(pVariable)
-            if (delimiterResult is Pass) {
-                params.add(delimiterResult.value)
-            } else {
-                this.position = start
-                return null
+            when (val variableResult = tryParse(pVariable)) {
+                is Pass -> params.add(variableResult.value)
+                is Fail -> return fail("$failed on variable with reason: ${variableResult.reason}")
             }
         }
     }
 
     if (pattern.postfix != null) {
-        for (subWord in pattern.postfix.split("_")) {
-            if (tryParse(_keyword(subWord)) is Fail) {
-                this.position = start
-                return null
+        trySubWords(pattern.postfix).apply {
+            if (this is Fail) {
+                return copy("$failed on postfix \"${pattern.postfix}\" with reason:" + reason)
             }
         }
     }
     return if (params.count() == pattern.variables.count()) {
-        params
+        pass(start, params)
     } else {
-        null
+        return fail(
+            "$failed to find enough variables " +
+                    "(expected ${pattern.variables.count()}, bot got ${params.count()})."
+        )
     }
 }
 
 val sKnownPattern: Parser<Pair<Pattern, List<Variable>>> = {
     val start = this.position
     var out: ParserResult<Pair<Pattern, List<Variable>>> =
-        this.fail("Failed to match with any of the known patterns")
+        this.fail(
+            "Failed to match with any of the known patterns, the patterns in order: ${
+                methods.map { it.pattern }.sortedWith(patternComparator.reversed())
+                    .joinToString { "\"${it.toString(this)}\"" }
+            }"
+        )
     for (pattern in methods.map { it.pattern }.sortedWith(patternComparator.reversed())) {
-        val result = tryPattern(pattern)
-        if (result != null) {
-            out = this.pass(start, pattern to result)
-            break
-        } else {
-            this.position = start
+        when (val result = sSinglePattern(pattern)) {
+            is Pass -> {
+                out = Pass(pattern to result.value, this, result.match)
+                break
+            }
+
+            is Fail -> {
+                this.position = start
+            }
         }
     }
     out

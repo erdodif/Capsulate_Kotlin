@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.lang.evaluation
 
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.Parameter
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
@@ -16,13 +17,13 @@ class MockEnvironments {
                 throw IllegalStateException("Equals called the never parameter!")
         }
 
-        fun neverEnv(): Environment = Environment(
+        fun neverEnv(): Environment = Env(
             mapOf(), mapOf(), mutableListOf(
                 Parameter("_", Type.NEVER, NeverValue)
             )
         )
 
-        fun intEnv(): Environment = Environment(
+        fun intEnv(): Environment = Env(
             mapOf(), mapOf(), mutableListOf(
                 Parameter("a", Type.NAT, VNat(1U)),
                 Parameter("b", Type.NAT, VNat(4U)),
@@ -30,7 +31,7 @@ class MockEnvironments {
             )
         )
 
-        fun stringEnv(): Environment = Environment(
+        fun stringEnv(): Environment = Env(
             mapOf(), mapOf(), mutableListOf(
                 Parameter("a", Type.STRING, VStr("text")),
             )

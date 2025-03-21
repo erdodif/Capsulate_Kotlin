@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate.lang.evaluation.context
 
+import com.erdodif.capsulate.lang.program.evaluation.Env
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.grammar.Assign
@@ -35,7 +36,7 @@ class FunctionTest {
         val underTest = FunctionCall(function, listOf(), pos)
         var context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf("x" to function.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
@@ -56,7 +57,7 @@ class FunctionTest {
         val underTest = FunctionCall(function, listOf(), pos)
         var context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf("x" to function.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
@@ -78,7 +79,7 @@ class FunctionTest {
         val underTest = FunctionCall(function, listOf(), pos)
         var context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf("x" to function.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
@@ -108,7 +109,7 @@ class FunctionTest {
         val underTest2 = FunctionCall(constant2, listOf(), pos)
         var context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf(
                         "x" to constant1.body.toTypedArray(),
                         "y" to constant2.body.toTypedArray()
@@ -150,7 +151,7 @@ class FunctionTest {
             FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf("f" to function.body.toTypedArray(), "x" to constant.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
@@ -188,7 +189,7 @@ class FunctionTest {
             FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf("f" to function.body.toTypedArray(), "x" to constant.body.toTypedArray()),
                     mapOf(),
                     mutableListOf()
@@ -217,7 +218,7 @@ class FunctionTest {
         val underTest3 = FunctionCall(constant3, listOf(), pos)
         val context =
             EvaluationContext(
-                Environment(
+                Env(
                     mapOf(
                         "x" to constant2.body.toTypedArray(),
                         "y" to constant3.body.toTypedArray()
