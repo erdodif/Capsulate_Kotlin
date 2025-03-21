@@ -2,6 +2,7 @@ package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,59 +73,62 @@ class ProjectPage : Ui<State> {
     override fun Content(
         state: State, modifier: Modifier
     ) {
-        Column(modifier) {
-            ScrollableLazyRow(
-                modifier = Modifier.padding(3.dp).background(MaterialTheme.colorScheme.surface)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                itemsIndexed(state.project.openFiles) { index, openFile ->
-                    val color = if (openFile.hasFile) MaterialTheme.colorScheme.secondary
-                    else MaterialTheme.colorScheme.tertiary
-                    Button(
-                        modifier = Modifier,
-                        onClick = { state.eventHandler(Event.OpenN(index)) },
-                        shape = RectangleShape,
-                        enabled = state.opened.file.valueOrNull != openFile,
-                        colors = if (state.opened == openFile) openedColors else regularColors
-                    ) {
-                        Text(
-                            (openFile.file.valueOrNull?.getName() ?: "New File (${state.project.namelessCount(index)})") + " *",
-                            modifier = Modifier.padding(1.dp, 2.dp),
-                            color = color
-                        ) // STOPSHIP - Locale
+        Scaffold(
+            modifier = modifier,
+            topBar = {
+                ScrollableLazyRow(
+                    modifier = Modifier.padding(3.dp).background(MaterialTheme.colorScheme.surface)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    itemsIndexed(state.project.openFiles) { index, openFile ->
+                        val color = if (openFile.hasFile) MaterialTheme.colorScheme.secondary
+                        else MaterialTheme.colorScheme.tertiary
+                        Button(
+                            modifier = Modifier,
+                            onClick = { state.eventHandler(Event.OpenN(index)) },
+                            shape = RectangleShape,
+                            enabled = state.opened.file.valueOrNull != openFile,
+                            colors = if (state.opened == openFile) openedColors else regularColors
+                        ) {
+                            Text(
+                                (openFile.file.valueOrNull?.getName()
+                                    ?: "New File (${state.project.namelessCount(index)})") + " *",
+                                modifier = Modifier.padding(1.dp, 2.dp),
+                                color = color
+                            ) // STOPSHIP - Locale
+                        }
                     }
-                }
-                items(state.project.listFiles().filter {
-                    it.getName() !in state.project.openFiles.mapNotNull {
-                        it.file.valueOrNull?.getName()
+                    items(state.project.listFiles().filter {
+                        it.getName() !in state.project.openFiles.mapNotNull {
+                            it.file.valueOrNull?.getName()
+                        }
+                    }) {
+                        Button(
+                            modifier = Modifier,
+                            onClick = { state.eventHandler(Event.OpenAFile(it.getName())) },
+                            shape = RectangleShape,
+                            enabled = state.opened.file != it,
+                            colors = regularColors
+                        ) {
+                            Text(it.getName(), Modifier.padding(1.dp, 2.dp))
+                        }
                     }
-                }) {
-                    Button(
-                        modifier = Modifier,
-                        onClick = { state.eventHandler(Event.OpenAFile(it.getName())) },
-                        shape = RectangleShape,
-                        enabled = state.opened.file != it,
-                        colors = regularColors
-                    ) {
-                        Text(it.getName(), Modifier.padding(1.dp, 2.dp))
-                    }
-                }
-                item {
-                    IconButton({ state.eventHandler(Event.New) }) {
-                        Icon(Icons.Filled.Add, "")
+                    item {
+                        IconButton({ state.eventHandler(Event.New) }) {
+                            Icon(Icons.Filled.Add, "")
+                        }
                     }
                 }
             }
-            Column(Modifier.fillMaxSize()) {
-                NavigableCircuitContent(
-                    navigator = state.editorNavigator,
-                    backStack = state.editorBackStack,
-                    modifier = Modifier.fillMaxSize(),
-                    unavailableRoute = defaultScreenError
-                )
-                Button({ state.eventHandler(Event.Close) }) { Text(stringResource(Res.string.close)) }
-            }
+        ) { paddingValues ->
+            NavigableCircuitContent(
+                navigator = state.editorNavigator,
+                backStack = state.editorBackStack,
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
+                    .consumeWindowInsets(paddingValues),
+                unavailableRoute = defaultScreenError
+            )
         }
     }
 }

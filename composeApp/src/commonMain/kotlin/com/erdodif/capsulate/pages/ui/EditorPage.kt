@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.waterfall
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
@@ -69,16 +70,15 @@ class EditorPage() : Ui<EditorScreen.State> {
     @Composable
     override fun Content(state: EditorScreen.State, modifier: Modifier) {
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-        val imePaddingValues = WindowInsets.ime.asPaddingValues()
         StatementDragProvider {
             DragAndDropContainer(LocalDraggingStatement.current.state) {
                 Scaffold(
                     modifier,
-                    contentWindowInsets = WindowInsets.statusBars,
+                    contentWindowInsets = WindowInsets.ime,
                     bottomBar = { bottomBar().Content(state, Modifier) }
                 ) { innerPadding ->
                     if (state.loading) {
-                        Box(Modifier.fillMaxSize()) {
+                        Box(Modifier.fillMaxSize().padding(innerPadding)) {
                             CircularProgressIndicator(
                                 modifier = Modifier.align(Alignment.Center).size(60.dp),
                                 strokeWidth = 5.dp,
@@ -88,7 +88,7 @@ class EditorPage() : Ui<EditorScreen.State> {
                         }
                     } else {
                         ContentWithOverlays(Modifier.fillMaxSize()) {
-                            Box(Modifier.imePadding()) {
+                            Box(Modifier.fillMaxSize()) {
                                 Column(
                                     Modifier.verticalScroll(rememberScrollState())
                                         .padding(innerPadding),
@@ -113,7 +113,8 @@ class EditorPage() : Ui<EditorScreen.State> {
                                     Row(
                                         Modifier.fillMaxWidth()
                                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                            .align(Alignment.BottomCenter),
+                                            .align(Alignment.BottomCenter)
+                                            .imePadding(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Button({
