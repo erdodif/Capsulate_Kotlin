@@ -65,6 +65,9 @@ data class PendingMethodEvaluation(
     val method: Method,
     val context: EvaluationContext
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
+    val head: Statement?
+        get() = context.head
+
     constructor(method: Method, env: ProxyEnv) :
             this(method, EvaluationContext(env, EvalSequence(method.program), env.seed))
 
@@ -159,7 +162,7 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
             this
         }
 
-        is PendingMethodEvaluation ->{
+        is PendingMethodEvaluation -> {
             statements.add(0, result)
             this
         }

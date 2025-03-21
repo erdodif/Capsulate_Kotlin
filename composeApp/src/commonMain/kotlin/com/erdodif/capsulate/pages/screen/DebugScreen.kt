@@ -12,6 +12,7 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
+import com.erdodif.capsulate.lang.program.evaluation.PendingMethodEvaluation
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
 import com.erdodif.capsulate.structogram.Structogram
@@ -65,7 +66,14 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         }
         var error: String? by remember { mutableStateOf(null) }
         val envState by remember(step) { derivedStateOf { debug.env } }
-        val statement: Uuid? by remember(step) { derivedStateOf { debug.head?.id } }
+        val statement: Uuid? by remember(step) {
+            derivedStateOf {
+                if (debug.head is PendingMethodEvaluation)
+                    (debug.head as PendingMethodEvaluation).head?.id
+                else
+                    debug.head?.id
+            }
+        }
         val ongoing: Structogram? by remember(step) {
             derivedStateOf {
                 screen.structogram.functions.firstOrNull { it.function == debug.functionOngoing?.expression?.call?.function }
@@ -103,7 +111,10 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                 }
 
                 is Event.ResetRenew -> {
-                    debug = EvaluationContext(Environment.EMPTY, EvalSequence(screen.structogram.program))
+                    debug = EvaluationContext(
+                        Environment.EMPTY,
+                        EvalSequence(screen.structogram.program)
+                    )
                     step = 0
                     error = null
                 }

@@ -2,21 +2,32 @@ package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
@@ -29,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
@@ -47,30 +59,38 @@ class DebugPage : Ui<State> {
         if (state.overlayStructogram != null) {
             FunctionModal(state)
         }
-        Scaffold(modifier = modifier.fillMaxSize(), bottomBar = { Stats(state) }) {
-            LazyRow(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(5.dp)) {
-                item {
-                    Box(
-                        Modifier.fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                    ) {
-                        state.structogram.Content(
-                            modifier = Modifier.fillMaxWidth(),
-                            draggable = false,
-                            activeStatement = state.activeStatement,
-                        )
+        Scaffold(modifier = modifier.fillMaxSize(), bottomBar = { Stats(state) }) { paddingValues ->
+            BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {
+                val itemModifier = Modifier.width(maxWidth).height(maxHeight)
+                    .padding(15.dp)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                        RoundedCornerShape(15.dp)
+                    )
+                    .padding(15.dp)
+                val listState = rememberLazyListState()
+                LazyRow(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    flingBehavior = rememberSnapFlingBehavior(listState)
+                ) {
+                    item {
+                        Box(itemModifier) {
+                            state.structogram.Content(
+                                modifier = Modifier.fillMaxWidth(),
+                                draggable = false,
+                                activeStatement = state.activeStatement,
+                            )
+                        }
                     }
-                }
-                items(state.structogram.methods) { method ->
-                    Box(
-                        Modifier.fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                    ) {
-                        method.asStructogram().Content(
-                            modifier = Modifier.fillMaxWidth(),
-                            draggable = false,
-                            activeStatement = state.activeStatement,
-                        )
+                    items(state.structogram.methods) { method ->
+                        Box(itemModifier) {
+                            method.asStructogram().Content(
+                                modifier = Modifier.fillMaxWidth(),
+                                draggable = false,
+                                activeStatement = state.activeStatement,
+                            )
+                        }
                     }
                 }
             }
@@ -103,7 +123,10 @@ class DebugPage : Ui<State> {
 
     @Composable
     private fun Stats(state: State) {
-        Column(Modifier.safeContentPadding(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(
+            Modifier.safeDrawingPadding().padding(horizontal = 5.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             if (state.env.parameters.isEmpty()) {
                 Text("() : Empty Environment!", color = MaterialTheme.colorScheme.error)
             } else {
