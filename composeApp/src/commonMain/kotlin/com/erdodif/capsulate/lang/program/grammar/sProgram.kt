@@ -1,6 +1,6 @@
 package com.erdodif.capsulate.lang.program.grammar
 
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.expression.KeyWord
 import com.erdodif.capsulate.lang.program.grammar.expression.LineEnd
 import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
@@ -78,6 +78,6 @@ fun tokenizeProgram(input: String): ParserResult<List<Token>> =
             )
         )
 
-fun Env.runProgram(statements: List<Statement>) {
+fun Environment.runProgram(statements: List<Statement>) {
     for (statement in statements) statement.evaluate(this)
 }

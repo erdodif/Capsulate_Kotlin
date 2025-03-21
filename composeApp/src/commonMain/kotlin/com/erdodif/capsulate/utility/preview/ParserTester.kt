@@ -101,19 +101,19 @@ private val methods: List<Method> = listOf(
             ),
             ":_read"
         ),
-        listOf(Skip(pos))
+        listOf(Skip(pos)),
     ),
     Method(
-        Pattern("read", listOf(), listOf(), null),
-        listOf(Abort(pos))
-    ),
-    Method(
-        Pattern("param", listOf(), listOf(Variable("hm", MatchPos.ZERO)), null),
-        listOf(Skip(pos), Skip(pos))
-    ),
-    Method(
-        Pattern("param", listOf(), listOf(Variable("hm", MatchPos.ZERO)), "abor"),
-        listOf(Abort(pos))
+        Pattern(
+            "sx_,",
+            listOf(","),
+            listOf(
+                Variable("dx", MatchPos.ZERO),
+                Variable("x", MatchPos.ZERO)
+            ),
+            ":_read"
+        ),
+        listOf(Skip(pos)),
     )
 )
 

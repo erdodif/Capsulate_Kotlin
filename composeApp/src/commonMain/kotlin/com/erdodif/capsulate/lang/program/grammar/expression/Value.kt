@@ -8,7 +8,7 @@ interface Value: KParcelable {
     override operator fun equals(other: Any?): Boolean
 }
 
-interface VNum : Value {
+sealed interface VNum : Value {
     val value: Int
 }
 
@@ -17,35 +17,45 @@ interface VNum : Value {
 value class VNat(private val _value: UInt) : VNum {   // ℕ
     override val value: Int
         get() = _value.toInt()
+    override fun toString(): String = value.toString()
 }
 
 @KParcelize
 @JvmInline
-value class VWhole(override val value: Int) : VNum   // ZZ
+value class VWhole(override val value: Int) : VNum { // ZZ
+    override fun toString(): String = value.toString()
+}
 
 @KParcelize
 @JvmInline
-value class VStr(val value: String) : Value   // 𝕊
+value class VStr(val value: String) : Value{  // 𝕊
+    override fun toString(): String = value.toString()
+}
 
 @KParcelize
 @JvmInline
-value class VBool(val value: Boolean) : Value
+value class VBool(val value: Boolean) : Value{
+    override fun toString(): String = value.toString()
+}
 
 @KParcelize
 @JvmInline
-value class VCharacter(val value: Char) : Value   // ℂ
-enum class Type {
-    NAT,
-    WHOLE,
-    STRING,
-    BOOL,
-    CHAR,
-    FILE,
-    ARRAY,
-    STREAM,
-    TUPLE,
-    SET,
-    NEVER,
+value class VCharacter(val value: Char) : Value{
+    override fun toString(): String = value.toString()
+}   // ℂ
+
+enum class Type(val label: String) {
+    NAT("ℕ"),
+    WHOLE("ℤ"),
+    STRING("𝕊"),
+    BOOL("𝔹"),
+    CHAR("ℂ"),
+    FILE("File"),
+    ARRAY("Array"),
+    STREAM("Stream"),
+    TUPLE("Pair"),
+    SET("Set"),
+    NEVER("⊥"),
 }
 
 fun Value.type(): Type = when (this) {

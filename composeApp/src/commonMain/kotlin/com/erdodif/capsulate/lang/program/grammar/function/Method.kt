@@ -10,9 +10,9 @@ import com.erdodif.capsulate.lang.program.grammar.delimit
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.statementOrBlock
-import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
+import com.erdodif.capsulate.lang.program.evaluation.PendingMethodEvaluation
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
@@ -31,7 +31,6 @@ data class Method(
 
     override fun toString(): String =
         "Method $pattern, { ... ${program.count()} statements}"
-
 
     fun onFormat(formatting: Formatting, state: ParserState): Int = with(formatting) {
         print("method " + pattern.toString(state))
@@ -59,9 +58,11 @@ data class MethodCall(
     override val match: MatchPos,
     override val id: Uuid = Uuid.random()
 ) : Statement(id, match) {
-    override fun evaluate(env: Env): EvaluationResult {
-        return EvalSequence(method.program)
-    }
+    override fun evaluate(env: Environment): EvaluationResult = PendingMethodEvaluation(
+        method,
+        env.proxyWith(values.mapIndexed { i, variable -> variable.id to method.pattern.variables[i].id }
+            .associate { it })
+    )
 
     override fun toString(): String = "Call on $method"
 

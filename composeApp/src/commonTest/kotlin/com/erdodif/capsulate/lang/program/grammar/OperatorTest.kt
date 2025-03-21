@@ -11,7 +11,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryCalc
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryOperator
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryCalculation
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryOperator
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Association
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Fixation
 import com.erdodif.capsulate.lang.util.Fail
@@ -40,7 +40,7 @@ class OperatorTest {
 
         @KParcelize
         private data class TestExp(val matchedChar: Char) : Exp<TestValue> {
-            override fun evaluate(context: Env) = Left(TestValue(matchedChar))
+            override fun evaluate(context: Environment) = Left(TestValue(matchedChar))
             override fun toString(state: ParserState, parentStrength: Int) = matchedChar.toString()
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == matchedChar) ||

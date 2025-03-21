@@ -26,21 +26,22 @@ val pLineEnd: Parser<Char> = asum(*lineEnd.map { char(it) }.toTypedArray())
  */
 inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = {
     val firstResult = parser()
-    if(firstResult is Pass){
+    if (firstResult is Pass) {
         many(whiteSpace)()
         firstResult.copy(state = this)
-    }
-    else{
+    } else {
         firstResult
     }
 }
 
+fun isWordChar(char: Char): Boolean =
+    char !in whiteSpaceChars && char !in reservedChars && char !in lineEnd
 
 /**
  * Looks for non reserved char
  */
 val freeChar: Parser<Char> =
-    satisfy { it !in whiteSpaceChars && it !in reservedChars && it !in lineEnd }
+    satisfy(::isWordChar)
 
 /**
  * Looks for a word made of non reserved characters
@@ -49,7 +50,8 @@ val freeWord: Parser<String> = some(freeChar) / { it.asString() }
 
 inline fun _char(char: Char): Parser<Char> = tok(char(char))
 
-inline fun _keyword(string: String): Parser<String> = tok(left(stringCaseLess(string), not(freeChar)))
+inline fun _keyword(string: String): Parser<String> =
+    tok(left(stringCaseLess(string), not(freeChar)))
 
 val _anyKeyword: Parser<String> = asum(*keywords.map { _keyword(it) }.toTypedArray())
 
@@ -57,7 +59,7 @@ val reservedChar: Parser<Char> = asum(*reservedChars.map { char(it) }.toTypedArr
 val _reservedChar: Parser<Char> = tok(reservedChar)
 
 val _nonKeyword: Parser<String> = tok(freeWord)[{
-    if ( it.value in keywords) {
+    if (it.value in keywords) {
         fail("The word '${it.value}' is reserved!")
     } else {
         it

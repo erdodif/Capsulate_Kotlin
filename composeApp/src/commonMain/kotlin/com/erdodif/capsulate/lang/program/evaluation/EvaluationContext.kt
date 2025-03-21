@@ -11,15 +11,16 @@ import kotlin.random.Random
 
 @KParcelize
 data class EvaluationContext(
-    var env: Env,
+    var env: Environment,
     private var currentStatement: Statement?,
     val seed: Int = Random.Default.nextInt(),
 ) : KParcelable {
     @KIgnoredOnParcel
     val random = Random(seed)
     val entries: ArrayList<Statement> = arrayListOf()
-    var functionOngoing: PendingFunctionEvaluation<*>? = null
-        private set
+    private var function: PendingFunctionEvaluation<*>? = null
+    val functionOngoing: PendingFunctionEvaluation<*>?
+        get() = function ?: (currentStatement as? PendingMethodEvaluation)?.context?.functionOngoing
     private var atomicOngoing: EvaluationContext? = null
     val head: Statement?
         get() = functionOngoing?.head ?: atomicOngoing?.head ?: currentStatement
@@ -31,9 +32,9 @@ data class EvaluationContext(
         val function = functionOngoing
         if (function != null) {
             when (val result = function.evaluate(env)) {
-                is PendingFunctionEvaluation<*> -> this.functionOngoing = result
+                is PendingFunctionEvaluation<*> -> this.function = result
                 else -> {
-                    this.functionOngoing = null
+                    this.function = null
                     handleResult(result)
                 }
             }
@@ -86,9 +87,24 @@ data class EvaluationContext(
 
             is SingleStatement -> entries.add(stack.next)
             is ParallelEvaluation -> entries.addAll(stack.entries)
-            is PendingFunctionEvaluation<*> -> functionOngoing = stack
+            is PendingFunctionEvaluation<*> -> function = stack
+            is PendingMethodEvaluation -> {
+                env = (stack.context.env as ProxyEnv).env
+                entries.add(stack)
+            }
         }
         currentStatement =
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
     }
+
+    data class StackTraceEntry(val scope: String, val variables: List<Parameter>)
+
+    fun getCallStack(label: String = "Program"): List<StackTraceEntry> = buildList {
+        add(StackTraceEntry(label, env.parameters))
+        functionOngoing?.apply { addAll(getCallStack()) }
+        (((head as? EvalSequence)?.statements?.first() ?: head) as? PendingMethodEvaluation)?.apply {
+            addAll(context.getCallStack(method.pattern.toPatternString()))
+        }
+    }
+
 }

@@ -10,7 +10,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.evaluation.AbortEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.AtomicEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.PendingFunctionEvaluation
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.Finished
@@ -29,7 +29,7 @@ import kotlin.uuid.Uuid
 @Serializable
 abstract class Statement(open val id: Uuid = Uuid.random(), open val match: MatchPos) :
     KParcelable {
-    abstract fun evaluate(env: Env): EvaluationResult
+    abstract fun evaluate(env: Environment): EvaluationResult
     override fun equals(other: Any?): Boolean = other is Statement && other.id == id
     override fun hashCode(): Int = id.hashCode()
     abstract fun Formatting.format(state: ParserState): Int
@@ -37,8 +37,8 @@ abstract class Statement(open val id: Uuid = Uuid.random(), open val match: Matc
     fun getFormat(state: ParserState): String = Formatting(0).apply { format(state) }.finalize()
 
     fun <R : Value> Exp<R>.join(
-        context: Env,
-        onValue: Env.(R) -> EvaluationResult
+        context: Environment,
+        onValue: Environment.(R) -> EvaluationResult
     ): EvaluationResult = try {
         when (val result = evaluate(context)) {
             is Left -> onValue(context, result.value)
@@ -49,8 +49,8 @@ abstract class Statement(open val id: Uuid = Uuid.random(), open val match: Matc
     }
 
     fun List<Exp<Value>>.joinAll(
-        context: Env,
-        onEvery: Env.(List<Value>) -> EvaluationResult
+        context: Environment,
+        onEvery: Environment.(List<Value>) -> EvaluationResult
     ): EvaluationResult = if (isEmpty()) onEvery(context, emptyList()) else
         this[0].join(context) {
             this@joinAll.drop(1).joinAll(context) { values ->
@@ -81,7 +81,7 @@ data class If(
         match: MatchPos
     ) : this(condition, statementsTrue, statementsFalse, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult = condition.join(env) {
+    override fun evaluate(env: Environment): EvaluationResult = condition.join(env) {
         when {
             it is VBool && it.value -> EvalSequence(statementsTrue)
             it is VBool -> EvalSequence(statementsFalse)
@@ -144,7 +144,7 @@ data class When(
         match: MatchPos
     ) : this(block.toMutableList(), elseBlock, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult {
+    override fun evaluate(env: Environment): EvaluationResult {
         val source = blocks.removeAt(env.random.nextInt(blocks.size))
         return source.first.join(env) {
             if (it is VBool) {
@@ -203,7 +203,7 @@ data class When(
 data class Skip(override val id: Uuid, override val match: MatchPos) : Statement(id, match) {
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
-    override fun evaluate(env: Env) = Finished
+    override fun evaluate(env: Environment) = Finished
     override fun Formatting.format(state: ParserState) = print("skip")
 }
 
@@ -211,7 +211,7 @@ data class Skip(override val id: Uuid, override val match: MatchPos) : Statement
 data class Abort(override val id: Uuid, override val match: MatchPos) : Statement(id, match) {
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
-    override fun evaluate(env: Env) = AbortEvaluation("Abort has been called!")
+    override fun evaluate(env: Environment) = AbortEvaluation("Abort has been called!")
 
     override fun Formatting.format(state: ParserState) = print("abort")
 
@@ -234,7 +234,7 @@ data class While(
     constructor(condition: Exp<*>, statements: ArrayList<out Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult = condition.join(env) {
+    override fun evaluate(env: Environment): EvaluationResult = condition.join(env) {
         when (it) {
             is VBool -> {
                 if (it.value) {
@@ -285,7 +285,7 @@ data class DoWhile(
     constructor(condition: Exp<*>, statements: ArrayList<out Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult =
+    override fun evaluate(env: Environment): EvaluationResult =
         EvalSequence(statements + While(condition, statements, MatchPos.ZERO))
 
     override fun Formatting.format(state: ParserState): Int {
@@ -321,7 +321,7 @@ data class Assign(
     constructor(label: String, value: Exp<*>, match: MatchPos) :
             this(label, value, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult = value.join(env) {
+    override fun evaluate(env: Environment): EvaluationResult = value.join(env) {
         env.set(label, it)
         Finished
     }
@@ -345,7 +345,7 @@ data class Select(
     constructor(label: String, set: String, match: MatchPos) :
             this(label, set, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult {
+    override fun evaluate(env: Environment): EvaluationResult {
         TODO("Implement 'Zsák objektum'")
     }
 
@@ -363,7 +363,7 @@ data class ParallelAssign(
     constructor(assigns: ArrayList<Pair<String, Exp<Value>>>, match: MatchPos) :
             this(assigns, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult =
+    override fun evaluate(env: Environment): EvaluationResult =
         assigns.map { it.second }.joinAll(env) {
             for (assign in assigns.map { it.first }.zip(it)) env.set(
                 assign.first,
@@ -389,7 +389,7 @@ data class Expression(
 ) : Statement(id, match) {
     constructor(expression: Exp<Value>, match: MatchPos) : this(expression, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult {
+    override fun evaluate(env: Environment): EvaluationResult {
         return try {
             expression.join(env) { Finished }
         } catch (e: Exception) {
@@ -412,7 +412,7 @@ data class Parallel(
     constructor(blocks: ArrayList<out ArrayList<out Statement>>, match: MatchPos) :
             this(blocks, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult =
+    override fun evaluate(env: Environment): EvaluationResult =
         ParallelEvaluation(blocks.map { EvalSequence(it) })
 
     override fun Formatting.format(state: ParserState): Int {
@@ -464,7 +464,7 @@ data class Atomic(
     constructor(statements: List<Statement>, match: MatchPos) :
             this(ArrayDeque(statements), Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult = AtomicEvaluation(this.statements)
+    override fun evaluate(env: Environment): EvaluationResult = AtomicEvaluation(this.statements)
     override fun Formatting.format(state: ParserState): Int {
         val result = preFormat {
             statements.fencedForEach { it.onFormat(this, state) }
@@ -494,7 +494,7 @@ data class Wait(
     constructor(condition: Exp<*>, atomic: Atomic, match: MatchPos) :
             this(condition, atomic, Uuid.random(), match)
 
-    override fun evaluate(env: Env): EvaluationResult =
+    override fun evaluate(env: Environment): EvaluationResult =
         condition.join(env) {
             when (it) {
                 is VBool -> {

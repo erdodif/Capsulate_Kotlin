@@ -10,17 +10,11 @@ import com.erdodif.capsulate.lang.program.grammar.nonAssoc
 import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.rightAssoc
-import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
-import com.erdodif.capsulate.lang.program.grammar.expression.withRawValue
-import com.erdodif.capsulate.lang.program.grammar.expression.withValue
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.many
-import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
-import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
-import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
@@ -43,7 +37,7 @@ open class UnaryOperator<T : Value, R : Value>(
     override val label: String = "~",
     override val operatorParser: Parser<*>,
     val fixation: Fixation,
-    val operation: @Serializable Env.(R) -> T
+    val operation: @Serializable Environment.(R) -> T
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")
@@ -70,7 +64,7 @@ open class BinaryOperator<T : Value, R : Value>(
     override val label: String,
     override val operatorParser: Parser<*>,
     val association: Association,
-    val operation: @Serializable Env.(R, R) -> T
+    val operation: @Serializable Environment.(R, R) -> T
 ) : Operator<Exp<T>>(bindingStrength, label, operatorParser), KParcelable {
 
     @Suppress("UNCHECKED_CAST")

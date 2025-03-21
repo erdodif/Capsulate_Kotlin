@@ -17,7 +17,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.statementOrBlock
-import com.erdodif.capsulate.lang.program.evaluation.Env
+import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
@@ -82,7 +82,7 @@ class FunctionCall<T : Value>(
     val match: MatchPos
 ) : Exp<T> {
     @Suppress("UNCHECKED_CAST")
-    override fun evaluate(context: Env): Right<PendingExpression<Value, T>> =
+    override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> =
         Right(PendingExpression(this as FunctionCall<Value>) { Left(it as T) })
 
     override fun toString(state: ParserState, parentStrength: Int): String =
@@ -115,7 +115,7 @@ data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     override val match: MatchPos
 ) : Statement(id, match) {
     @OptIn(ExperimentalUuidApi::class)
-    override fun evaluate(env: Env): EvaluationResult = value.join(env) { returnValue: T ->
+    override fun evaluate(env: Environment): EvaluationResult = value.join(env) { returnValue: T ->
         ReturnEvaluation(returnValue)
     }
 
