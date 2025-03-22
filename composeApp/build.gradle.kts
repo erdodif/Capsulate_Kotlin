@@ -1,4 +1,5 @@
 import com.android.build.gradle.internal.packaging.defaultExcludes
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -9,7 +10,12 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
     id("kotlin-parcelize")
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     kotlin("plugin.serialization") version "1.5.30"
+}
+
+dependencies{
+    detektPlugins(libs.detekt.rules.compose)
 }
 
 kotlin {
@@ -154,5 +160,21 @@ compose.desktop {
             packageName = "com.erdodif.capsulate"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+detekt {
+    toolVersion = "1.23.8"
+    config.setFrom(file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+}
+
+// Kotlin DSL
+tasks.withType<Detekt>().configureEach {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        sarif.required.set(true)
+        md.required.set(true)
     }
 }

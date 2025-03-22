@@ -33,6 +33,7 @@ import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.asum
+import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 import kotlinx.serialization.SerialName
@@ -52,14 +53,14 @@ open class PendingExpression<R : Value, T : Value>(
             }
         }
 
-    fun <S : Value> addTransform(transform: Environment.(T) -> Either<S, PendingExpression<Value, S>>): PendingExpression<R, S> =
-        PendingExpression(call) _env@{
-            when (val result = onValue(it)) {
-                is Left -> transform(this, result.value)
-                is Right -> Right(result.value.addTransform(transform))
-            }
+    fun <S : Value> addTransform(
+        transform: Environment.(T) -> Either<S, PendingExpression<Value, S>>
+    ): PendingExpression<R, S> = PendingExpression(call) _env@{
+        when (val result = onValue(it)) {
+            is Left -> transform(this, result.value)
+            is Right -> Right(result.value.addTransform(transform))
         }
-
+    }
 }
 
 interface Exp<T : Value> : KParcelable {
@@ -135,7 +136,7 @@ val pComment: Parser<Comment> = orEither(
         and(char('/'), _char('*')),
         left(many(right(not(char('*') + _char('/')), anyChar)), char('*') + _char('/'))
     )
-) * { it, pos -> Comment(it.asString(), pos) }
+) * { comment, pos -> Comment(comment.asString(), pos) }
 
 
 val pStrLit: Parser<StrLit> = middle(
@@ -143,9 +144,9 @@ val pStrLit: Parser<StrLit> = middle(
     many(orEither(right(char('\\'), anyChar), right(not(char('"')), anyChar))),
     _char('"')
 ) * { res, pos -> StrLit(res.asString(), pos) }
-val pIntLit: Parser<IntLit> = _integer * { it, pos -> IntLit(it, pos) }
+val pIntLit: Parser<IntLit> = _integer * { lit, pos -> IntLit(lit, pos) }
 val pBoolLit: Parser<BoolLit> =
-    or(_keyword("true"), _keyword("false")) * { it, pos -> BoolLit(it is Left<*>, pos) }
+    or(_keyword("true"), _keyword("false")) * { lit, pos -> BoolLit(lit is Left<*>, pos) }
 val pVariable: Parser<Variable> = _nonKeyword[{
     if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
     else pass(it.match.start, Variable(it.value, it.match))
@@ -158,7 +159,7 @@ val litOrder: Array<Parser<Exp<*>>> = arrayOf(
 )
 typealias ExParser = Parser<Exp<Value>>
 
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "SpreadOperator")
 inline fun pAtom(): ExParser = {
     // Can't be directly assigned, or else the pExp reference -|
     //                                               v___v-----| would be null

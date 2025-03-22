@@ -9,6 +9,7 @@ circuitFoundation = "0.27.0"
 compose-plugin = "1.7.3"
 composeDnd = "0.3.0"
 coreSplashscreen = "1.0.1"
+detektRulesCompose = "1.4.0"
 filekitCore = "0.8.8"
 kmpfileFilekit = "0.7.0"
 kotlin = "2.1.10"
@@ -29,6 +30,7 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
 compose-dnd = { module = "com.mohamedrejeb.dnd:compose-dnd", version.ref = "composeDnd" }
+detekt-rules-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektRulesCompose" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
 kmpfile = { module = "dev.zwander:kmpfile", version.ref = "kmpfileFilekit" }
