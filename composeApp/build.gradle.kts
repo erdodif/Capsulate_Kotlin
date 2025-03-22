@@ -106,8 +106,7 @@ android {
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/main/res", "src/commonMain/composeResources")
     sourceSets["main"].resources.srcDirs(
-        "src/commonMain/resources",
-        "src/commonMain/composeResources"
+        "src/commonMain/resources", "src/commonMain/composeResources"
     )
 
     defaultConfig {

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,14 +19,16 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.waterfall
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -46,15 +47,22 @@ import com.erdodif.capsulate.StatementDragProvider
 import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.pages.screen.EditorScreen
+import com.erdodif.capsulate.pages.screen.EditorScreen.Event
 import com.erdodif.capsulate.pages.screen.EditorScreen.State
 import com.erdodif.capsulate.presets.presets
 import com.erdodif.capsulate.project.OpenFile
+import com.erdodif.capsulate.resources.Res
+import com.erdodif.capsulate.resources.close
+import com.erdodif.capsulate.resources.format
+import com.erdodif.capsulate.resources.lightning
+import com.erdodif.capsulate.resources.run
+import com.erdodif.capsulate.resources.save
+import com.erdodif.capsulate.resources.save_file
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.utility.UnicodeOverlay
-import com.erdodif.capsulate.utility.max
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
 import com.slack.circuit.overlay.ContentWithOverlays
@@ -62,10 +70,13 @@ import com.slack.circuit.overlay.OverlayEffect
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Month
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.ExperimentalUuidApi
 
-class EditorPage() : Ui<State> {
+class EditorPage : Ui<State> {
 
     companion object Factory : Ui.Factory by screenUiFactory<EditorScreen>(::EditorPage)
 
@@ -137,7 +148,7 @@ class EditorPage() : Ui<State> {
                     Text("Code") // STOPSHIP: Locale
                     Switch(
                         state.showCode,
-                        { state.eventHandler(EditorScreen.Event.ToggleCode) },
+                        { state.eventHandler(Event.ToggleCode) },
                         Modifier.padding(5.dp, 1.dp)
                     )
                 }
@@ -148,7 +159,7 @@ class EditorPage() : Ui<State> {
                     Text("Struk") // STOPSHIP: Locale
                     Switch(
                         state.showStructogram,
-                        { state.eventHandler(EditorScreen.Event.ToggleStructogram) },
+                        { state.eventHandler(Event.ToggleStructogram) },
                         Modifier.padding(5.dp, 1.dp)
                     )
                 }
@@ -159,41 +170,41 @@ class EditorPage() : Ui<State> {
                     Text("Drag") // STOPSHIP: Locale
                     Switch(
                         state.dragStatements,
-                        { state.eventHandler(EditorScreen.Event.ToggleStatementDrag) },
+                        { state.eventHandler(Event.ToggleStatementDrag) },
                         Modifier.padding(5.dp, 1.dp)
                     )
                 }
-                Button(
-                    { state.eventHandler(EditorScreen.Event.Close) },
-                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                    contentPadding = PaddingValues(2.dp)
+                OutlinedIconButton(
+                    { state.eventHandler(Event.Close) },
+                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand)
                 ) {
-                    Text("X") // STOPSHIP: Locale
+                    Icon(painterResource(Res.drawable.close), stringResource(Res.string.close))
                 }
-                Button(
-                    { state.eventHandler(EditorScreen.Event.Format) },
-                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                    contentPadding = PaddingValues(2.dp)
-                ) {
-                    Text("Format") // STOPSHIP: Locale
+                PainterButton(Res.drawable.format,Res.string.format) {
+                    state.eventHandler(Event.Format)
                 }
-                Button(
-                    { state.eventHandler(EditorScreen.Event.Run) },
-                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                    contentPadding = PaddingValues(2.dp)
-                ) {
-                    Text("Run") // STOPSHIP: Locale
+                PainterButton(Res.drawable.lightning,Res.string.run) {
+                    state.eventHandler(Event.Run)
                 }
-                Button(
-                    { state.eventHandler(EditorScreen.Event.Save) },
-                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-                    contentPadding = PaddingValues(2.dp)
-                ) {
-                    Text("Save file") // STOPSHIP: Locale
+                PainterButton(Res.drawable.save, Res.string.save_file) {
+                    state.eventHandler(Event.Save)
                 }
             }
         }
     }
+
+    @Composable
+    private fun PainterButton(icon: DrawableResource, text: StringResource, onClick: () -> Unit) =
+        OutlinedButton(
+            onClick = onClick,
+            modifier = Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+            contentPadding = PaddingValues(8.dp, 2.dp)
+        ) {
+            Row {
+                Icon(painterResource(icon), stringResource(text), Modifier.size(20.dp))
+                Text(stringResource(text))
+            }
+        }
 
 
     @Composable
@@ -206,10 +217,10 @@ class EditorPage() : Ui<State> {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button({
-                state.eventHandler(EditorScreen.Event.OpenUnicodeInput)
+                state.eventHandler(Event.OpenUnicodeInput)
             }) { Text("\\escape") }
             Button({
-                state.eventHandler(EditorScreen.Event.Format)
+                state.eventHandler(Event.Format)
             }) { Text("Format") }
         }
     }
@@ -232,7 +243,7 @@ internal fun structogram(): Ui<State> = ui { state, modifier ->
                     ),
                     state.dragStatements,
                     null,
-                    { state.eventHandler(EditorScreen.Event.DroppedStatement(it.first, it.second)) }
+                    { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
                 )
             } else {
                 Text("Error", Modifier.fillMaxWidth())
@@ -254,24 +265,24 @@ internal fun codeEdit(): Ui<State> = ui { state, modifier ->
             state.tokenized,
             modifier,
             state.focusRequester,
-            { state.eventHandler(EditorScreen.Event.OpenUnicodeInput) }
+            { state.eventHandler(Event.OpenUnicodeInput) }
         ) {
-            state.eventHandler(EditorScreen.Event.TextInput(it))
+            state.eventHandler(Event.TextInput(it))
         }
     if (state.input)
         OverlayEffect(state) {
             val result = show(UnicodeOverlay(false))
             if (result == 0.toChar()) {
-                state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
+                state.eventHandler(Event.CloseUnicodeInput)
                 return@OverlayEffect
             } else {
                 val code = state.code
-                state.eventHandler(EditorScreen.Event.TextInput(code.copy(buildString {
+                state.eventHandler(Event.TextInput(code.copy(buildString {
                     append(code.text.substring(0, code.selection.start))
                     append(result)
                     append(code.text.substring(code.selection.start, code.text.length))
                 }, TextRange(code.selection.start + 1))))
-                state.eventHandler(EditorScreen.Event.CloseUnicodeInput)
+                state.eventHandler(Event.CloseUnicodeInput)
             }
         }
 }

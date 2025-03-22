@@ -8,4 +8,7 @@
     <string name="close">Close</string>
     <string name="folder_open_failed">Failed to open folder</string>
     <string name="file_open_failed">Failed to open file</string>
+    <string name="save_file">Save file</string>
+    <string name="run">Run</string>
+    <string name="format">Format</string>
 </resources>
