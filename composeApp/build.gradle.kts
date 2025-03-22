@@ -169,6 +169,7 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Pkg)
             packageName = "com.erdodif.capsulate"
             packageVersion = "1.0.0"
+            linux { modules("jdk.security.auth") }
         }
         buildTypes.release.proguard {
             configurationFiles.from("proguard-desktop-rules.pro")
