@@ -1,6 +1,6 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
-import com.erdodif.capsulate.lang.evaluation.MockEnvironments.Companion.intEnv
+import com.erdodif.capsulate.lang.evaluation.MockEnvironments.intEnv
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.grammar.Assign
