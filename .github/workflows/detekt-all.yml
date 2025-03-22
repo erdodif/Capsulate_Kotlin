@@ -13,7 +13,6 @@ on:
 jobs:
   detekt:
     runs-on: ubuntu-latest
-
     steps:
       - name: Setup detekt
         uses: peter-murray/setup-detekt@v2
@@ -21,4 +20,4 @@ jobs:
           detekt_version: 1.23.8
 
       - name: Run detekt
-        run: detekt-cli --base-path /src --config /config/detekt.yml
+        run: detekt-cli --base-path ./composeApp/src --config ./config/detekt.yml
