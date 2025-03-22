@@ -1,0 +1,47 @@
+name: Checks
+
+on:
+  push:
+    branches:
+      - main
+      - detekt
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  detekt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: 17
+          cache: 'gradle'
+
+      - name: "Setup | Gradle"
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run detekt
+        run: ./gradlew :composeApp:detekt
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: 17
+          cache: 'gradle'
+
+      - name: "Setup | Gradle"
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tests
+        run: ./gradlew :composeApp:test

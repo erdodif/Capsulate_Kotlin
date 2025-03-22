@@ -3,7 +3,6 @@ package com.erdodif.capsulate
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcel
-import android.os.Parcelable
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -19,16 +18,11 @@ import androidx.core.view.WindowCompat
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.utility.preview.ParserTester
-import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
-import io.github.aakira.napier.DebugAntilog
-import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parceler
-import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.TypeParceler
 import kotlinx.serialization.json.Json
 import kotlin.system.exitProcess
 import kotlin.uuid.ExperimentalUuidApi
@@ -42,7 +36,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         installSplashScreen()
-        Napier.base(DebugAntilog())
         hideSystemUI()
         scope.launch {
             applicationExitJob.join()

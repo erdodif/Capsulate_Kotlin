@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.project
 
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
@@ -7,7 +8,6 @@ import com.erdodif.capsulate.lang.util.valueOrNull
 import com.erdodif.capsulate.supportedExtensions
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.filekit.toKmpFile
-import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.core.PlatformDirectory
 import kotlin.arrayOf
 import kotlin.collections.MutableList
@@ -22,7 +22,7 @@ class Project(
     constructor(openFile: OpenFile) : this(null, mutableListOf(openFile))
 
     init {
-        Napier.d { directory.toString() }
+        Logger.d { directory.toString() }
     }
 
     fun openEmptyFile(): OpenFile = OpenFile().also { openFiles.add(it) }

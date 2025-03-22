@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate.project
 
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
@@ -12,7 +13,6 @@ import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.valueOrNull
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.filekit.toKmpFile
-import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -51,7 +51,7 @@ data class OpenFile(
         }
         val buffer = file.valueOrNull?.openOutputStream(false)
         if (buffer == null) {
-            Napier.e { "Could not save file ${file[{ it.getName() }, { "TMP:$it" }]}" }
+            Logger.e { "Could not save file ${file[{ it.getName() }, { "TMP:$it" }]}" }
             false
         } else {
             buffer.write((content ?: "").encodeToByteArray())

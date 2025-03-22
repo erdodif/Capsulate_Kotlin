@@ -54,7 +54,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.kotlin.test)
-            implementation(libs.napier)
+            implementation(libs.kermit)
             implementation(libs.kmpfile)
             implementation(libs.kmpfile.filekit)
             implementation(libs.kmpfile.okio)
@@ -141,6 +141,16 @@ android {
     }
     dependencies {
         debugImplementation(compose.uiTooling)
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            multiDexKeepProguard = file("multidex-config.pro")
+
+            signingConfig = signingConfigs.getByName("debug") // Add release cert on PlayStore
+        }
     }
 }
 
