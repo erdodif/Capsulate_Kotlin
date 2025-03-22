@@ -18,7 +18,7 @@ jobs:
       - name: Setup detekt
         uses: peter-murray/setup-detekt@v2
         with:
-          detekt_version: 1.20
+          detekt_version: 1.23.8
 
       - name: Run detekt
         run: detekt-cli --version
