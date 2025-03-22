@@ -22,4 +22,4 @@ jobs:
           detekt_version: 1.23.8
 
       - name: Run detekt
-        run: detekt-cli --base-path ./composeApp/src --config ./config/detekt.yml
+        run: detekt-cli --base-path ./composeApp/src --config ./composeApp/detekt.yml
