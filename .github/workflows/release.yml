@@ -1,3 +1,4 @@
+name: Release
 on:
   push:
     tags:
@@ -31,6 +32,8 @@ jobs:
           distribution: 'jetbrains'
           java-version: 21
           cache: 'gradle'
+        env: # because the job gets rate-limited on macOS build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Setup | Gradle"
         uses: gradle/actions/setup-gradle@v4
