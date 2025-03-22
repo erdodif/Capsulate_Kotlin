@@ -66,7 +66,6 @@ data class Function<T>(
             appendAll(result)
             print(" }")
         } else {
-            breakLine()
             indent {
                 appendAll(result)
             }
