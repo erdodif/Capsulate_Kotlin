@@ -19,13 +19,13 @@ dependencies{
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
     jvm("desktop")
 
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 
@@ -169,6 +169,13 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Pkg)
             packageName = "com.erdodif.capsulate"
             packageVersion = "1.0.0"
+        }
+        buildTypes.release.proguard {
+            configurationFiles.from("proguard-desktop-rules.pro")
+            joinOutputJars = true
+            optimize = true
+            obfuscate = false
+            version.set("7.6.1")
         }
     }
 }

@@ -146,7 +146,7 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
     constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
     override fun evaluate(env: Environment): EvaluationResult {
-        val result = statements.removeFirst().evaluate(env)
+        val result = statements.removeAt(0).evaluate(env) // https://youtrack.jetbrains.com/issue/KT-71375/Prevent-Kotlins-removeFirst-and-removeLast-from-causing-crashes-on-Android-14-and-below-after-upgrading-to-Android-API-Level-35#:~:text=removeLast()%20extension%20functions.,running%20Android%2014%20or%20lower
         return if (statements.isEmpty()) {
             result
         } else {
