@@ -1,6 +1,13 @@
 name: Install detekt
 
 on:
+  push:
+    branches:
+      - main
+      - detekt
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
