@@ -1,0 +1,109 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  APP_NAME: capsulate
+
+jobs:
+  release-desktop:
+    name: Build Desktop (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            file-name: x86_64-unknown-linux-gnu.tar.gz
+          - target: aarch-64-apple-darwin
+            os: macOS-latest
+            file-name: aarch-64-apple-darwin.tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            file-name: x86_64-pc-windows-msvc.zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: 21
+          cache: 'gradle'
+
+      - name: "Setup | Gradle"
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build for ${{ matrix.target }}
+        shell: bash
+        run: ./gradlew :composeApp:createReleaseDistributable
+      - name: Package Win
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          cd composeApp/build/compose/binaries/main-release/app
+          mkdir ../release
+          7z a ../release/${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.file-name }} .
+          cd -
+      - name: Package Linux/Darwin
+        shell: bash
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd composeApp/build/compose/binaries/main-release/app
+          mkdir ../release
+          tar czvf ../release/${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.file-name }} .
+          cd -
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.file-name }}
+          path: composeApp/build/compose/binaries/main-release/release
+          overwrite: true
+  release-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: 21
+          cache: 'gradle'
+
+      - name: "Setup | Gradle"
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build for Android
+        shell: bash
+        run: ./gradlew :composeApp:assembleRelease
+      - name: "Package Android"
+        shell: bash
+        run: |
+          cd composeApp/build/outputs/apk/release
+          mv composeApp-release.apk ${{env.APP_NAME}}-${{github.ref_name}}-android.apk
+          cd -
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.APP_NAME}}-${{github.ref_name}}-android
+          path: composeApp/build/outputs/apk/release
+          overwrite: true
+  release-finalize:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [release-desktop, release-android]
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: releases
+          merge-multiple: true
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: releases/*
+        env: 
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
