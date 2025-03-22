@@ -41,7 +41,7 @@ class Project(
         }
         val platformFile = directory?.toKmpFile()?.listFiles()?.first { it.getName() == name }
         if (platformFile == null) {
-            throw Exception()
+            throw error("PlatformFile still null!")
         }
         val opened = OpenFile(platformFile)
         openFiles.add(opened)

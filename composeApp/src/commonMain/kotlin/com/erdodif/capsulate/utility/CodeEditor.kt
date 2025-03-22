@@ -38,19 +38,19 @@ import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.util.ParserResult
 import kotlinx.coroutines.launch
 
-fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, it ->
-    if (it == '\n') return@mapIndexed pos
+fun lineBreakPositions(str: String): List<Int> = str.mapIndexed { pos, char ->
+    if (char == '\n') return@mapIndexed pos
     else null
 }.filterNotNull()
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CodeEditor(
+    modifier: Modifier = Modifier,
     code: TextFieldValue = TextFieldValue(""),
     tokenizationResult: ParserResult<List<Token>> = tokenizeProgram(code.text),
-    modifier: Modifier = Modifier,
     focusRequester: FocusRequester = FocusRequester(),
-    onBackSlashEntered: () -> Unit = {},
+    onBackSlashEnter: () -> Unit = {},
     onValueChange: ((TextFieldValue) -> Unit)? = null
 ) {
     val text = code.text
@@ -81,14 +81,14 @@ fun CodeEditor(
                 else MaterialTheme.colorScheme.surfaceContainerHigh
             ).onInterceptKeyBeforeSoftKeyboard {
                 if (it.utf16CodePoint.toChar() == '\\' && onValueChange != null) {
-                    coroutineScope.launch { onBackSlashEntered() }
+                    coroutineScope.launch { onBackSlashEnter() }
                     true
                 } else {
                     false
                 }
             }.onPreviewKeyEvent {
                 if (it.utf16CodePoint.toChar() == '\\' && onValueChange != null) {
-                    coroutineScope.launch { onBackSlashEntered() }
+                    coroutineScope.launch { onBackSlashEnter() }
                     true
                 } else {
                     false

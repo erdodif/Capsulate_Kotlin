@@ -76,5 +76,4 @@ class QuantityTest {
     fun `exactly passes`() {
         exactly(2, char('c')) pass "ccrr" match { it.size == 2 && it[0] == 'c' }
     }
-
 }

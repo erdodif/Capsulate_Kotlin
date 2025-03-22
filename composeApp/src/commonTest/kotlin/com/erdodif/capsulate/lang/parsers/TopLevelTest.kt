@@ -40,5 +40,4 @@ class TopLevelTest {
     fun `topLevel fails with char on empty string`(){
         topLevel(char('c')) fail "" at 0
     }
-
 }

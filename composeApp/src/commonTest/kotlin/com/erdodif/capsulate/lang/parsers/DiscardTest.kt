@@ -60,5 +60,4 @@ class DiscardTest {
     fun `middle fail char right`(){
         middle(char('l'), char('c'), char('r')) fail "lcx" at 3
     }
-
 }

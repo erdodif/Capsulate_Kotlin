@@ -6,7 +6,6 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -85,7 +84,7 @@ class AwaitStatement(
 
 @Preview
 @Composable
-fun AwaitPreview() = PreviewColumn {
+private fun AwaitPreview() = PreviewColumn {
     val pos = MatchPos.ZERO
     val atom = Atomic(listOf(Skip(pos)), pos)
     val inner = Command("A", Skip(pos))

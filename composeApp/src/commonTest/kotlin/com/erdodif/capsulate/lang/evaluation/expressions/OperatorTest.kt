@@ -19,7 +19,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class OperatorTest {
 
@@ -188,6 +187,4 @@ class OperatorTest {
         assertIs<VBool>(result)
         assertEquals(true, result.value)
     }
-
-
 }

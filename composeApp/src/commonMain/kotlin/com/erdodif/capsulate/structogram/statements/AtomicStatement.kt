@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -64,12 +63,11 @@ class AtomicStatement(
             }
         }
     }
-
 }
 
 @Preview
 @Composable
-fun AtomicPreview() = PreviewColumn {
+private fun AtomicPreview() = PreviewColumn {
     val pos = MatchPos.ZERO
     val stmt = Atomic(listOf(Skip(pos)), pos)
     val inner = Command("A", Skip(pos))

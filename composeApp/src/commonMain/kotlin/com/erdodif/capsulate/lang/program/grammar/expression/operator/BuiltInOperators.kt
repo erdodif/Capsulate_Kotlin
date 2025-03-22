@@ -62,7 +62,7 @@ object Div : BinaryOperator<VNum, VNum>(
     Association.LEFT,
     { a, b ->
         if (b.value == 0) {
-            throw RuntimeException("Division by Zero!")
+            error("Division by Zero!")
         }
         if (a is VNat) {
             VNat((a.value / b.value).toUInt())

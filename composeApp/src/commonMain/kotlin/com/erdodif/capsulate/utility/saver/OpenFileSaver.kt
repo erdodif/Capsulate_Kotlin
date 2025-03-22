@@ -2,10 +2,7 @@ package com.erdodif.capsulate.utility.saver
 
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
-import com.erdodif.capsulate.lang.util.Nat.Zero.value
-import com.erdodif.capsulate.lang.util.fold
 import com.erdodif.capsulate.lang.util.get
-import com.erdodif.capsulate.lang.util.valueOrNull
 import com.erdodif.capsulate.project.OpenFile
 import dev.zwander.kotlin.file.PlatformFile
 import kotlin.uuid.ExperimentalUuidApi

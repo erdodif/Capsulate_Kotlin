@@ -14,14 +14,15 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -29,12 +30,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Right
@@ -50,7 +51,7 @@ import com.erdodif.capsulate.utility.imageExportable
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -75,7 +76,10 @@ class PresetPage(private val preset: Preset) : Ui<State> {
             Column {
                 Text(preset.headerText)
                 LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(if (windowInfo.windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.COMPACT) 1 else 2),
+                    columns = StaggeredGridCells.Fixed(
+                        if (windowInfo.windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.COMPACT) 1
+                        else 2
+                    ),
                     Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
@@ -84,29 +88,26 @@ class PresetPage(private val preset: Preset) : Ui<State> {
                             Column(Modifier.fillMaxWidth()) {
                                 Text(it.description)
                                 CodeEditor(
-                                    TextFieldValue(it.code),
-                                    modifier = Modifier.heightIn(max = 350.dp).fillMaxWidth()
+                                    modifier = Modifier.heightIn(max = 350.dp).fillMaxWidth(),
+                                    code = TextFieldValue(it.code)
                                 )
-                                var image: ImageBitmap by remember {
-                                    mutableStateOf(
-                                        ImageBitmap(
-                                            1,
-                                            1
-                                        )
-                                    )
+                                val coroutineScope = rememberCoroutineScope()
+                                var result: Either<Structogram, Fail>? by remember {
+                                    mutableStateOf(null)
                                 }
-                                val result =
-                                    remember {
-                                        derivedStateOf {
-                                            runBlocking { Structogram.fromString(it.code) }
-                                        }
-                                    } // TODO: Loading
-                                when (result.value) {
+                                LaunchedEffect(it.code) {
+                                    result = null
+                                    coroutineScope.launch {
+                                        result = Structogram.fromString(it.code)
+                                    }
+                                }
+                                when (result) {
+                                    null -> CircularProgressIndicator()
                                     is Left<Structogram> -> {
                                         val scope = rememberCoroutineScope()
                                         val graphicsLayer: GraphicsLayer = rememberGraphicsLayer()
                                         var makeImage by remember { mutableStateOf(false) }
-                                        (result.value as Left<Structogram>).value.Content(
+                                        (result as Left<Structogram>).value.Content(
                                             Modifier.combinedClickable(
                                                 enabled = true,
                                                 onClick = {},
@@ -124,7 +125,7 @@ class PresetPage(private val preset: Preset) : Ui<State> {
                                     }
 
                                     is Right<Fail> -> Text(
-                                        (result.value as Right<Fail>).value.reason,
+                                        (result as Right<Fail>).value.reason,
                                         color = Color.Red
                                     )
                                 }

@@ -14,10 +14,6 @@ plugins {
     kotlin("plugin.serialization") version "1.5.30"
 }
 
-dependencies{
-    detektPlugins(libs.detekt.rules.compose)
-}
-
 kotlin {
     jvmToolchain(21)
     jvm("desktop")
@@ -146,7 +142,10 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             multiDexKeepProguard = file("multidex-config.pro")
 
             signingConfig = signingConfigs.getByName("debug") // Add release cert on PlayStore
@@ -195,10 +194,16 @@ detekt {
     )
     basePath = projectDir.absolutePath
     toolVersion = "1.23.8"
+    // Android specifics
+    ignoredBuildTypes = listOf("release", "debug")
+    ignoredFlavors = listOf("production")
+    ignoredVariants = listOf("productionRelease")
 }
 
-// Kotlin DSL
 tasks.withType<Detekt>().configureEach {
+    dependencies {
+        detektPlugins(libs.detekt.rules.compose)
+    }
     reports {
         xml.required.set(true)
         html.required.set(true)

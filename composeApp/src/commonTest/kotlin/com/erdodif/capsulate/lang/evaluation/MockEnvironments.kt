@@ -9,32 +9,31 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.program.grammar.expression.VStr
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 
-class MockEnvironments {
-    companion object {
-        @KParcelize
-        private object NeverValue : Value {
-            override fun equals(other: Any?): Boolean =
-                throw IllegalStateException("Equals called the never parameter!")
-        }
-
-        fun neverEnv(): Environment = Env(
-            mapOf(), mapOf(), mutableListOf(
-                Parameter("_", Type.NEVER, NeverValue)
-            )
-        )
-
-        fun intEnv(): Environment = Env(
-            mapOf(), mapOf(), mutableListOf(
-                Parameter("a", Type.NAT, VNat(1U)),
-                Parameter("b", Type.NAT, VNat(4U)),
-                Parameter("c", Type.NAT, VNat(7U))
-            )
-        )
-
-        fun stringEnv(): Environment = Env(
-            mapOf(), mapOf(), mutableListOf(
-                Parameter("a", Type.STRING, VStr("text")),
-            )
-        )
+object MockEnvironments {
+    @KParcelize
+    private object NeverValue : Value {
+        override fun hashCode(): Int = 0
+        override fun equals(other: Any?): Boolean =
+            error("Equals called the never parameter!")
     }
+
+    fun neverEnv(): Environment = Env(
+        mapOf(), mapOf(), mutableListOf(
+            Parameter("_", Type.NEVER, NeverValue)
+        )
+    )
+
+    fun intEnv(): Environment = Env(
+        mapOf(), mapOf(), mutableListOf(
+            Parameter("a", Type.NAT, VNat(1U)),
+            Parameter("b", Type.NAT, VNat(4U)),
+            Parameter("c", Type.NAT, VNat(7U))
+        )
+    )
+
+    fun stringEnv(): Environment = Env(
+        mapOf(), mapOf(), mutableListOf(
+            Parameter("a", Type.STRING, VStr("text")),
+        )
+    )
 }

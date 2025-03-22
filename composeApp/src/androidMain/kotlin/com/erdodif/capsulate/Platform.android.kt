@@ -4,7 +4,6 @@ package com.erdodif.capsulate
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.Parcel
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -16,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import dev.zwander.kotlin.file.IPlatformFile
 import dev.zwander.kotlin.file.PlatformFile
 import io.github.vinceglb.filekit.core.PlatformDirectory
@@ -43,7 +43,7 @@ actual typealias KParceler<T> = Parceler<T>
 actual typealias KTypeParceler<T, R> = TypeParceler<T, R>
 
 @Composable
-actual fun locateSetting() {
+actual fun LocateSetting() {
     val context = LocalContext.current
     val intent = Intent(Intent.ACTION_SHOW_APP_INFO)
     context.startActivity(intent)
@@ -85,7 +85,7 @@ class DirectoryParceler : KParceler<PlatformDirectory?> {
         if (path == null) {
             return null
         }
-        return PlatformDirectory(Uri.parse(path))
+        return PlatformDirectory(path.toUri())
     }
 
 }
@@ -99,4 +99,3 @@ actual fun ImageBitmap.toPngByteArray(): ByteArray =
         this.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
         return@use it.toByteArray()
     }
-

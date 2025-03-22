@@ -33,7 +33,6 @@ import com.slack.circuit.foundation.internal.BackHandler
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.screen.Screen
 import kotlinx.coroutines.Job
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modifier ->
     Column(modifier, verticalArrangement = Arrangement.Center) {
@@ -51,7 +50,6 @@ val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modif
 val applicationExitJob = Job()
 
 @Composable
-@Preview
 fun App() {
     val backStack = rememberSaveableBackStack(root = LandingScreen)
     val navigator = rememberCircuitNavigator(backStack) {

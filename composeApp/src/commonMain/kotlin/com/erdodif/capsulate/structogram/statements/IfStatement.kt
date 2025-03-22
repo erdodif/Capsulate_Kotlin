@@ -140,7 +140,7 @@ open class IfStatement(
 
 @Preview
 @Composable
-fun IfPreview() = PreviewColumn(width = 400.dp) {
+private fun IfPreview() = PreviewColumn(width = 400.dp) {
     val pos = MatchPos.ZERO
     val statement =
         IfStatement(

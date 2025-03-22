@@ -14,7 +14,7 @@ import org.jetbrains.skia.Image
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Composable
-actual fun resolveColors(): ColorScheme = dynamicColorScheme(Color(106,56,193), true, false)
+actual fun resolveColors(): ColorScheme = dynamicColorScheme(Color(106, 56, 193), true, false)
 
 
 @Target(AnnotationTarget.PROPERTY)
@@ -22,14 +22,14 @@ actual fun resolveColors(): ColorScheme = dynamicColorScheme(Color(106,56,193), 
 actual annotation class KIgnoredOnParcel actual constructor()
 actual interface KParcelable
 actual interface KParceler<T>
+
 @Retention(value = AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 actual annotation class KTypeParceler<T, R : KParceler<in T>>
 actual class FileParceler : KParceler<IPlatformFile?>
 
 @Composable
-actual fun locateSetting() {
-}
+actual fun LocateSetting() = Unit
 
 actual val onMobile: Boolean = false
 

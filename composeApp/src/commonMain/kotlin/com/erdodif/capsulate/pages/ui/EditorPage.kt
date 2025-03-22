@@ -50,11 +50,14 @@ import com.erdodif.capsulate.presets.presets
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.close
+import com.erdodif.capsulate.resources.code
+import com.erdodif.capsulate.resources.drag
 import com.erdodif.capsulate.resources.format
 import com.erdodif.capsulate.resources.lightning
 import com.erdodif.capsulate.resources.run
 import com.erdodif.capsulate.resources.save
 import com.erdodif.capsulate.resources.save_file
+import com.erdodif.capsulate.resources.struk
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.IconTextButton
@@ -141,7 +144,7 @@ class EditorPage : Ui<State> {
                     Modifier.padding(5.dp, 0.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Code") // STOPSHIP: Locale
+                    Text(stringResource(Res.string.code))
                     Switch(
                         state.showCode,
                         { state.eventHandler(Event.ToggleCode) },
@@ -152,7 +155,7 @@ class EditorPage : Ui<State> {
                     Modifier.padding(5.dp, 0.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Struk") // STOPSHIP: Locale
+                    Text(stringResource(Res.string.struk))
                     Switch(
                         state.showStructogram,
                         { state.eventHandler(Event.ToggleStructogram) },
@@ -163,7 +166,7 @@ class EditorPage : Ui<State> {
                     Modifier.padding(5.dp, 0.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Drag") // STOPSHIP: Locale
+                    Text(stringResource(Res.string.drag))
                     Switch(
                         state.dragStatements,
                         { state.eventHandler(Event.ToggleStatementDrag) },
@@ -243,9 +246,9 @@ internal fun structogram(): Ui<State> = ui { state, modifier ->
 internal fun codeEdit(): Ui<State> = ui { state, modifier ->
     if (state.showCode)
         CodeEditor(
+            modifier,
             state.code,
             state.tokenized,
-            modifier,
             state.focusRequester,
             { state.eventHandler(Event.OpenUnicodeInput) }
         ) {
@@ -271,7 +274,7 @@ internal fun codeEdit(): Ui<State> = ui { state, modifier ->
 
 @Preview
 @Composable
-fun EditorPagePreview() = PreviewTheme {
+private fun EditorPagePreview() = PreviewTheme {
     val code = TextFieldValue(presets[1].demos[2].code)
     val structorgram =
         (runBlocking { Structogram.fromString(code.text) } as Left<Structogram>).value

@@ -3,8 +3,9 @@ package com.erdodif.capsulate.lang.specification.coc
 sealed interface Sort {
     val type: Sort
 
-    abstract override fun equals(other: Any?): Boolean
-    abstract override fun toString(): String
+    override fun hashCode(): Int
+    override fun equals(other: Any?): Boolean
+    override fun toString(): String
     fun rewrite(label: String, value: Sort): Sort
 }
 
@@ -13,6 +14,7 @@ sealed interface Sort {
  */
 object Prop : Sort {
     override fun equals(other: Any?): Boolean = other is Prop
+    override fun hashCode(): Int = 0
 
     /**
      * Gets the type of Prop, which is (by definition) Type(1)
@@ -31,6 +33,7 @@ object Prop : Sort {
  */
 object Set : Sort {
     override fun equals(other: Any?): Boolean = other is Set
+    override fun hashCode(): Int = 1
 
     /**
      * Gets the type of Set, which is (by definition) Type(1)
@@ -51,7 +54,6 @@ object Set : Sort {
  */
 data class Type(val level: Int) : Sort {
     override fun equals(other: Any?): Boolean = other is Type && other.level == level
-
     override fun hashCode(): Int = level
 
     /**

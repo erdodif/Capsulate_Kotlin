@@ -12,7 +12,7 @@ import dev.zwander.kotlin.file.IPlatformFile
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 // No `expect` keyword here
-annotation class KParcelize()
+annotation class KParcelize
 
 @Target(AnnotationTarget.TYPE)
 @Retention(AnnotationRetention.BINARY)
@@ -33,7 +33,7 @@ expect annotation class KTypeParceler<T, R: KParceler<in T>>
 expect class FileParceler : KParceler<IPlatformFile?>
 
 @Composable
-expect fun locateSetting()
+expect fun LocateSetting()
 
 expect val onMobile: Boolean
 

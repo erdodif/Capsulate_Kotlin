@@ -21,7 +21,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -143,7 +142,7 @@ class LoopStatement(
 
 @Preview
 @Composable
-fun LoopPreview() {
+private fun LoopPreview() {
     val pos = MatchPos.ZERO
     val tmpWhile =
         While(BoolLit(true, MatchPos(0, "condition".length)), arrayListOf(Skip(pos)), pos)

@@ -56,7 +56,11 @@ class FunctionState<R : Value, T : Value>(
     }
 
     override fun toString(): String {
-        return "FuncState(calls on: ${call.function.name}, error: ${context.error}, value: ${context.returnValue}, head: ${context.head})"
+        return "FuncState(" +
+                "calls on: ${call.function.name}, " +
+                "error: ${context.error}, " +
+                "value: ${context.returnValue}, " +
+                "head: ${context.head})"
     }
 }
 

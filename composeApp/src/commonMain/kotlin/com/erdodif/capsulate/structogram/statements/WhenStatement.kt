@@ -92,7 +92,8 @@ class WhenStatement(
                 modifier.dim(isDragging).clip(RectangleShape).fillMaxWidth()
                     .height(IntrinsicSize.Min)
                     .onDpSize(density) { size = it }
-                    .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary)) { statement.id == activeStatement }
+                    .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary))
+                    { statement.id == activeStatement }
             ) {
                 var maxHeight by remember { mutableStateOf(0.dp) }
                 StackWithSeparator(blocks, {
@@ -165,7 +166,7 @@ class Block(
 
 @Preview
 @Composable
-fun WhenPreview() = PreviewColumn(width = 400.dp) {
+private fun WhenPreview() = PreviewColumn(width = 400.dp) {
     val pos = MatchPos.ZERO
     val parserState = ParserState("")
     val statement = WhenStatement(

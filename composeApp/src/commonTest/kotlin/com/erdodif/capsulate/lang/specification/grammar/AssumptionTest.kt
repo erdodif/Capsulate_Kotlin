@@ -37,5 +37,4 @@ class AssumptionTest {
         assumption fail "Nat : Prop"
         assumption fail "A : Type(0)"
     }
-
 }

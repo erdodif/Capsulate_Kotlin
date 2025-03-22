@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
@@ -153,12 +152,13 @@ private val parsers: List<Pair<Parser<*>, String>> = listOf(
 
 @Preview
 @Composable
+@Suppress("PublicComposablePreview")
 fun ParserTester() = PreviewTheme {
     var input by remember { mutableStateOf(TextFieldValue("")) }
     var filter by remember { mutableStateOf("") }
     val tokens = tokenizeProgram(input.text)
     Column(Modifier.fillMaxSize().imePadding()) {
-        CodeEditor(input, tokens, Modifier.fillMaxWidth().height(100.dp)) { input = it }
+        CodeEditor(Modifier.fillMaxWidth().height(100.dp),input, tokens) { input = it }
         HorizontalDivider()
         Row(
             Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -182,7 +182,7 @@ fun ParserTester() = PreviewTheme {
             items(parsers.filter { filter in it.second }
                 .sortedBy { it.second.length }) { (parser, name) ->
                 var result: Either<ParserResult<*>, Exception> by remember {
-                    mutableStateOf(Right(NullPointerException()))
+                    mutableStateOf(Right(NullPointerException("No result")))
                 }
                 LaunchedEffect(input.text, filter) {
                     withContext(Dispatchers.IO) {

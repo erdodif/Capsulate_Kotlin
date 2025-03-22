@@ -3,7 +3,6 @@
 package com.erdodif.capsulate.lang.evaluation.context
 
 import com.erdodif.capsulate.lang.program.evaluation.Env
-import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.grammar.Assign
 import com.erdodif.capsulate.lang.program.grammar.Expression
@@ -238,5 +237,4 @@ class FunctionTest {
         assertEquals(1, context.env.parameters.size)
         assertEquals(5, (context.env.parameters[0].value as VNum).value)
     }
-
 }

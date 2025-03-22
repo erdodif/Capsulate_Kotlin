@@ -67,5 +67,4 @@ class CombinatorTest {
     fun `not resets position`() {
         not(char('c')) pass "x" withMatch (0 to 0) at 0
     }
-
 }

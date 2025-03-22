@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
 @Preview(wallpaper = Wallpapers.BLUE_DOMINATED_EXAMPLE)
 @PreviewScreenSizes
 @Composable
-fun AppAndroidPreview() {
+private fun AppAndroidPreview() {
     App()
 }
 

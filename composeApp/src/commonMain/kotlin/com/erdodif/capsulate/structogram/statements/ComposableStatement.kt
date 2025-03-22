@@ -148,7 +148,8 @@ sealed class ComposableStatement<T : GrammarStatement>(open val statement: T) : 
                 Column {
                     AnimatedVisibility(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
-                        visible = state.preview && state.draggedItem != null && state.state.hoveredDropTargetKey == statement,
+                        visible = state.preview && state.draggedItem != null &&
+                                state.state.hoveredDropTargetKey == statement,
                         enter = expandIn(tween(300), Alignment.Center),
                         exit = fadeOut(tween(0))
                     ) {

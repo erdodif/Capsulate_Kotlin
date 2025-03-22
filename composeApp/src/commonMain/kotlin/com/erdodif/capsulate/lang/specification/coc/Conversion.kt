@@ -26,16 +26,19 @@ fun Context.reduceDelta(variable: Definition): Sort = variable.value
  */
 fun Context.reduceZeta(let: Let): Sort = let.term.rewrite(let.definition.name, let.definition)
 
-private class nameIterator() : Iterator<String> {
+private class NameIterator : Iterator<String> {
     var i: Int = 0
     override fun hasNext(): Boolean = true
 
     override fun next(): String {
+        if (i == Int.MAX_VALUE) {
+            throw NoSuchElementException("OverFlow! ${Int.MAX_VALUE} reached on name iteration")
+        }
         i++
         var j = i
         val sb = StringBuilder()
         while (j != 0) {
-            sb.append( 'a'.plus(j % 26))
+            sb.append('a'.plus(j % 26))
             j %= 26
         }
         return sb.toString()
@@ -49,7 +52,7 @@ private class nameIterator() : Iterator<String> {
  * Eta reduction is not defined due to it's incompatibility with the cic type system
  */
 fun Context.expandEta(lambda: Lam): Sort {
-    val ite = nameIterator()
+    val ite = NameIterator()
     var next = ite.next()
     while (!fresh(next)) {
         next = ite.next()
@@ -61,7 +64,7 @@ fun Context.expandEta(lambda: Lam): Sort {
 /**
  * `E[Γ] ⊢ t▷u`
  */
-fun Context.norm(sort: Sort): Sort = when(sort){
+fun Context.norm(sort: Sort): Sort = when (sort) {
     is Definition -> norm(reduceDelta(sort))
     is App -> norm(reduceBeta(sort.f, sort.x))
     is Let -> norm(reduceZeta(sort))
@@ -71,8 +74,4 @@ fun Context.norm(sort: Sort): Sort = when(sort){
     Prop -> sort
     Set -> sort
     is Type -> sort
-}
-
-object Conversion {
-
 }

@@ -60,7 +60,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
-class LandingPage() : Ui<LandingScreen.State> {
+class LandingPage : Ui<LandingScreen.State> {
 
     companion object Factory : Ui.Factory by screenUiFactory<LandingScreen>(::LandingPage)
 
@@ -237,7 +237,7 @@ class LandingPage() : Ui<LandingScreen.State> {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun EmptyPagePreview() = PreviewTheme {
+private fun EmptyPagePreview() = PreviewTheme {
     LandingPage().Content(
         LandingScreen.State(false, rememberModalBottomSheetState(), SnackbarHostState(), { _ -> }),
         Modifier.fillMaxSize()
@@ -247,7 +247,7 @@ fun EmptyPagePreview() = PreviewTheme {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun EmptyPageOpenModelPreview() = PreviewTheme {
+private fun EmptyPageOpenModelPreview() = PreviewTheme {
     val state = rememberModalBottomSheetState()
     runBlocking { state.show() }
     LandingPage().Content(

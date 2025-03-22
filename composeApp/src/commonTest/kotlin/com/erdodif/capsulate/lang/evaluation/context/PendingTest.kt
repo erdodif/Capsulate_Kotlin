@@ -24,8 +24,9 @@ import kotlin.uuid.ExperimentalUuidApi
 
 class PendingTest {
     @KParcelize
-    private object TestValue: Value{
+    private object TestValue : Value {
         override fun equals(other: Any?): Boolean = false
+        override fun hashCode(): Int = 0
     }
 
     @Test

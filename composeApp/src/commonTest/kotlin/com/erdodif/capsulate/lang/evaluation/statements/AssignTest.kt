@@ -57,6 +57,4 @@ class AssignTest {
         assertEquals(4, (env.parameters[1].value as VNat).value)
         assertEquals(7, (env.parameters[2].value as VNat).value)
     }
-
-
 }

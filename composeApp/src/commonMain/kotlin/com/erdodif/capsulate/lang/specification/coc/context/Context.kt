@@ -15,7 +15,6 @@ import com.erdodif.capsulate.lang.specification.coc.Type
 import com.erdodif.capsulate.lang.specification.coc.TypeProd
 import com.erdodif.capsulate.lang.specification.coc.Variable
 import com.erdodif.capsulate.lang.specification.coc.norm
-import com.erdodif.capsulate.lang.specification.grammar.Var
 
 /**
  * A set of Terms that makes sure that type-inference rules are enforced during construction

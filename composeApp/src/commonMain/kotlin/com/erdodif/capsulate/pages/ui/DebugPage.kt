@@ -132,7 +132,7 @@ class DebugPage : Ui<State> {
                         )
                         .border(1.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(5.dp))
                         .widthIn(min = 100.dp, max = 350.dp)
-                        .height(150.dp)
+                        .heightIn(min = 100.dp, max = 150.dp)
                         .padding(5.dp)
                 ) {
                     Text(entry.scope)

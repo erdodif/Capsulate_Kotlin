@@ -25,6 +25,7 @@ import com.erdodif.capsulate.lang.util.fold
 import com.erdodif.capsulate.lang.util.get
 import kotlin.math.max
 
+@Suppress("LongParameterList")
 class CodeHighlight private constructor(
     val constant: Color,
     val variable: Color,

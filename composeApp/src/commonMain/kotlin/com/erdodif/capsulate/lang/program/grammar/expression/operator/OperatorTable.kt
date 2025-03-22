@@ -19,8 +19,6 @@ class OperatorTable<T : Value>(private var operators: Map<Int, List<Operator<Exp
     constructor(vararg operators: Operator<Exp<T>>) : this(operators.groupBy { it.bindingStrength })
     constructor(operators: List<Operator<Exp<T>>>) : this(operators.groupBy { it.bindingStrength })
 
-    private val maxKey = operators.keys.max()
-
     operator fun get(index: Int, atomParser: Parser<Exp<T>>): Parser<Exp<T>> =
         (if (index >= operators.keys.count()) {
             atomParser

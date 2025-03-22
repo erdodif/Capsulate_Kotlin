@@ -21,8 +21,7 @@ actual annotation class KTypeParceler<T, R : KParceler<in T>>
 actual class FileParceler : KParceler<IPlatformFile?>
 
 @Composable
-actual fun locateSetting() {
-}
+actual fun LocateSetting() = Unit
 
 actual val supportedExtensions: List<String>? = listOf("struk", "stk", "txt")
 

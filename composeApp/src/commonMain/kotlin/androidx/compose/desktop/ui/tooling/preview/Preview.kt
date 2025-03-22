@@ -3,7 +3,7 @@ package androidx.compose.desktop.ui.tooling.preview
 import androidx.annotation.FloatRange
 import androidx.annotation.IntRange
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "LongParameterList")
 @OptIn(ExperimentalMultiplatform::class)
 @OptionalExpectation
 expect annotation class Preview(

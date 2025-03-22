@@ -217,8 +217,10 @@ class OperatorTest {
 
     @Test
     fun unaryPre_Pass() {
-        val expectPredicate: (Pass<Exp<TestValue>>) -> Boolean =
-            { it.value is UnaryCalculation<*, *> && ((it.value as UnaryCalculation<*, *>).param as TestExp).matchedChar == 'a' }
+        val expectPredicate: (Pass<Exp<TestValue>>) -> Boolean = {
+            it.value is UnaryCalculation<*, *> &&
+                    ((it.value as UnaryCalculation<*, *>).param as TestExp).matchedChar == 'a'
+        }
         operatorsSimple pass "@a" matches expectPredicate
         operatorsSimple pass "@ a" matches expectPredicate
         operatorsSimple pass "@  a " matches expectPredicate
@@ -262,7 +264,7 @@ class OperatorTest {
     }
 
     @Test
-    fun `multiple unary on the same operand`(){
+    fun `multiple unary on the same operand`() {
         operatorsConflict pass "-a"
         operatorsConflict pass "@a"
         operatorsConflict pass "-@a"

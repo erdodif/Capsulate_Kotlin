@@ -198,7 +198,7 @@ class Structogram private constructor(
 @Preview
 @Composable
 @OptIn(ExperimentalUuidApi::class)
-fun StructogramPreview() = PreviewTheme {
+private fun StructogramPreview() = PreviewTheme {
     lateinit var structogram: Structogram
     runBlocking {
         Structogram.fromString(
@@ -215,7 +215,7 @@ fun StructogramPreview() = PreviewTheme {
         )[{
             structogram = it
         }, {
-            throw Exception(it.reason)
+            error(it.reason)
         }]
     }
     structogram.Content(Modifier, false, null)

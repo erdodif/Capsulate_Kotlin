@@ -48,7 +48,7 @@ class Variable(val id: String, override val match: MatchPos) : RawValue<Value>(m
         if (param is Left) {
             return param.value.value
         } else {
-            throw RuntimeException("Variable '$id' is not defined!")
+            error("Variable '$id' is not defined!")
         }
     }
 

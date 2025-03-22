@@ -9,7 +9,7 @@ data class Formatting(val nesting: Int) {
      * creates the correct amount indentation
      */
     fun getNestingSequence(indentation: Int, nesting: String): String = buildString {
-        (0..<indentation).forEach { append(nesting) }
+        for (i in 0..<indentation) append(nesting)
     }
 
     /**

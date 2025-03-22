@@ -9,12 +9,12 @@ import io.github.vinceglb.filekit.core.PlatformDirectory
 
 @Composable
 fun FolderSelectorButton(
-    onFolderSelected: (PlatformDirectory?) -> Unit,
+    onFolderSelect: (PlatformDirectory?) -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
     val picker = rememberDirectoryPickerLauncher("Open Project"){
-        onFolderSelected(it)
+        onFolderSelect(it)
     }
     Button({picker.launch()}, modifier, content = content)
 }

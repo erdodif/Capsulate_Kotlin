@@ -100,11 +100,13 @@ fun Modifier.awaitIndicator(): Modifier = this.drawBehind {
 @Composable
 fun commandPlaceHolder(modifier: Modifier = Modifier) = StatementText("", modifier = modifier)
 
+val defaultModifier = Modifier.padding(Theme.commandPadding)
+
 @Composable
 fun StatementText(
     text: String,
     centered: Boolean = true,
-    modifier: Modifier = Modifier.padding(Theme.commandPadding)
+    modifier: Modifier = defaultModifier
 ) = Text(
     text = text.replace("\n", " "),
     modifier = Theme.commandModifier.then(modifier),

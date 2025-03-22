@@ -98,7 +98,7 @@ class Command(
 
 @Preview
 @Composable
-fun CommandPreview() {
+private fun CommandPreview() {
     val command = Command("statement", Skip(MatchPos.ZERO))
     val modifier = Modifier.fillMaxWidth().border(Theme.borderWidth, Theme.borderColor)
     PreviewColumn {

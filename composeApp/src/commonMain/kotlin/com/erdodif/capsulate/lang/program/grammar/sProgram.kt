@@ -64,14 +64,14 @@ fun tokenizeProgram(input: String): ParserResult<List<Token>> =
             topLevel(
                 many(
                     asum(
-                        (_lineEnd * { it, pos -> LineEnd(it, pos) }) as Parser<Token>,
+                        (_lineEnd * { char, pos -> LineEnd(char, pos) }) as Parser<Token>,
                         pVariable as Parser<Token>,
                         pComment as Parser<Token>,
                         pIntLit as Parser<Token>,
                         pBoolLit as Parser<Token>,
                         pStrLit as Parser<Token>,
-                        (_anyKeyword * { it, pos -> KeyWord(it, pos) }) as Parser<Token>,
-                        (tok(reservedChar) * { it, pos -> Symbol(it, pos) }) as Parser<Token>,
+                        (_anyKeyword * { keyword, pos -> KeyWord(keyword, pos) }) as Parser<Token>,
+                        (tok(reservedChar) * { char, pos -> Symbol(char, pos) }) as Parser<Token>,
                         (tok(some(freeChar)) * { _, pos -> Token(pos) }),
                     )
                 )

@@ -1,6 +1,5 @@
 package com.erdodif.capsulate.lang.program.grammar
 
-import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Not
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryCalculation

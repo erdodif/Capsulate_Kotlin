@@ -6,6 +6,7 @@ import kotlin.jvm.JvmInline
 
 interface Value: KParcelable {
     override operator fun equals(other: Any?): Boolean
+    override fun hashCode(): Int
 }
 
 sealed interface VNum : Value {

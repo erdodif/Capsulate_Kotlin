@@ -24,7 +24,9 @@ class LocalContext(private val context: GlobalEnvironment, vararg declaration: V
     }
 
     override fun wellFormed(type: Sort): Boolean {
-        return (type is Variable && (this[type.name] != null || context[type.name] != null)) || type is Type || type == Set || type == Prop
+        return (type is Variable &&
+                (this[type.name] != null || context[type.name] != null))
+                || type is Type || type == Set || type == Prop
     }
 
     /**

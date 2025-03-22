@@ -46,5 +46,4 @@ class FunctionTest {
         topLevel(sFunction) pass "function xy(a, b)\n{}" matches condition at 20
         topLevel(sFunction) pass "function xy( a , b )\n{\n}" matches condition at 24
     }
-
 }

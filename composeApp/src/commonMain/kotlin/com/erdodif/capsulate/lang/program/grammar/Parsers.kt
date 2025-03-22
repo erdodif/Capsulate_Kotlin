@@ -16,7 +16,6 @@ import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.getEither
 import com.erdodif.capsulate.lang.util.times
-import kotlinx.coroutines.MainScope
 
 inline val anyChar: Parser<Char>
     get() = {

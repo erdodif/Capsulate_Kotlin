@@ -1,7 +1,6 @@
 package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,29 +17,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.defaultScreenError
-import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.valueOrNull
 import com.erdodif.capsulate.pages.screen.ProjectScreen
 import com.erdodif.capsulate.pages.screen.ProjectScreen.Event
 import com.erdodif.capsulate.pages.screen.ProjectScreen.State
-import com.erdodif.capsulate.resources.Res
-import com.erdodif.capsulate.resources.close
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.runtime.ui.Ui
-import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.ExperimentalUuidApi
 
 private val regularColors: ButtonColors
@@ -56,13 +45,6 @@ private val openedColors: ButtonColors
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
         disabledContentColor = MaterialTheme.colorScheme.primary,
         disabledContainerColor = MaterialTheme.colorScheme.primaryContainer
-    )
-private val temporalColors: ButtonColors
-    @Composable get() = ButtonColors(
-        contentColor = MaterialTheme.colorScheme.secondary,
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-        disabledContentColor = MaterialTheme.colorScheme.tertiary,
-        disabledContainerColor = MaterialTheme.colorScheme.tertiaryContainer
     )
 
 class ProjectPage : Ui<State> {
