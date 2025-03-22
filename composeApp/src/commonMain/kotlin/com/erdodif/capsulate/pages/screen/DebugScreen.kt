@@ -44,6 +44,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
         val stepCount: Int,
         val seed: Int,
         val error: String?,
+        val functionOngoing: Boolean,
         val stackTrace: List<EvaluationContext.StackTraceEntry>,
         val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
@@ -80,7 +81,9 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         }
         val functionOngoing: ComposableFunction? by remember(step) {
             derivedStateOf {
-                screen.structogram.functions.firstOrNull { it.function == debug.functionOngoing?.expression?.call?.function }
+                screen.structogram.functions.firstOrNull {
+                    it.function == debug.functionOngoing?.expression?.call?.function
+                }
             }
         }
         val scope = rememberCoroutineScope()
@@ -92,11 +95,12 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
             step,
             debug.seed,
             error,
+            debug.functionOngoing != null,
             debug.getCallStack(screen.structogram.name ?: "Program")
         ) { event ->
             when (event) {
                 is Event.StepForward -> {
-                    if (debug.head != null) {
+                    if (debug.head != null || debug.functionOngoing != null) {
                         debug = debug.step()
                         step = step + 1
                         if (debug.error != null) {
@@ -145,7 +149,9 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     val active = (debug.head as? PendingMethodEvaluation)
                         ?: (debug.head as? EvalSequence)?.statements?.first() as? PendingMethodEvaluation
                     if (active != null) {
-                        listState.animateScrollToItem(screen.structogram.methods.indexOfFirst { it.method == active.method } + 1)
+                        listState.animateScrollToItem(
+                            screen.structogram.methods.indexOfFirst { it.method == active.method } + 1
+                        )
                     } else {
                         listState.animateScrollToItem(0)
                     }

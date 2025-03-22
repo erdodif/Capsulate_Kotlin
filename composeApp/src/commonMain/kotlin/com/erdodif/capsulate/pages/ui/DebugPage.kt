@@ -167,7 +167,7 @@ class DebugPage : Ui<State> {
             CallStack(state.stackTrace)
             Column {
                 Text("Seed: ${state.seed}")
-                if (state.activeStatement == null) {
+                if (state.activeStatement == null && !state.functionOngoing) {
                     Row {
                         TextButton({ state.eventHandler(Event.Reset) }) { Text("Reset") }
                         TextButton({ state.eventHandler(Event.ResetRenew) }) { Text("Reset with new seed") }
