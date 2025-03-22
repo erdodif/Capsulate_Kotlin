@@ -11,4 +11,8 @@
     <string name="save_file">Save file</string>
     <string name="run">Run</string>
     <string name="format">Format</string>
+    <string name="reset">Reset</string>
+    <string name="reset_new_seed">Reset with new seed</string>
+    <string name="step_forward">Step forward</string>
+    <string name="step_over">Step over</string>
 </resources>

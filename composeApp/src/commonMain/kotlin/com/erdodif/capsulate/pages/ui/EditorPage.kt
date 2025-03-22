@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -21,13 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -60,6 +57,7 @@ import com.erdodif.capsulate.resources.save
 import com.erdodif.capsulate.resources.save_file
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.CodeEditor
+import com.erdodif.capsulate.utility.IconTextButton
 import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.utility.UnicodeOverlay
@@ -70,8 +68,6 @@ import com.slack.circuit.overlay.OverlayEffect
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.ExperimentalUuidApi
@@ -180,32 +176,18 @@ class EditorPage : Ui<State> {
                 ) {
                     Icon(painterResource(Res.drawable.close), stringResource(Res.string.close))
                 }
-                PainterButton(Res.drawable.format,Res.string.format) {
+                IconTextButton(Res.drawable.format,Res.string.format) {
                     state.eventHandler(Event.Format)
                 }
-                PainterButton(Res.drawable.lightning,Res.string.run) {
+                IconTextButton(Res.drawable.lightning,Res.string.run) {
                     state.eventHandler(Event.Run)
                 }
-                PainterButton(Res.drawable.save, Res.string.save_file) {
+                IconTextButton(Res.drawable.save, Res.string.save_file) {
                     state.eventHandler(Event.Save)
                 }
             }
         }
     }
-
-    @Composable
-    private fun PainterButton(icon: DrawableResource, text: StringResource, onClick: () -> Unit) =
-        OutlinedButton(
-            onClick = onClick,
-            modifier = Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-            contentPadding = PaddingValues(8.dp, 2.dp)
-        ) {
-            Row {
-                Icon(painterResource(icon), stringResource(text), Modifier.size(20.dp))
-                Text(stringResource(text))
-            }
-        }
-
 
     @Composable
     private fun BoxScope.KeyBoardExtension(state: State) {

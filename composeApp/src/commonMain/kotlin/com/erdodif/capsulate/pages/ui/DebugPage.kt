@@ -29,6 +29,7 @@ import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,6 +44,15 @@ import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui
 import kotlin.uuid.ExperimentalUuidApi
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
+import com.erdodif.capsulate.resources.Res
+import com.erdodif.capsulate.resources.close
+import com.erdodif.capsulate.resources.play
+import com.erdodif.capsulate.resources.random
+import com.erdodif.capsulate.resources.reset
+import com.erdodif.capsulate.resources.reset_new_seed
+import com.erdodif.capsulate.resources.step_forward
+import com.erdodif.capsulate.resources.step_over
+import com.erdodif.capsulate.utility.IconTextButton
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
 class DebugPage : Ui<State> {
@@ -168,15 +178,21 @@ class DebugPage : Ui<State> {
             Column {
                 Text("Seed: ${state.seed}")
                 if (state.activeStatement == null && !state.functionOngoing) {
-                    Row {
-                        TextButton({ state.eventHandler(Event.Reset) }) { Text("Reset") }
-                        TextButton({ state.eventHandler(Event.ResetRenew) }) { Text("Reset with new seed") }
-                        TextButton({ state.eventHandler(Event.Close) }) { Text("Close") }
-                    }
                     Text(
                         "Finished in ${state.stepCount + 1} steps!",
                         color = MaterialTheme.colorScheme.tertiary,
                     )
+                    Row {
+                        IconTextButton(Res.drawable.reset, Res.string.reset) {
+                            state.eventHandler(Event.Reset)
+                        }
+                        IconTextButton(Res.drawable.random, Res.string.reset_new_seed) {
+                            state.eventHandler(Event.ResetRenew)
+                        }
+                        IconTextButton(Res.drawable.close, Res.string.close) {
+                            state.eventHandler(Event.Close)
+                        }
+                    }
                 } else {
                     Text(state.activeStatement.toString())
                     Text(
@@ -184,9 +200,15 @@ class DebugPage : Ui<State> {
                         color = MaterialTheme.colorScheme.secondary
                     )
                     Row {
-                        TextButton({ state.eventHandler(Event.StepForward) }) { Text("Step forward") }
-                        TextButton({ state.eventHandler(Event.StepOver) }) { Text("Step over") }
-                        TextButton({ state.eventHandler(Event.Close) }) { Text("Close") }
+                        IconTextButton(Res.drawable.play, Res.string.step_forward) {
+                            state.eventHandler(Event.StepForward)
+                        }
+                        IconTextButton(Res.drawable.step_over, Res.string.step_over) {
+                            state.eventHandler(Event.StepOver)
+                        }
+                        IconTextButton(Res.drawable.close, Res.string.close) {
+                            state.eventHandler(Event.Close)
+                        }
                     }
                 }
             }
