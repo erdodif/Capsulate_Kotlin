@@ -164,9 +164,19 @@ compose.desktop {
 }
 
 detekt {
-    toolVersion = "1.23.8"
-    config.setFrom(file("config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$projectDir/detekt.yml")
+    source.setFrom(
+        "src/commonMain/kotlin",
+        "src/nativeMain/kotlin",
+        "src/commonTest/kotlin",
+        "src/androidMain/kotlin",
+        "src/desktopMain/kotlin",
+        "src/iosMain/kotlin",
+    )
+    basePath = projectDir.absolutePath
+    toolVersion = "1.23.8"
 }
 
 // Kotlin DSL
