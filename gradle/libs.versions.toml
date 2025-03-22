@@ -9,7 +9,9 @@ circuitFoundation = "0.27.0"
 compose-plugin = "1.7.3"
 composeDnd = "0.3.0"
 coreSplashscreen = "1.0.1"
+detektRulesCompose = "1.4.0"
 filekitCore = "0.8.8"
+kermit = "2.0.5"
 kmpfileFilekit = "0.7.0"
 kotlin = "2.1.10"
 kotlinx-coroutines = "1.10.1"
@@ -19,9 +21,9 @@ kotlinxSerializationJson = "1.8.0"
 material = "1.12.0"
 materialKolor = "2.0.0"
 multiplatformSettingsNoArg = "1.2.0"
-napier = "2.7.1"
 okio = "3.10.2"
 adaptive = "1.0.1"
+proguardGradle = "7.6.1"
 slf4j = "2.0.16"
 
 [libraries]
@@ -29,8 +31,10 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
 compose-dnd = { module = "com.mohamedrejeb.dnd:compose-dnd", version.ref = "composeDnd" }
+detekt-rules-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektRulesCompose" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
+kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kmpfile = { module = "dev.zwander:kmpfile", version.ref = "kmpfileFilekit" }
 kmpfile-filekit = { module = "dev.zwander:kmpfile-filekit", version.ref = "kmpfileFilekit" }
 kmpfile-okio = { module = "dev.zwander:kmpfile-okio", version.ref = "kmpfileFilekit" }
@@ -47,8 +51,8 @@ material = { module = "com.google.android.material:material", version.ref = "mat
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 multiplatform-settings-no-arg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettingsNoArg" }
 multiplatform-settings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "multiplatformSettingsNoArg" }
-napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+proguard-gradle = { module = "com.guardsquare:proguard-gradle", version.ref = "proguardGradle" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref= "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref= "slf4j" }
 adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }

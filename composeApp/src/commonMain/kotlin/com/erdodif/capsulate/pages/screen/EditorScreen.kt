@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
@@ -41,7 +42,6 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
@@ -180,7 +180,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 is Event.ToggleStructogram -> showStructogram = !showStructogram
                 is Event.Close -> navigator.pop()
                 is Event.Run -> {
-                    Napier.d { "Navigating" }
+                    Logger.d { "Navigating" }
                     navigator.goTo(DebugScreen(structogram))
                 }
 
@@ -246,7 +246,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         }
         if (structogram is Left) {
             val value = structogram.value
-            Napier.i(
+            Logger.i(
                 "Structogram built in $time" +
                         "${value.statements.count()} statements, " +
                         "${value.methods.count()} methods and " +
@@ -254,7 +254,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
             )
         } else {
             val reason = (structogram as Right).value
-            Napier.e("Structogram parse failed in $time with reason: $reason")
+            Logger.e("Structogram parse failed in $time with reason: $reason")
         }
         onResult(structogram)
     }

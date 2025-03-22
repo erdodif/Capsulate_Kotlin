@@ -150,21 +150,25 @@ inline operator fun <A, R> Parser<A>.div(crossinline lambda: ParserState.(A) -> 
 inline operator fun <A, B, R> Parser<Pair<A, B>>.div(crossinline lambda: ParserState.(A, B) -> R): Parser<R> =
     fMap { lambda(it.first, it.second) }
 
-inline operator fun <A, B, C, R> Parser<Pair<Pair<A, B>, C>>.div(crossinline lambda: ParserState.(A, B, C) -> R): Parser<R> =
-    fMap { lambda(it.first.first, it.first.second, it.second) }
+inline operator fun <A, B, C, R> Parser<Pair<Pair<A, B>, C>>.div(
+    crossinline lambda: ParserState.(A, B, C) -> R
+): Parser<R> = fMap { lambda(it.first.first, it.first.second, it.second) }
 
-inline operator fun <A, B, C, D, R> Parser<Pair<Pair<Pair<A, B>, C>, D>>.div(crossinline lambda: ParserState.(A, B, C, D) -> R): Parser<R> =
+inline operator fun <A, B, C, D, R> Parser<Pair<Pair<Pair<A, B>, C>, D>>.div(
+    crossinline lambda: ParserState.(A, B, C, D) -> R
+): Parser<R> =
     fMap { lambda(it.first.first.first, it.first.first.second, it.first.second, it.second) }
 
 // Until nested destructuring is supported by kotlin
-inline operator fun <A, B, C, D, E, R> Parser<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>>.div(crossinline lambda: ParserState.(A, B, C, D, E) -> R): Parser<R> =
-    fMap {
-        lambda(
-            it.first.first.first.first, it.first.first.first.second, it.first.first.second,
-            it.first.second,
-            it.second
-        )
-    }
+inline operator fun <A, B, C, D, E, R> Parser<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>>.div(
+    crossinline lambda: ParserState.(A, B, C, D, E) -> R
+): Parser<R> = fMap {
+    lambda(
+        it.first.first.first.first, it.first.first.first.second, it.first.first.second,
+        it.first.second,
+        it.second
+    )
+}
 
 inline operator fun <T, R> Parser<T>.get(
     crossinline onPass: ParserState.(Pass<T>) -> ParserResult<R>,
@@ -195,10 +199,10 @@ inline fun <T, R> Parser<T?>.applyIf(crossinline lambda: ParserState.(T) -> R): 
 /**
  * Tries to apply the clean [lambda] if the result is present and not null [MatchPos] for extra context
  */
+@Suppress("UNCHECKED_CAST")
 inline fun <T, R> Parser<T?>.applyIfPos(crossinline lambda: ParserState.(T, MatchPos) -> R): Parser<R?> =
-    fMapPos { it, pos ->
-        @Suppress("UNCHECKED_CAST")
-        if (it == null) null else lambda(it as T, pos)
+    fMapPos { result, pos ->
+        if (result == null) null else lambda(result as T, pos)
     }
 
 inline fun <T> asum(vararg parsers: Parser<T>): Parser<T> = {

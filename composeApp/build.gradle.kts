@@ -1,4 +1,5 @@
 import com.android.build.gradle.internal.packaging.defaultExcludes
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -9,17 +10,22 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
     id("kotlin-parcelize")
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     kotlin("plugin.serialization") version "1.5.30"
 }
 
+dependencies{
+    detektPlugins(libs.detekt.rules.compose)
+}
+
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
     jvm("desktop")
 
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 
@@ -48,7 +54,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.kotlin.test)
-            implementation(libs.napier)
+            implementation(libs.kermit)
             implementation(libs.kmpfile)
             implementation(libs.kmpfile.filekit)
             implementation(libs.kmpfile.okio)
@@ -127,14 +133,24 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
     }
     dependencies {
         debugImplementation(compose.uiTooling)
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            multiDexKeepProguard = file("multidex-config.pro")
+
+            signingConfig = signingConfigs.getByName("debug") // Add release cert on PlayStore
+        }
     }
 }
 
@@ -154,5 +170,38 @@ compose.desktop {
             packageName = "com.erdodif.capsulate"
             packageVersion = "1.0.0"
         }
+        buildTypes.release.proguard {
+            configurationFiles.from("proguard-desktop-rules.pro")
+            joinOutputJars = true
+            optimize = true
+            obfuscate = false
+            version.set("7.6.1")
+        }
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$projectDir/detekt.yml")
+    source.setFrom(
+        "src/commonMain/kotlin",
+        "src/nativeMain/kotlin",
+        "src/commonTest/kotlin",
+        "src/androidMain/kotlin",
+        "src/desktopMain/kotlin",
+        "src/iosMain/kotlin",
+    )
+    basePath = projectDir.absolutePath
+    toolVersion = "1.23.8"
+}
+
+// Kotlin DSL
+tasks.withType<Detekt>().configureEach {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        sarif.required.set(true)
+        md.required.set(true)
     }
 }

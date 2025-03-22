@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.presets.Preset
 import com.erdodif.capsulate.project.OpenFile
@@ -28,7 +29,6 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import dev.zwander.kotlin.file.filekit.toKmpFile
-import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
@@ -78,7 +78,7 @@ class LandingPresenter(
             stringResource(Res.string.open_folder), "."
         ) {
             if (it != null) {
-                Napier.d { it.path.toString() }
+                Logger.d { it.path.toString() }
                 navigator.goTo(ProjectScreen(Project(it)))
             } else {
                 coroutineScope.launch {
@@ -91,7 +91,7 @@ class LandingPresenter(
             stringResource(Res.string.open_file)
         ) {
             if (it != null) {
-                Napier.d { it.path.toString() }
+                Logger.d { it.path.toString() }
                 val project = Project(OpenFile(it.toKmpFile()))
                 navigator.goTo(ProjectScreen(project))
             } else {
