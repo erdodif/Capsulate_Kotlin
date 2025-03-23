@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -53,6 +52,7 @@ import com.erdodif.capsulate.resources.step_forward
 import com.erdodif.capsulate.resources.step_over
 import com.erdodif.capsulate.resources.stop
 import com.erdodif.capsulate.utility.IconTextButton
+import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
 class DebugPage : Ui<State> {
@@ -79,7 +79,7 @@ class DebugPage : Ui<State> {
                     RoundedCornerShape(15.dp)
                 )
                 .padding(15.dp)
-            LazyRow(
+            ScrollableLazyRow(
                 state = state.strucListState,
                 modifier = Modifier.fillMaxSize(),
                 flingBehavior = rememberSnapFlingBehavior(state.strucListState)
@@ -119,7 +119,7 @@ class DebugPage : Ui<State> {
     private fun CallStack(trace: List<EvaluationContext.StackTraceEntry>) {
         val listState = rememberLazyListState()
         val textModifier = Modifier.padding(horizontal = 5.dp)
-        LazyRow(
+        ScrollableLazyRow(
             state = listState,
             flingBehavior = rememberSnapFlingBehavior(listState),
             modifier = Modifier.fillMaxWidth()

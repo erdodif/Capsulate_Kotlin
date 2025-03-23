@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
@@ -64,6 +65,7 @@ import com.erdodif.capsulate.utility.IconTextButton
 import com.erdodif.capsulate.utility.PreviewTheme
 import com.erdodif.capsulate.utility.StatementDrawer
 import com.erdodif.capsulate.utility.UnicodeOverlay
+import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
 import com.slack.circuit.overlay.ContentWithOverlays
@@ -135,58 +137,74 @@ class EditorPage : Ui<State> {
     @Composable
     private fun BottomBar(state: State, modifier: Modifier) {
         BottomAppBar {
-            val scrollState = rememberScrollState(0)
-            Row(
-                modifier.fillMaxWidth().horizontalScroll(scrollState),
+            ScrollableLazyRow(
+                modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    Modifier.padding(5.dp, 0.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(Res.string.code))
-                    Switch(
-                        state.showCode,
-                        { state.eventHandler(Event.ToggleCode) },
-                        Modifier.padding(5.dp, 1.dp)
-                    )
+                item {
+                    Row(
+                        Modifier.padding(5.dp, 0.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(Res.string.code))
+                        Switch(
+                            state.showCode,
+                            { state.eventHandler(Event.ToggleCode) },
+                            Modifier.padding(5.dp, 1.dp)
+                        )
+                    }
                 }
-                Row(
-                    Modifier.padding(5.dp, 0.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(Res.string.struk))
-                    Switch(
-                        state.showStructogram,
-                        { state.eventHandler(Event.ToggleStructogram) },
-                        Modifier.padding(5.dp, 1.dp)
-                    )
+                item {
+                    Row(
+                        Modifier.padding(5.dp, 0.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(Res.string.struk))
+                        Switch(
+                            state.showStructogram,
+                            { state.eventHandler(Event.ToggleStructogram) },
+                            Modifier.padding(5.dp, 1.dp)
+                        )
+                    }
                 }
-                Row(
-                    Modifier.padding(5.dp, 0.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(Res.string.drag))
-                    Switch(
-                        state.dragStatements,
-                        { state.eventHandler(Event.ToggleStatementDrag) },
-                        Modifier.padding(5.dp, 1.dp)
-                    )
+                item {
+                    Row(
+                        Modifier.padding(5.dp, 0.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(Res.string.drag))
+                        Switch(
+                            state.dragStatements,
+                            { state.eventHandler(Event.ToggleStatementDrag) },
+                            Modifier.padding(5.dp, 1.dp)
+                        )
+                    }
                 }
-                OutlinedIconButton(
-                    { state.eventHandler(Event.Close) },
-                    Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand)
-                ) {
-                    Icon(painterResource(Res.drawable.close), stringResource(Res.string.close))
+                item {
+                    OutlinedIconButton(
+                        { state.eventHandler(Event.Close) },
+                        Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand)
+                    ) {
+                        Icon(
+                            painterResource(Res.drawable.close),
+                            stringResource(Res.string.close)
+                        )
+                    }
                 }
-                IconTextButton(Res.drawable.format,Res.string.format) {
-                    state.eventHandler(Event.Format)
+                item {
+                    IconTextButton(Res.drawable.format, Res.string.format) {
+                        state.eventHandler(Event.Format)
+                    }
                 }
-                IconTextButton(Res.drawable.lightning,Res.string.run) {
-                    state.eventHandler(Event.Run)
+                item {
+                    IconTextButton(Res.drawable.lightning, Res.string.run) {
+                        state.eventHandler(Event.Run)
+                    }
                 }
-                IconTextButton(Res.drawable.save, Res.string.save_file) {
-                    state.eventHandler(Event.Save)
+                item {
+                    IconTextButton(Res.drawable.save, Res.string.save_file) {
+                        state.eventHandler(Event.Save)
+                    }
                 }
             }
         }

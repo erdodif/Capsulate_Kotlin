@@ -25,11 +25,12 @@ fun IconTextButton(
     icon: DrawableResource,
     text: StringResource,
     enabled: Boolean = true,
+    modifier: Modifier = IconButtonModifier,
     onClick: () -> Unit
 ) = OutlinedButton(
     onClick = onClick,
     enabled = enabled,
-    modifier = IconButtonModifier,
+    modifier = modifier,
     contentPadding = IconButtonPaddingValues
 ) {
     Row {

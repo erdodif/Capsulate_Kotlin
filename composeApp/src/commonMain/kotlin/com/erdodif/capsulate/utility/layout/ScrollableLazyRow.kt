@@ -1,5 +1,7 @@
 package com.erdodif.capsulate.utility.layout
 
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ fun ScrollableLazyRow(
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
+    flingBehavior: FlingBehavior = ScrollableDefaults.flingBehavior(),
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     content: LazyListScope.() -> Unit
 ) {
@@ -44,6 +47,7 @@ fun ScrollableLazyRow(
         contentPadding = contentPadding,
         horizontalArrangement = horizontalArrangement,
         verticalAlignment = verticalAlignment,
+        flingBehavior = flingBehavior,
         content = content
     )
 }

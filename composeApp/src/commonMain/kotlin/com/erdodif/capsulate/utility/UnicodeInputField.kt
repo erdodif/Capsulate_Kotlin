@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -66,6 +65,7 @@ import com.erdodif.capsulate.utility.chars.escapes
 import com.erdodif.capsulate.utility.chars.getFromLatexPrefix
 import com.erdodif.capsulate.utility.chars.getFromPrefix
 import com.erdodif.capsulate.utility.chars.latexEscapes
+import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.slack.circuit.overlay.Overlay
 import com.slack.circuit.overlay.OverlayNavigator
 import org.jetbrains.compose.resources.Font
@@ -129,7 +129,7 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
             containerColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
             bottomBar = {
                 Column(Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
-                    LazyRow(
+                    ScrollableLazyRow(
                         Modifier.fillMaxWidth()
                             .background(MaterialTheme.colorScheme.tertiaryContainer)
                             .padding(if (prefixes.isEmpty()) 0.dp else 10.dp)
