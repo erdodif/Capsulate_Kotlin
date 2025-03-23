@@ -18,7 +18,6 @@ import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.evaluation.PendingMethodEvaluation
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
-import com.erdodif.capsulate.pages.ui.structogram
 import com.erdodif.capsulate.structogram.ComposableFunction
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.screenPresenterFactory
@@ -27,7 +26,11 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -44,6 +47,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
         val seed: Int,
         val error: String?,
         val functionOngoing: Boolean,
+        val evalLoading: Boolean,
         val stackTrace: List<EvaluationContext.StackTraceEntry>,
         val eventHandler: (Event) -> Unit,
     ) : CircuitUiState
@@ -54,6 +58,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
         data object StepOver : Event
         data object Reset : Event
         data object ResetRenew : Event
+        data object Pause : Event
         data object Close : Event
     }
 }
@@ -89,6 +94,11 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
             }
         }
         val scope = rememberCoroutineScope()
+        var executionJob: Job? by remember { mutableStateOf(null) }
+        var evalLoading by remember { mutableStateOf(false) }
+        var stackTrace: List<EvaluationContext.StackTraceEntry> by remember {
+            mutableStateOf(debug.getCallStack(screen.structogram.name ?: "Program"))
+        }
         return State(
             screen.structogram,
             listState,
@@ -98,48 +108,80 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
             debug.seed,
             error,
             debug.functionOngoing != null,
-            debug.getCallStack(screen.structogram.name ?: "Program")
+            evalLoading,
+            stackTrace
         ) { event ->
             when (event) {
                 is Event.StepForward -> {
+                    executionJob?.cancel()
+                    executionJob = null
+                    evalLoading = false
                     if (debug.head != null || debug.functionOngoing != null) {
                         debug = debug.step()
                         step = step + 1
                         if (debug.error != null) {
                             error = debug.error
                         }
+                        stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
                     }
                 }
 
                 is Event.Reset -> {
+                    executionJob?.cancel()
+                    executionJob = null
+                    evalLoading = false
                     debug = EvaluationContext(
                         Environment.fromStructogram(screen.structogram, debug.env.seed),
                         EvalSequence(screen.structogram.program),
                         debug.seed
                     )
+                    stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
                     step = 0
                     error = null
                 }
+
                 is Event.ResetRenew -> {
+                    executionJob?.cancel()
+                    executionJob = null
+                    evalLoading = false
                     debug = EvaluationContext(
                         Environment.fromStructogram(screen.structogram),
                         EvalSequence(screen.structogram.program)
                     )
+                    stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
                     step = 0
                     error = null
                 }
 
                 is Event.StepOver -> {
-                    do {
-                        debug = debug.step()
-                        step = step + 1
-                    } while (debug.functionOngoing != null && debug.error == null)
-                    if (debug.error != null) {
-                        error = debug.error
+                    evalLoading = true
+                    executionJob?.cancel()
+                    executionJob = scope.launch(Dispatchers.IO) {
+                        do {
+                            debug = debug.step()
+                            step = step + 1
+                            if (debug.error != null) {
+                                error = debug.error
+                            }
+                            stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
+                            yield()
+                        } while (debug.functionOngoing != null && debug.error == null)
+                        evalLoading = false
                     }
                 }
 
-                is Event.Close -> navigator.pop()
+                is Event.Pause -> {
+                    executionJob?.cancel()
+                    executionJob = null
+                    evalLoading = false
+                }
+
+                is Event.Close -> {
+                    executionJob?.cancel()
+                    executionJob = null
+                    evalLoading = false
+                    navigator.pop()
+                }
             }
             scope.launch {
                 if (functionOngoing != null) {

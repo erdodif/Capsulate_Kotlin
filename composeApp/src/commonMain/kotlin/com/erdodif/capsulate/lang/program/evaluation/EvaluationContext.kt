@@ -102,7 +102,7 @@ data class EvaluationContext(
     fun getCallStack(label: String = "Program"): List<StackTraceEntry> = buildList {
         add(StackTraceEntry(label, env.parameters))
         functionOngoing?.apply { addAll(getCallStack()) }
-        (((head as? EvalSequence)?.statements?.first() ?: head) as? PendingMethodEvaluation)?.apply {
+        (((head as? EvalSequence)?.statements?.firstOrNull() ?: head) as? PendingMethodEvaluation)?.apply {
             addAll(context.getCallStack(method.pattern.toPatternString()))
         }
     }

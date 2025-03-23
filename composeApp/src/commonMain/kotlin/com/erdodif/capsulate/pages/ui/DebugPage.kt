@@ -44,12 +44,14 @@ import kotlin.uuid.ExperimentalUuidApi
 import com.erdodif.capsulate.pages.screen.DebugScreen.State
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.close
+import com.erdodif.capsulate.resources.pause
 import com.erdodif.capsulate.resources.play
 import com.erdodif.capsulate.resources.random
 import com.erdodif.capsulate.resources.reset
 import com.erdodif.capsulate.resources.reset_new_seed
 import com.erdodif.capsulate.resources.step_forward
 import com.erdodif.capsulate.resources.step_over
+import com.erdodif.capsulate.resources.stop
 import com.erdodif.capsulate.utility.IconTextButton
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
@@ -192,16 +194,25 @@ class DebugPage : Ui<State> {
                         }
                     }
                 } else {
-                    Text(state.activeStatement.toString())
                     Text(
                         "Steps taken: ${state.stepCount + 1}",
                         color = MaterialTheme.colorScheme.secondary
                     )
                     Row {
-                        IconTextButton(Res.drawable.play, Res.string.step_forward) {
-                            state.eventHandler(Event.StepForward)
+                        if (state.evalLoading) {
+                            IconTextButton(Res.drawable.pause, Res.string.stop) {
+                                state.eventHandler(Event.Pause)
+                            }
+                        } else {
+                            IconTextButton(Res.drawable.play, Res.string.step_forward) {
+                                state.eventHandler(Event.StepForward)
+                            }
                         }
-                        IconTextButton(Res.drawable.step_over, Res.string.step_over) {
+                        IconTextButton(
+                            Res.drawable.step_over,
+                            Res.string.step_over,
+                            enabled = !state.evalLoading
+                        ) {
                             state.eventHandler(Event.StepOver)
                         }
                         IconTextButton(Res.drawable.close, Res.string.close) {

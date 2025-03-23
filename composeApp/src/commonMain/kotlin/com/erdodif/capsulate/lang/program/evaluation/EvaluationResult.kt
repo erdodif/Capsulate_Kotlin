@@ -3,6 +3,7 @@ package com.erdodif.capsulate.lang.program.evaluation
 import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
@@ -34,26 +35,20 @@ class FunctionState<R : Value, T : Value>(
     val head: Statement?
         get() = context.head
 
-    private fun evaluateReturn(value: Either<T, PendingExpression<Value, T>>):
-            Either<T, EvaluationResult> = value.fold({ Left(it) }) {
-        val ongoing = PendingFunctionEvaluation(it) { ReturnEvaluation(it) }
-        context.entries.clear()
-        context.function = ongoing
-        Right(ongoing)
-    }
-
     @OptIn(ExperimentalUuidApi::class)
     @Suppress("UNCHECKED_CAST")
-    fun step(): Either<T, EvaluationResult> {
+    fun step(): Either<R, EvaluationResult> {
         if (context.head != null) {
             context.step()
         }
         return when {
-            context.returnValue != null -> evaluateReturn(onValue(env, context.returnValue as R))
+            context.returnValue != null -> Left(context.returnValue as R)
             context.error != null -> Right(AbortEvaluation.logged(context.error!!))
-            context.head == null -> Right(AbortEvaluation.logged("Function execution ended, no return statement found on the way.")).also {
-                context.error = it.value.reason
-            }
+            context.head == null -> Right(
+                AbortEvaluation.logged(
+                    "Function execution ended, no return statement found on the way."
+                )
+            ).also { context.error = it.value.reason }
 
             else -> Right(SingleStatement(context.head!!))
         }
@@ -100,8 +95,7 @@ data class PendingFunctionEvaluation<T : Value>(
     val expression: PendingExpression<Value, T>, val callback: Environment.(T) -> EvaluationResult
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
     val head: Statement?
-        get() = if (expression is FunctionState) expression.head
-        else expression.function.body.firstOrNull()
+        get() = if (expression is FunctionState) expression.head else Skip(MatchPos.ZERO)
 
     override fun evaluate(env: Environment): EvaluationResult = try {
         when (expression) {
@@ -111,9 +105,8 @@ data class PendingFunctionEvaluation<T : Value>(
                     else -> this.copy()
                 }
 
-                is Left -> expression.onValue(env, result.value).fold({
-                    callback(env, result.value)
-                }) { PendingFunctionEvaluation(it, callback) }
+                is Left -> expression.onValue(env, result.value).fold({ callback(env, it) })
+                { PendingFunctionEvaluation(it, callback) }
             }
 
             else -> expression.call.values.joinAll(env) {
@@ -149,7 +142,7 @@ data class PendingFunctionEvaluation<T : Value>(
 data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult,
     Statement(match = MatchPos.ZERO) {
     override val id: Uuid
-        get() = statements.first().id
+        get() = statements.firstOrNull()?.id ?: Uuid.NIL
 
     constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
