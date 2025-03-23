@@ -190,7 +190,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                                 screen.structogram.functions.indexOfFirst { it.function == functionOngoing?.function })
                 } else {
                     val active = (debug.head as? PendingMethodEvaluation)
-                        ?: (debug.head as? EvalSequence)?.statements?.first() as? PendingMethodEvaluation
+                        ?: (debug.head as? EvalSequence)?.statements?.firstOrNull() as? PendingMethodEvaluation
                     if (active != null) {
                         listState.animateScrollToItem(
                             screen.structogram.methods.indexOfFirst { it.method == active.method } + 1
