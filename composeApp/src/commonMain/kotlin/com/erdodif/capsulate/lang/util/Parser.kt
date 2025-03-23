@@ -9,9 +9,15 @@ import kotlin.math.min
 
 open class ParserState(
     val input: String,
-    val functions: MutableList<Function<Value>> = mutableListOf(),
-    val methods: MutableList<Method> = mutableListOf()
+    functions: List<Function<Value>> = listOf(),
+    methods: List<Method> = listOf()
 ) {
+    var allowReturn: Boolean = false
+        protected set
+
+    val functions: MutableList<Function<Value>> = functions.toMutableList()
+    val methods: MutableList<Method> = methods.toMutableList()
+
     var position: Int = 0
 
     /**
@@ -57,6 +63,13 @@ open class ParserState(
         }
     }
 
+    internal inline fun <T> withReturn(crossinline parser: Parser<T>): ParserResult<T> {
+        allowReturn = true
+        val result = parser()
+        allowReturn = false
+        return result
+    }
+
     operator fun get(start: Int, end: Int): String = input[start, end]
     operator fun get(match: MatchPos): String = input.get(match.start, match.end)
 }
@@ -80,6 +93,14 @@ sealed class ParserResult<out T>(open val state: ParserState) {
             is Pass -> Pass(lambda(state, value, match), state, match)
             is Fail -> this
         }
+
+    inline fun <R> fold(crossinline onPass: (Pass<T>) -> R, crossinline onFail: (Fail) -> R): R =
+        when (this) {
+            is Pass -> onPass(this)
+            is Fail -> onFail(this)
+        }
+
+    inline fun mapFail(crossinline onFail: (Fail) -> Fail): ParserResult<T> = fold({ it }, onFail)
 
     fun toEither(): Either<T, String> = when (this) {
         is Pass -> Left(this.value)

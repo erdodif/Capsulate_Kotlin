@@ -2,14 +2,16 @@ package com.erdodif.capsulate.lang.program.evaluation
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.type
+import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.Pattern
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.structogram.Structogram
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.random.Random
@@ -22,8 +24,8 @@ data class Parameter(val id: String, val type: Type, var value: Value) : KParcel
 }
 
 sealed interface Environment : KParcelable {
-    val functions: Map<String, Array<Statement>>
-    val methods: Map<Pattern, Array<Statement>>
+    val functions: Map<String, Function<Value>>
+    val methods: Map<Pattern, Method>
     val seed: Int
     val random: Random
     val parameters: ImmutableList<Parameter>
@@ -48,6 +50,14 @@ sealed interface Environment : KParcelable {
     companion object {
         val EMPTY: Env
             get() = Env(mapOf(), mapOf(), mutableListOf())
+
+        fun fromStructogram(structogram: Structogram, seed: Int = Random.Default.nextInt()): Env =
+            Env(
+                structogram.functions.map { it.function },
+                structogram.methods.map { it.method },
+                emptyList(),
+                seed
+            )
     }
 
     override fun toString(): String
@@ -65,9 +75,9 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
         get() = env.random
     override val seed: Int
         get() = env.seed
-    override val functions: Map<String, Array<Statement>>
+    override val functions: Map<String, Function<Value>>
         get() = env.functions
-    override val methods: Map<Pattern, Array<Statement>>
+    override val methods: Map<Pattern, Method>
         get() = env.methods
 
     private val newNames = renames.map { it.value to it.key }.associate { it }
@@ -121,11 +131,23 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
 
 @KParcelize
 data class Env(
-    override val functions: Map<String, Array<Statement>>,
-    override val methods: Map<Pattern, Array<Statement>>,
+    override val functions: Map<String, Function<Value>>,
+    override val methods: Map<Pattern, Method>,
     private val values: MutableList<Parameter>,
     override val seed: Int = Random.Default.nextInt(),
 ) : KParcelable, Environment {
+    constructor(
+        functions: List<Function<Value>> = emptyList(),
+        methods: List<Method> = emptyList(),
+        values: List<Parameter> = emptyList(),
+        seed: Int = Random.Default.nextInt()
+    ) : this(
+        functions.associateBy { it.name },
+        methods.associateBy { it.pattern },
+        values.toMutableList(),
+        seed
+    )
+
     override val random = Random(seed)
 
     override val parameters: ImmutableList<Parameter>

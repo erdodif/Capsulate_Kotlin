@@ -18,7 +18,7 @@ data class EvaluationContext(
     @KIgnoredOnParcel
     val random = Random(seed)
     val entries: ArrayList<Statement> = arrayListOf()
-    private var function: PendingFunctionEvaluation<*>? = null
+    internal var function: PendingFunctionEvaluation<*>? = null
     val functionOngoing: PendingFunctionEvaluation<*>?
         get() = function ?: (currentStatement as? PendingMethodEvaluation)?.context?.functionOngoing
     private var atomicOngoing: EvaluationContext? = null
@@ -102,7 +102,7 @@ data class EvaluationContext(
     fun getCallStack(label: String = "Program"): List<StackTraceEntry> = buildList {
         add(StackTraceEntry(label, env.parameters))
         functionOngoing?.apply { addAll(getCallStack()) }
-        (((head as? EvalSequence)?.statements?.first() ?: head) as? PendingMethodEvaluation)?.apply {
+        (((head as? EvalSequence)?.statements?.firstOrNull() ?: head) as? PendingMethodEvaluation)?.apply {
             addAll(context.getCallStack(method.pattern.toPatternString()))
         }
     }

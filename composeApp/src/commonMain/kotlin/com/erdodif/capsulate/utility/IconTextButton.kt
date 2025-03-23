@@ -17,16 +17,23 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+val IconButtonModifier = Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand)
+val IconButtonPaddingValues = PaddingValues(8.dp, 2.dp)
 
 @Composable
-fun IconTextButton(icon: DrawableResource, text: StringResource, onClick: () -> Unit) =
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
-        contentPadding = PaddingValues(8.dp, 2.dp)
-    ) {
-        Row {
-            Icon(painterResource(icon), stringResource(text), Modifier.size(20.dp))
-            Text(stringResource(text))
-        }
+fun IconTextButton(
+    icon: DrawableResource,
+    text: StringResource,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) = OutlinedButton(
+    onClick = onClick,
+    enabled = enabled,
+    modifier = IconButtonModifier,
+    contentPadding = IconButtonPaddingValues
+) {
+    Row {
+        Icon(painterResource(icon), stringResource(text), Modifier.size(20.dp))
+        Text(stringResource(text))
     }
+}

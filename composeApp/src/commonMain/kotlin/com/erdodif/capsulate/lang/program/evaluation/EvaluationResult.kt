@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.program.evaluation
 
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Skip
@@ -21,14 +22,13 @@ import kotlin.uuid.Uuid
 sealed interface EvaluationResult : KParcelable
 
 class FunctionState<R : Value, T : Value>(
-    val env: Environment,
-    exp: PendingExpression<R, T>
-) : PendingExpression<R, T>(exp.call, exp.onValue) {
+    val env: Environment, exp: PendingExpression<R, T>
+) : PendingExpression<R, T>(exp.call, exp.function, exp.onValue) {
     val context = EvaluationContext(
-        env, when (call.function.body.size) {
+        env, when (function.body.size) {
             0 -> null
-            1 -> call.function.body[0]
-            else -> EvalSequence(call.function.body)
+            1 -> function.body[0]
+            else -> EvalSequence(function.body)
         }
     )
 
@@ -37,27 +37,26 @@ class FunctionState<R : Value, T : Value>(
 
     @OptIn(ExperimentalUuidApi::class)
     @Suppress("UNCHECKED_CAST")
-    fun step(): Either<T, EvaluationResult> {
-        if (context.returnValue != null) {
-            return Left(context.returnValue as T)
-        }
+    fun step(): Either<R, EvaluationResult> {
         if (context.head != null) {
             context.step()
-        } else {
-            context.error = "Function execution ended, no return statement found on the way."
         }
         return when {
-            context.returnValue != null -> onValue(env, context.returnValue as R)
-                .fold({ Left(it) }) { Right(PendingFunctionEvaluation(it) { ReturnEvaluation(it) }) }
+            context.returnValue != null -> Left(context.returnValue as R)
+            context.error != null -> Right(AbortEvaluation.logged(context.error!!))
+            context.head == null -> Right(
+                AbortEvaluation.logged(
+                    "Function execution ended, no return statement found on the way."
+                )
+            ).also { context.error = it.value.reason }
 
-            context.error != null -> Right(AbortEvaluation(context.error!!))
             else -> Right(SingleStatement(context.head!!))
         }
     }
 
     override fun toString(): String {
         return "FuncState(" +
-                "calls on: ${call.function.name}, " +
+                "calls on: ${call.name}, " +
                 "error: ${context.error}, " +
                 "value: ${context.returnValue}, " +
                 "head: ${context.head})"
@@ -66,8 +65,7 @@ class FunctionState<R : Value, T : Value>(
 
 @KParcelize
 data class PendingMethodEvaluation(
-    val method: Method,
-    val context: EvaluationContext
+    val method: Method, val context: EvaluationContext
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
     @OptIn(ExperimentalUuidApi::class)
     override val id: Uuid
@@ -75,8 +73,10 @@ data class PendingMethodEvaluation(
     val head: Statement?
         get() = context.head
 
-    constructor(method: Method, env: ProxyEnv) :
-            this(method, EvaluationContext(env, EvalSequence(method.program), env.seed))
+    constructor(method: Method, env: ProxyEnv) : this(
+        method,
+        EvaluationContext(env, EvalSequence(method.program), env.seed)
+    )
 
     override fun evaluate(env: Environment): EvaluationResult {
         context.step()
@@ -92,8 +92,7 @@ data class PendingMethodEvaluation(
 
 @KParcelize
 data class PendingFunctionEvaluation<T : Value>(
-    val expression: PendingExpression<Value, T>,
-    val callback: Environment.(T) -> EvaluationResult
+    val expression: PendingExpression<Value, T>, val callback: Environment.(T) -> EvaluationResult
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
     val head: Statement?
         get() = if (expression is FunctionState) expression.head else Skip(MatchPos.ZERO)
@@ -106,20 +105,18 @@ data class PendingFunctionEvaluation<T : Value>(
                     else -> this.copy()
                 }
 
-                is Left -> expression.onValue(env, result.value).fold({
-                    callback(env, result.value)
-                }) { PendingFunctionEvaluation(it, callback) }
+                is Left -> expression.onValue(env, result.value).fold({ callback(env, it) })
+                { PendingFunctionEvaluation(it, callback) }
             }
 
             else -> expression.call.values.joinAll(env) {
                 val newEnv = Env(
                     env.functions,
                     env.methods,
-                    expression.call.function.parameters.zip(it)
+                    expression.function.parameters.zip(it)
                         .map { (param, value) -> Parameter(param.id, value.type(), value) }
                         .toMutableList(),
-                    env.seed
-                )
+                    env.seed)
                 PendingFunctionEvaluation(FunctionState(newEnv, expression), callback)
             }
         }
@@ -136,7 +133,7 @@ data class PendingFunctionEvaluation<T : Value>(
     override fun Formatting.format(state: ParserState): Int = error("formatted function: $this")
 
     fun getCallStack(): List<EvaluationContext.StackTraceEntry> =
-        if (expression is FunctionState) expression.context.getCallStack(expression.call.function.name)
+        if (expression is FunctionState) expression.context.getCallStack(expression.call.name)
         else emptyList()
 }
 
@@ -145,12 +142,13 @@ data class PendingFunctionEvaluation<T : Value>(
 data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResult,
     Statement(match = MatchPos.ZERO) {
     override val id: Uuid
-        get() = statements.first().id
+        get() = statements.firstOrNull()?.id ?: Uuid.NIL
 
     constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
     override fun evaluate(env: Environment): EvaluationResult {
-        val result = statements.removeAt(0).evaluate(env) // https://youtrack.jetbrains.com/issue/KT-71375/Prevent-Kotlins-removeFirst-and-removeLast-from-causing-crashes-on-Android-14-and-below-after-upgrading-to-Android-API-Level-35#:~:text=removeLast()%20extension%20functions.,running%20Android%2014%20or%20lower
+        val result = statements.removeAt(0)
+            .evaluate(env) // https://youtrack.jetbrains.com/issue/KT-71375/Prevent-Kotlins-removeFirst-and-removeLast-from-causing-crashes-on-Android-14-and-below-after-upgrading-to-Android-API-Level-35#:~:text=removeLast()%20extension%20functions.,running%20Android%2014%20or%20lower
         return if (statements.isEmpty()) {
             result
         } else {
@@ -201,7 +199,12 @@ data object Finished : EvaluationResult
 data class ReturnEvaluation<T : Value>(val value: T) : EvaluationResult
 
 @KParcelize
-data class AbortEvaluation(val reason: String = "") : EvaluationResult
+data class AbortEvaluation(val reason: String = "") : EvaluationResult {
+    companion object {
+        fun logged(reason: String): AbortEvaluation =
+            AbortEvaluation(reason).apply { Logger.e { reason } }
+    }
+}
 
 @KParcelize
 data class AtomicEvaluation(val statements: List<Statement>) : EvaluationResult
