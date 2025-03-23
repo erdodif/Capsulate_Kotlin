@@ -21,12 +21,14 @@ import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
@@ -93,16 +95,32 @@ class FunctionCall<T : Value>(
         }.dropLast(2) + ")"
 }
 
-val sFunction: Parser<Function<Value>> = (delimit(
-    right(_keyword("function"), _nonKeyword) + middle(
-        _char('('),
-        optional(delimited(pVariable, _char(','))),
-        _char(')')
-    )
-) + delimit(statementOrBlock)) / { name, params, body ->
-    val function = Function<Value>(name, params ?: emptyList(), body)
-    functions.add(function)
-    function
+val sFunction: Parser<Function<Value>> = {
+    delimit(
+        right(_keyword("function"), _nonKeyword) + middle(
+            _char('('),
+            optional(delimited(pVariable, _char(','))),
+            _char(')')
+        )
+    )().fold({ (result, params) ->
+        val (name, params) = result
+        val tmpEnv = ParserState(
+            this.input,
+            this.functions + Function(name, params ?: emptyList(), listOf()),
+            this.methods
+        ).also { it.position = this.position }
+        val blocks = (delimit { statementOrBlock(tmpEnv) }())
+        position = tmpEnv.position
+        when (blocks) {
+            is Pass -> {
+                val function = Function<Value>(name, params ?: emptyList(), blocks.value)
+                functions.add(function)
+                Pass(function, tmpEnv, MatchPos.ZERO)
+            }
+
+            is Fail -> blocks
+        }
+    }) { it }
 }
 
 

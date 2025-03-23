@@ -45,18 +45,20 @@ value class VCharacter(val value: Char) : Value{
     override fun toString(): String = value.toString()
 }   // ℂ
 
-enum class Type(val label: String) {
-    NAT("ℕ"),
-    WHOLE("ℤ"),
-    STRING("𝕊"),
-    BOOL("𝔹"),
-    CHAR("ℂ"),
+enum class Type(vararg val labels: String) {
+    NAT("ℕ", "Nat"),
+    WHOLE("ℤ", "Whole", "Integer"),
+    STRING("𝕊", "String"),
+    BOOL("𝔹", "Boolean"),
+    CHAR("ℂ", "Char"),
     FILE("File"),
     ARRAY("Array"),
     STREAM("Stream"),
     TUPLE("Pair"),
     SET("Set"),
-    NEVER("⊥"),
+    NEVER("⊥", "Never");
+    val label : String
+        get() = labels.first()
 }
 
 fun Value.type(): Type = when (this) {
