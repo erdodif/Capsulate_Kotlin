@@ -168,7 +168,16 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Pkg)
             packageName = "com.erdodif.capsulate"
             packageVersion = "1.0.0"
-            linux { modules("jdk.security.auth") }
+            macOS {
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/logo/logo.icns"))
+            }
+            windows {
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/logo/logo.ico"))
+            }
+            linux {
+                modules("jdk.security.auth")
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/logo/logo.png"))
+            }
         }
         buildTypes.release.proguard {
             configurationFiles.from("proguard-desktop-rules.pro")
