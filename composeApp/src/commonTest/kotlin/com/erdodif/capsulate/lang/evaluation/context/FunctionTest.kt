@@ -32,14 +32,10 @@ class FunctionTest {
     fun `niladic function call`() {
         val function =
             Function<Value>("x", listOf(), listOf(Return(IntLit(0, pos), match = pos)))
-        val underTest = FunctionCall(function, listOf(), pos)
+        val underTest = FunctionCall<Value>("x", listOf(), pos)
         var context =
             EvaluationContext(
-                Env(
-                    mapOf("x" to function.body.toTypedArray()),
-                    mapOf(),
-                    mutableListOf()
-                ), Expression(underTest, pos)
+                Env(listOf(function)), Expression(underTest, pos)
             )
         context.step()
         assertNotNull(context.functionOngoing)
@@ -53,15 +49,8 @@ class FunctionTest {
     fun `niladic function assign`() {
         val function =
             Function<Value>("x", listOf(), listOf(Return(IntLit(0, pos), match = pos)))
-        val underTest = FunctionCall(function, listOf(), pos)
-        var context =
-            EvaluationContext(
-                Env(
-                    mapOf("x" to function.body.toTypedArray()),
-                    mapOf(),
-                    mutableListOf()
-                ), Assign("a", underTest, pos)
-            )
+        val underTest = FunctionCall<Value>("x", listOf(), pos)
+        var context = EvaluationContext(Env(listOf(function)), Assign("a", underTest, pos))
         context.step()
         assertNotNull(context.functionOngoing)
         context.step()
@@ -78,11 +67,7 @@ class FunctionTest {
         val underTest = FunctionCall(function, listOf(), pos)
         var context =
             EvaluationContext(
-                Env(
-                    mapOf("x" to function.body.toTypedArray()),
-                    mapOf(),
-                    mutableListOf()
-                ),
+                Env(listOf(function as Function<Value>)),
                 Assign(
                     "a",
                     BinaryCalculation<VNum, VNum>(underTest, IntLit(3, pos) as Exp<VNum>, Add),
@@ -108,17 +93,12 @@ class FunctionTest {
         val underTest2 = FunctionCall(constant2, listOf(), pos)
         var context =
             EvaluationContext(
-                Env(
-                    mapOf(
-                        "x" to constant1.body.toTypedArray(),
-                        "y" to constant2.body.toTypedArray()
-                    ),
-                    mapOf(),
-                    mutableListOf()
-                ), Assign("a", BinaryCalculation<VNum, VNum>(underTest1, underTest2, Add), pos)
+                Env(listOf(constant1, constant2)),
+                Assign("a", BinaryCalculation<VNum, VNum>(underTest1, underTest2, Add), pos)
             )
         context.step()
         assertNotNull(context.functionOngoing)
+        context.step()
         context.step()
         context.step()
         context.step()
@@ -149,13 +129,7 @@ class FunctionTest {
         val underTest =
             FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
-            EvaluationContext(
-                Env(
-                    mapOf("f" to function.body.toTypedArray(), "x" to constant.body.toTypedArray()),
-                    mapOf(),
-                    mutableListOf()
-                ), Assign("a", underTest, pos)
-            )
+            EvaluationContext(Env(listOf(function, constant)), Assign("a", underTest, pos))
         context.step()
         assertNotNull(context.functionOngoing)
         context.step()
@@ -187,13 +161,7 @@ class FunctionTest {
         val underTest =
             FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
-            EvaluationContext(
-                Env(
-                    mapOf("f" to function.body.toTypedArray(), "x" to constant.body.toTypedArray()),
-                    mapOf(),
-                    mutableListOf()
-                ), Assign("a", underTest, pos)
-            )
+            EvaluationContext(Env(listOf(function, constant)), Assign("a", underTest, pos))
         context.step()
         assertNotNull(context.functionOngoing)
         context.step()
@@ -215,17 +183,10 @@ class FunctionTest {
             Function<VNum>("y", listOf(), listOf(Return(IntLit(3, pos), match = pos)))
         val underTest2 = FunctionCall(constant2, listOf(), pos)
         val underTest3 = FunctionCall(constant3, listOf(), pos)
-        val context =
-            EvaluationContext(
-                Env(
-                    mapOf(
-                        "x" to constant2.body.toTypedArray(),
-                        "y" to constant3.body.toTypedArray()
-                    ),
-                    mapOf(),
-                    mutableListOf()
-                ), Assign("a", BinaryCalculation(underTest2, underTest3, Add), pos)
-            )
+        val context = EvaluationContext(
+            Env(listOf(constant2, constant3)),
+            Assign("a", BinaryCalculation(underTest2, underTest3, Add), pos)
+        )
         context.step()
         assertNotNull(context.functionOngoing)
         context.step()

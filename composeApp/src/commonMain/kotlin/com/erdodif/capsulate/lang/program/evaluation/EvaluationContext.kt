@@ -18,7 +18,7 @@ data class EvaluationContext(
     @KIgnoredOnParcel
     val random = Random(seed)
     val entries: ArrayList<Statement> = arrayListOf()
-    private var function: PendingFunctionEvaluation<*>? = null
+    internal var function: PendingFunctionEvaluation<*>? = null
     val functionOngoing: PendingFunctionEvaluation<*>?
         get() = function ?: (currentStatement as? PendingMethodEvaluation)?.context?.functionOngoing
     private var atomicOngoing: EvaluationContext? = null

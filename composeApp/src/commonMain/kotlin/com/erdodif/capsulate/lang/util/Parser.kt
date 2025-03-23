@@ -12,6 +12,8 @@ open class ParserState(
     functions: List<Function<Value>> = listOf(),
     methods: List<Method> = listOf()
 ) {
+    var allowReturn: Boolean = false
+        protected set
 
     val functions: MutableList<Function<Value>> = functions.toMutableList()
     val methods: MutableList<Method> = methods.toMutableList()
@@ -59,6 +61,13 @@ open class ParserState(
         } else {
             append("\"<")
         }
+    }
+
+    internal inline fun <T> withReturn(crossinline parser: Parser<T>): ParserResult<T> {
+        allowReturn = true
+        val result = parser()
+        allowReturn = false
+        return result
     }
 
     operator fun get(start: Int, end: Int): String = input[start, end]

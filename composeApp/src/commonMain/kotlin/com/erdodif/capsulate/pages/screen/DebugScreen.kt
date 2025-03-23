@@ -70,7 +70,10 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         var step by remember { mutableStateOf(0) }
         var debug by remember {
             mutableStateOf(
-                EvaluationContext(Environment.EMPTY, EvalSequence(screen.structogram.program))
+                EvaluationContext(
+                    Environment.fromStructogram(screen.structogram),
+                    EvalSequence(screen.structogram.program)
+                )
             )
         }
         var error: String? by remember { mutableStateOf(null) }
@@ -81,7 +84,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         val functionOngoing: ComposableFunction? by remember(step) {
             derivedStateOf {
                 screen.structogram.functions.firstOrNull {
-                    it.function == debug.functionOngoing?.expression?.call?.function
+                    it.function == debug.functionOngoing?.expression?.function
                 }
             }
         }
@@ -110,17 +113,16 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
 
                 is Event.Reset -> {
                     debug = EvaluationContext(
-                        Environment.EMPTY,
+                        Environment.fromStructogram(screen.structogram, debug.env.seed),
                         EvalSequence(screen.structogram.program),
                         debug.seed
                     )
                     step = 0
                     error = null
                 }
-
                 is Event.ResetRenew -> {
                     debug = EvaluationContext(
-                        Environment.EMPTY,
+                        Environment.fromStructogram(screen.structogram),
                         EvalSequence(screen.structogram.program)
                     )
                     step = 0

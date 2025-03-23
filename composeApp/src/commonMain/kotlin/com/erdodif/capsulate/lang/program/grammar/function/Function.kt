@@ -20,12 +20,18 @@ import com.erdodif.capsulate.lang.program.grammar.statementOrBlock
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
+import com.erdodif.capsulate.lang.program.grammar.blockOrParallel
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
+import com.erdodif.capsulate.lang.program.grammar.newLined
+import com.erdodif.capsulate.lang.program.grammar.nonParallel
+import com.erdodif.capsulate.lang.program.grammar.orEither
+import com.erdodif.capsulate.lang.program.grammar.sAbort
+import com.erdodif.capsulate.lang.program.grammar.some
+import com.erdodif.capsulate.lang.program.grammar.statement
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
-import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
@@ -33,13 +39,14 @@ import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
+import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @KParcelize
-data class Function<T>(
+data class Function<out T : Value>(
     val name: String,
     val parameters: List<Variable>,
     val body: List<Statement>,
@@ -77,39 +84,48 @@ data class Function<T>(
 }
 
 @KParcelize
-class FunctionCall<T : Value>(
-    val function: Function<T>,
+data class FunctionCall<T : Value>(
+    val name: String,
     val values: List<Exp<Value>>,
     val match: MatchPos
 ) : Exp<T> {
-    @Suppress("UNCHECKED_CAST")
-    override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> =
-        Right(PendingExpression(this as FunctionCall<Value>) { Left(it as T) })
+    constructor(function: Function<T>, values: List<Exp<Value>>, match: MatchPos) :
+            this(function.name, values, match)
 
-    override fun toString(state: ParserState, parentStrength: Int): String =
-        "${function.name}(" + buildString {
-            values.forEach {
-                append(it.toString(state))
-                append(", ")
-            }
-        }.dropLast(2) + ")"
+    @Suppress("UNCHECKED_CAST")
+    override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> = Right(
+        PendingExpression(this as FunctionCall<Value>, context.functions[name]!!) { Left(it as T) })
+
+    override fun toString(state: ParserState, parentStrength: Int) =
+        values.joinToString(
+            prefix = "$name(",
+            separator = ", ",
+            postfix = ")"
+        ) { it.toString(state) }
 }
 
 val sFunction: Parser<Function<Value>> = {
     delimit(
         right(_keyword("function"), _nonKeyword) + middle(
-            _char('('),
-            optional(delimited(pVariable, _char(','))),
-            _char(')')
+            _char('('), optional(delimited(pVariable, _char(','))), _char(')')
         )
-    )().fold({ (result, params) ->
+    )().fold({ (result, state) ->
         val (name, params) = result
         val tmpEnv = ParserState(
             this.input,
             this.functions + Function(name, params ?: emptyList(), listOf()),
             this.methods
-        ).also { it.position = this.position }
-        val blocks = (delimit { statementOrBlock(tmpEnv) }())
+        ).also { it.position = state.position }
+        val blocks = tmpEnv.withReturn(
+            delimit(
+                orEither(
+                    middle(
+                        newLined(_char('{')),
+                        some(delimit(orEither(sReturn, statement))),
+                        newLined(_char('}'))
+                    ), orEither(sReturn, sAbort) / { arrayListOf(it) })
+            )
+        )
         position = tmpEnv.position
         when (blocks) {
             is Pass -> {
@@ -140,9 +156,10 @@ data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
         print("return " + value.toString(state))
 }
 
-val sReturn: Parser<Statement> = right(_keyword("return"), pExp) * { value, pos ->
-    Return<Value>(value, match = pos)
-}
+val sReturn: Parser<Statement> = right(_keyword("return"), pExp)[{ (value, state, pos) ->
+    if (allowReturn) Pass(Return<Value>(value, match = pos), state, pos)
+    else Fail("Return is only allowed in a function block!", state)
+}]
 
 val sFunctionCall: Parser<Exp<Value>> = {
     (_nonKeyword + middle(_char('('), optional(delimited(pExp, _char(','))), _char(')')))[{
@@ -150,7 +167,7 @@ val sFunctionCall: Parser<Exp<Value>> = {
         val function =
             functions.firstOrNull {
                 it.name == name && it.parameters.count() == (params?.count() ?: 0)
-            }
+            }?.name
         if (function == null) {
             fail("Can't find any function named '$name'")
         } else {

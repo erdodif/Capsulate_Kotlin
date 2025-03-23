@@ -38,14 +38,8 @@ class PendingTest {
         )
         val exp = FunctionState(
             Environment.EMPTY, PendingExpression<Value, Value>(
-                FunctionCall<Value>(
-                    function,
-                    listOf(),
-                    MatchPos.ZERO
-                )
-            ) {
-                Left(TestValue)
-            })
+                FunctionCall(function, listOf(), MatchPos.ZERO), function
+            ) { Left(TestValue) })
         exp.step()
         assertNull(exp.context.error)
         assertNull(exp.context.functionOngoing)
@@ -65,14 +59,8 @@ class PendingTest {
         )
         val exp = FunctionState(
             Environment.EMPTY, PendingExpression<Value, Value>(
-                FunctionCall<Value>(
-                    function,
-                    listOf(),
-                    MatchPos.ZERO
-                )
-            ) {
-                Left(TestValue)
-            })
+                FunctionCall<Value>(function, listOf(), MatchPos.ZERO), function
+            ) { Left(TestValue) })
         exp.step()
         assertNull(exp.context.functionOngoing)
         assertNull(exp.context.head)
@@ -89,14 +77,8 @@ class PendingTest {
         )
         val exp = FunctionState(
             Environment.EMPTY, PendingExpression<Value, Value>(
-                FunctionCall<Value>(
-                    function,
-                    listOf(),
-                    MatchPos.ZERO
-                )
-            ) {
-                Left(TestValue)
-            })
+                FunctionCall<Value>(function, listOf(), MatchPos.ZERO), function
+            ) { Left(TestValue) })
         exp.step()
         assertNull(exp.context.functionOngoing)
         assertNull(exp.context.head)

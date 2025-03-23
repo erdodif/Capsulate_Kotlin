@@ -20,6 +20,7 @@ import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.sFunctionCall
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -42,11 +43,12 @@ import kotlinx.serialization.Serializable
 @KParcelize
 open class PendingExpression<R : Value, T : Value>(
     open val call: FunctionCall<R>,
+    open val function: Function<R>,
     open val onValue: @Serializable Environment.(R) -> Either<T, PendingExpression<Value, T>>
 ) : KParcelable {
 
     fun <S : Value> map(transform: Environment.(T) -> S): PendingExpression<R, S> =
-        PendingExpression(call) {
+        PendingExpression(call, function) {
             when (val result = onValue(it)) {
                 is Left -> Left(transform(this, result.value))
                 is Right -> Right(result.value.map(transform))
@@ -55,7 +57,7 @@ open class PendingExpression<R : Value, T : Value>(
 
     fun <S : Value> addTransform(
         transform: Environment.(T) -> Either<S, PendingExpression<Value, S>>
-    ): PendingExpression<R, S> = PendingExpression(call) _env@{
+    ): PendingExpression<R, S> = PendingExpression(call, function) _env@{
         when (val result = onValue(it)) {
             is Left -> transform(this, result.value)
             is Right -> Right(result.value.addTransform(transform))
