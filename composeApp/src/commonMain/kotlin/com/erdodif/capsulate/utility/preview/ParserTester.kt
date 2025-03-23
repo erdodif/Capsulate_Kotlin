@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -81,6 +80,7 @@ import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.pLineBreak
 import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.PreviewTheme
+import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -168,7 +168,7 @@ fun ParserTester() = PreviewTheme {
             BasicTextField(filter, { filter = it }, Modifier.fillMaxWidth())
         }
         HorizontalDivider()
-        LazyRow {
+        ScrollableLazyRow {
             val stream = tokens.passOrNull()?.value
             if (stream != null)
                 items(stream) { token: Token ->
