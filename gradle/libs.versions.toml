@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.0"
+agp = "8.9.1"
 android-compileSdk = "35"
 android-minSdk = "27"
 android-targetSdk = "35"
@@ -25,6 +25,7 @@ okio = "3.10.2"
 adaptive = "1.0.1"
 proguardGradle = "7.6.1"
 slf4j = "2.0.16"
+jetbrainsKotlinJvm = "2.1.10"
 
 [libraries]
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
@@ -65,3 +66,4 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }

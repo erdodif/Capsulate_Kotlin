@@ -2,10 +2,6 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.util.Either
-import com.erdodif.capsulate.lang.util.Left
-import com.erdodif.capsulate.lang.util.Right
-import com.erdodif.capsulate.lang.util.fold
 import kotlin.jvm.JvmInline
 
 interface Value : KParcelable {
@@ -44,27 +40,22 @@ value class VBool(val value: Boolean) : Value {
     override fun toString(): String = value.toString()
 }
 
-/**
- * Value to
- */
+@KParcelize
 data object UNSET : Value
 
 @KParcelize
 data class VArray<T : Value>(
-    private val value: Array<Either<T, UNSET>>,
+    private val value: Array<T?>,
     val type: Type
 ) : Value {
-    constructor(size: Int, type: Type) : this(Array(size) { Right(UNSET) }, type)
+    constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
 
-    fun unsafeGet(index: Int): T =
-        value[index].fold(
-            { it },
-            { throw IllegalStateException("Value uninitialized at [$index]") })
+    fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
 
-    operator fun get(index: Int): Value = value[index].fold({ it }, { it })
+    operator fun get(index: Int): Value = value[index] ?: UNSET
 
     operator fun set(index: Int, value: T) {
-        this.value[index] = Left(value)
+        this.value[index] = value
     }
 
     override fun equals(other: Any?): Boolean = when {
