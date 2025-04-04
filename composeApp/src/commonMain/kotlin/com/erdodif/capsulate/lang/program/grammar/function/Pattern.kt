@@ -44,7 +44,7 @@ data class Pattern(
 
     override fun toString(): String = buildString {
         prefix?.split("_")?.map { append(it) }
-        if(variables.isNotEmpty()) append(" ")
+        if (variables.isNotEmpty()) append(" ")
         delimiters.forEachIndexed { i, d -> append("${variables[i].id} $d ") }
         if (variables.isNotEmpty()) {
             append(variables.last().id)
@@ -58,16 +58,26 @@ data class Pattern(
         variables.zip(delimiters).map { (variable, delim) ->
             append('$')
             append(variable.toString(state))
+            if (delim.isEmpty() || isWordChar(delim.first())) {
+                append(' ')
+            }
             append(delim)
+            append(' ')
         }
         if (variables.count() > delimiters.count()) {
             append('$')
             append(variables.last().toString(state))
         }
         if (variables.count() < delimiters.count()) {
-            append(delimiters.last().toString())
+            val last = delimiters.last()
+            if (last.isEmpty() || isWordChar(last.first())) {
+                append(' ')
+            }
+            append(last.toString())
         }
-        append(postfix ?: "")
+        if (postfix != null) {
+            append(" $postfix")
+        }
     }
 }
 
