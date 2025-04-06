@@ -94,6 +94,29 @@ jobs:
           name: ${{env.APP_NAME}}-${{github.ref_name}}-android
           path: composeApp/build/outputs/apk/release
           overwrite: true
+  release-cli:
+    name: Build JVM CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: 21
+          cache: 'gradle'
+      - name: "Setup | Gradle"
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build CLI tool
+        shell: bash
+        run: ./gradlew :server:distTar
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.APP_NAME}}-${{github.ref_name}}-cli
+          path: server/build/distributions
+          overwrite: true
   release-finalize:
     name: Create Release
     runs-on: ubuntu-latest
