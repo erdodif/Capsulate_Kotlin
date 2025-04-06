@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -15,16 +16,13 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(21)
-    jvm("desktop")
-
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-
+    
     listOf(
         iosX64(),
         iosArm64(),
@@ -35,10 +33,23 @@ kotlin {
             isStatic = true
         }
     }
-
+    
+    jvm("desktop")
+    
     sourceSets {
         val desktopMain by getting
-
+        
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlin.test.junit)
+            implementation(libs.material)
+        }
+        desktopMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.kotlin.test.junit)
+        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -72,19 +83,11 @@ kotlin {
             implementation(libs.kotlinx.io.core)
             implementation(libs.slf4j.api)
             implementation(libs.slf4j.simple)
-        }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.kotlin.test.junit)
-        }
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.kotlin.test.junit)
-            implementation(libs.material)
-        }
-        iosMain.dependencies {
+            // -- Modules --
+            implementation(projects.platform)
+            implementation(projects.components)
+            implementation(projects.language)
+            implementation(projects.struktogram)
         }
         commonTest.dependencies {
             implementation(kotlin("test-common"))
@@ -125,21 +128,6 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    buildFeatures {
-        compose = true
-    }
-    dependencies {
-        debugImplementation(compose.uiTooling)
-    }
-    buildTypes {
-        getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -150,6 +138,13 @@ android {
 
             signingConfig = signingConfigs.getByName("debug") // Add release cert on PlayStore
         }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+    dependencies {
+        debugImplementation(compose.uiTooling)
     }
 }
 
@@ -165,22 +160,22 @@ compose.desktop {
         mainClass = "com.erdodif.capsulate.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Pkg)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.erdodif.capsulate"
             packageVersion = "1.0.0"
             macOS {
-                iconFile.set(project.file("src/commonMain/composeResources/drawable/logo/logo.icns"))
+                iconFile.set(project.file("$rootDir/img/logo/logo.icns"))
             }
             windows {
-                iconFile.set(project.file("src/commonMain/composeResources/drawable/logo/logo.ico"))
+                iconFile.set(project.file("$rootDir/img/logo/logo.ico"))
             }
             linux {
                 modules("jdk.security.auth")
-                iconFile.set(project.file("src/commonMain/composeResources/drawable/logo/logo.png"))
+                iconFile.set(project.file("$rootDir/img/logo/logo.png"))
             }
         }
         buildTypes.release.proguard {
-            configurationFiles.from("proguard-desktop-rules.pro")
+            configurationFiles.from("$rootDir/proguard-desktop-rules.pro")
             joinOutputJars = true
             optimize = true
             obfuscate = false
@@ -192,7 +187,7 @@ compose.desktop {
 detekt {
     buildUponDefaultConfig = true
     allRules = false
-    config.setFrom("$projectDir/detekt.yml")
+    config.setFrom("$rootDir/detekt.yml")
     source.setFrom(
         "src/commonMain/kotlin",
         "src/nativeMain/kotlin",

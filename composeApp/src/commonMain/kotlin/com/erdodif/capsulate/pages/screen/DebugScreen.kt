@@ -76,7 +76,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
         var debug by remember {
             mutableStateOf(
                 EvaluationContext(
-                    Environment.fromStructogram(screen.structogram),
+                    screen.structogram.toEnv(),
                     EvalSequence(screen.structogram.program)
                 )
             )
@@ -131,7 +131,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     executionJob = null
                     evalLoading = false
                     debug = EvaluationContext(
-                        Environment.fromStructogram(screen.structogram, debug.env.seed),
+                        screen.structogram.toEnv(debug.env.seed),
                         EvalSequence(screen.structogram.program),
                         debug.seed
                     )
@@ -145,7 +145,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     executionJob = null
                     evalLoading = false
                     debug = EvaluationContext(
-                        Environment.fromStructogram(screen.structogram),
+                        screen.structogram.toEnv(),
                         EvalSequence(screen.structogram.program)
                     )
                     stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")

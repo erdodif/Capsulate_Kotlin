@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.program.evaluation
 
+import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
@@ -71,8 +72,10 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
     override val methods: Map<Pattern, Method>
         get() = env.methods
 
+    @KIgnoredOnParcel
     private val newNames = renames.map { it.value to it.key }.associate { it }
 
+    @KIgnoredOnParcel
     private val values: MutableList<Parameter> = mutableListOf()
 
     override val parameters: ImmutableList<Parameter>
@@ -139,6 +142,7 @@ data class Env(
         seed
     )
 
+    @KIgnoredOnParcel
     override val random = Random(seed)
 
     override val parameters: ImmutableList<Parameter>

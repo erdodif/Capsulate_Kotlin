@@ -2,7 +2,6 @@ package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +57,7 @@ import com.slack.circuit.runtime.ui.Ui
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 class LandingPage : Ui<LandingScreen.State> {

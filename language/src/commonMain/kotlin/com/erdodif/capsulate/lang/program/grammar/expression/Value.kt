@@ -70,6 +70,35 @@ data class VArray<T : Value>(
 }
 
 @KParcelize
+data object UNSET : Value
+
+@KParcelize
+data class VArray<T : Value>(
+    private val value: Array<T?>,
+    val type: Type
+) : Value {
+    constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
+
+    fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
+
+    operator fun get(index: Int): Value = value[index] ?: UNSET
+
+    operator fun set(index: Int, value: T) {
+        this.value[index] = value
+    }
+
+    override fun equals(other: Any?): Boolean = when {
+        this === other -> true
+        other == null || other !is Value || other !is VArray<*> ||
+                type != other.type -> false
+
+        else -> value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int = value.contentHashCode()
+}
+
+@KParcelize
 @JvmInline
 value class VCharacter(val value: Char) : Value {
     override fun toString(): String = value.toString()

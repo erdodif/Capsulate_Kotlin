@@ -27,8 +27,7 @@ import kotlin.uuid.Uuid
 data class OpenFile(
     @KIgnoredOnParcel var file: Either<IPlatformFile, Uuid>,
     var content: String? = null
-) :
-    KParcelable {
+) : KParcelable {
     constructor() : this(Right(Uuid.random()))
     constructor(file: IPlatformFile) : this(Left(file))
     constructor(id: Uuid) : this(Right(id))
