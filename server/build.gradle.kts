@@ -1,6 +1,5 @@
 @file:OptIn(ExperimentalComposeLibrary::class)
 
-import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import org.jetbrains.compose.ExperimentalComposeLibrary
 
 plugins {
