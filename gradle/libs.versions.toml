@@ -13,10 +13,10 @@ detektRulesCompose = "1.4.0"
 filekitCore = "0.8.8"
 kermit = "2.0.5"
 kmpfileFilekit = "0.7.0"
-kotlin = "2.1.10"
+kotlin = "2.1.20"
 kotlinx-coroutines = "1.10.1"
 kotlinxDatetime = "0.6.1"
-kotlinxIoCore = "0.6.0"
+kotlinxIoCore = "0.7.0"
 kotlinxSerializationJson = "1.8.0"
 material = "1.12.0"
 materialKolor = "2.0.0"
@@ -24,8 +24,9 @@ multiplatformSettingsNoArg = "1.2.0"
 okio = "3.10.2"
 adaptive = "1.0.1"
 proguardGradle = "7.6.1"
-slf4j = "2.0.16"
-jetbrainsKotlinJvm = "2.1.10"
+slf4j = "2.0.17"
+jetbrainsKotlinJvm = "2.1.20"
+kotlinx-collection = "0.3.8"
 
 [libraries]
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
@@ -48,6 +49,7 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIoCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-collections-immutable = {module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collection"}
 material = { module = "com.google.android.material:material", version.ref = "material" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 multiplatform-settings-no-arg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettingsNoArg" }

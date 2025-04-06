@@ -28,12 +28,12 @@ import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.recover
 import com.erdodif.capsulate.pages.screen.EditorScreen.Event
 import com.erdodif.capsulate.project.OpenFile
+import com.erdodif.capsulate.saver.TextFieldValueSaver
+import com.erdodif.capsulate.saver.mutableSaverOf
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.structogram.statements.Command
 import com.erdodif.capsulate.structogram.statements.ComposableStatement
 import com.erdodif.capsulate.structogram.statements.DropStatement
-import com.erdodif.capsulate.utility.saver.TextFieldValueSaver
-import com.erdodif.capsulate.utility.saver.mutableSaverOf
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.CircuitUiEvent
@@ -52,7 +52,8 @@ import kotlinx.coroutines.Job
 
 @KParcelize
 @Serializable
-data class EditorScreen(val file: OpenFile, val fileChannel: ChannelEntry<OpenFile>) : Screen {
+data class EditorScreen(val file: OpenFile, val fileChannel: ChannelEntry<OpenFile>) :
+    Screen {
     @Stable
     data class State(
         val code: TextFieldValue,

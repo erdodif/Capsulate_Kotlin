@@ -1,6 +1,5 @@
 package com.erdodif.capsulate.pages.ui
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -39,8 +38,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.CodeEditor
 import com.erdodif.capsulate.LocalDraggingStatement
 import com.erdodif.capsulate.StatementDragProvider
+import com.erdodif.capsulate.StatementDrawer
+import com.erdodif.capsulate.UnicodeOverlay
 import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.pages.screen.EditorScreen
@@ -59,11 +61,8 @@ import com.erdodif.capsulate.resources.save
 import com.erdodif.capsulate.resources.save_file
 import com.erdodif.capsulate.resources.struk
 import com.erdodif.capsulate.structogram.Structogram
-import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.IconTextButton
 import com.erdodif.capsulate.utility.PreviewTheme
-import com.erdodif.capsulate.utility.StatementDrawer
-import com.erdodif.capsulate.utility.UnicodeOverlay
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
@@ -74,6 +73,7 @@ import com.slack.circuit.runtime.ui.ui
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.uuid.ExperimentalUuidApi
 
 class EditorPage : Ui<State> {

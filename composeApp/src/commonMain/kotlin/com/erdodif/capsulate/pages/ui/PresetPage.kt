@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.erdodif.capsulate.CodeEditor
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
@@ -46,7 +47,6 @@ import com.erdodif.capsulate.presets.Preset
 import com.erdodif.capsulate.resources.Res
 import com.erdodif.capsulate.resources.close
 import com.erdodif.capsulate.structogram.Structogram
-import com.erdodif.capsulate.utility.CodeEditor
 import com.erdodif.capsulate.utility.imageExportable
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.runtime.ui.Ui

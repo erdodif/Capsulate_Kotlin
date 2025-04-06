@@ -24,7 +24,7 @@ import com.erdodif.capsulate.pages.ui.EditorPage
 import com.erdodif.capsulate.pages.ui.LandingPage
 import com.erdodif.capsulate.pages.ui.PresetPage
 import com.erdodif.capsulate.pages.ui.ProjectPage
-import com.erdodif.capsulate.structogram.composables.Theme
+import com.erdodif.capsulate.utility.theme.Theme
 import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
