@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -57,5 +58,37 @@ android {
     }
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$rootDir/detekt.yml")
+    source.setFrom(
+        "src/commonMain/kotlin",
+        "src/nativeMain/kotlin",
+        "src/commonTest/kotlin",
+        "src/androidMain/kotlin",
+        "src/desktopMain/kotlin",
+        "src/iosMain/kotlin",
+    )
+    basePath = projectDir.absolutePath
+    toolVersion = "1.23.8"
+    // Android specifics
+    ignoredBuildTypes = listOf("release", "debug")
+    ignoredFlavors = listOf("production")
+    ignoredVariants = listOf("productionRelease")
+}
+
+tasks.withType<Detekt>().configureEach {
+    dependencies {
+        detektPlugins(libs.detekt.rules.compose)
+    }
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        sarif.required.set(true)
+        md.required.set(true)
     }
 }
