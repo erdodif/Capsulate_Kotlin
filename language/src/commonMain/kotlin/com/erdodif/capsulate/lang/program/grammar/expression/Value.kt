@@ -48,6 +48,7 @@ data class VArray<T : Value>(
     private val value: Array<T?>,
     val type: Type
 ) : Value {
+    @Suppress("UNCHECKED_CAST")
     constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
 
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
@@ -75,7 +76,8 @@ value class VCharacter(val value: Char) : Value {
     override fun toString(): String = value.toString()
 }   // ℂ
 
-enum class Type(vararg val labels: String) {
+@KParcelize
+enum class Type(vararg val labels: String): KParcelable {
     NAT("ℕ", "Nat"),
     WHOLE("ℤ", "Whole", "Integer"),
     STRING("𝕊", "String"),

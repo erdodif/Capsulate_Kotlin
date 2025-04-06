@@ -39,3 +39,8 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":server")
+include(":platform")
+include(":language")
+include(":struktogram")
+include(":components")

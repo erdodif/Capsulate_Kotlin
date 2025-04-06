@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
+import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.structogram.LocalDraggingStatement
 import com.erdodif.capsulate.lang.program.grammar.Abort
@@ -33,6 +34,7 @@ class DropStatement(val string: String) : ComposableStatement<Statement>(
         is Fail -> Abort(MatchPos.ZERO)
     }
 ) {
+    @KIgnoredOnParcel
     private val toDrag = fromStatement(ParserState(string), statement)
 
     override fun toString(state: ParserState): String = string

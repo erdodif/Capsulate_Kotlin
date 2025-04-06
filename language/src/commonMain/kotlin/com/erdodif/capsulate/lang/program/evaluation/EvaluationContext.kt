@@ -9,24 +9,32 @@ import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import kotlin.random.Random
 
+@ConsistentCopyVisibility
 @KParcelize
-data class EvaluationContext(
+data class EvaluationContext private constructor(
     var env: Environment,
     private var currentStatement: Statement?,
     val seed: Int = Random.Default.nextInt(),
+    var error: String? = null,
+    var returnValue: Value? = null,
+    val entries: ArrayList<Statement> = arrayListOf(),
+    private var atomicOngoing: EvaluationContext? = null,
+    internal var function: PendingFunctionEvaluation<*>? = null,
 ) : KParcelable {
+    constructor(
+        env: Environment,
+        currentStatement: Statement?,
+        seed: Int = Random.Default.nextInt()
+    ) : this(env, currentStatement, seed, null)
+
     @KIgnoredOnParcel
     val random = Random(seed)
-    val entries: ArrayList<Statement> = arrayListOf()
-    internal var function: PendingFunctionEvaluation<*>? = null
     val functionOngoing: PendingFunctionEvaluation<*>?
         get() = function ?: (currentStatement as? PendingMethodEvaluation)?.context?.functionOngoing
-    private var atomicOngoing: EvaluationContext? = null
+
+    @KIgnoredOnParcel
     val head: Statement?
         get() = functionOngoing?.head ?: atomicOngoing?.head ?: currentStatement
-
-    var error: String? = null
-    var returnValue: Value? = null
 
     fun step(): EvaluationContext {
         val function = functionOngoing
@@ -102,7 +110,8 @@ data class EvaluationContext(
     fun getCallStack(label: String = "Program"): List<StackTraceEntry> = buildList {
         add(StackTraceEntry(label, env.parameters))
         functionOngoing?.apply { addAll(getCallStack()) }
-        (((head as? EvalSequence)?.statements?.firstOrNull() ?: head) as? PendingMethodEvaluation)?.apply {
+        (((head as? EvalSequence)?.statements?.firstOrNull()
+            ?: head) as? PendingMethodEvaluation)?.apply {
             addAll(context.getCallStack(method.pattern.toPatternString()))
         }
     }

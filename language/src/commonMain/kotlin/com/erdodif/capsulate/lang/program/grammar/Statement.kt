@@ -27,8 +27,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
-abstract class Statement(open val id: Uuid = Uuid.random(), open val match: MatchPos) :
-    KParcelable {
+abstract class Statement(
+    open val id: Uuid = Uuid.random(),
+    open val match: MatchPos
+) : KParcelable {
     abstract fun evaluate(env: Environment): EvaluationResult
     override fun equals(other: Any?): Boolean = other is Statement && other.id == id
     override fun hashCode(): Int = id.hashCode()

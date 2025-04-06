@@ -18,8 +18,8 @@ import com.erdodif.capsulate.lang.program.grammar.stringCaseLess
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace
 import com.erdodif.capsulate.lang.program.grammar.whiteSpaceChars
 
-val pLineBreak: Parser<Char> = asum(*lineBreak.map { char(it) }.toTypedArray())
-val pLineEnd: Parser<Char> = asum(*lineEnd.map { char(it) }.toTypedArray())
+val pLineBreak: Parser<Char> = satisfy { it in lineBreak }
+val pLineEnd: Parser<Char> = satisfy { it in lineEnd }
 
 /**
  * Matches the given [parser], then removes the whitespaces
