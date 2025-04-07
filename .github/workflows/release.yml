@@ -15,6 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Use sed
+        shell: bash
         run: |
           cd gradle
           VERSION="${{ github.ref_name }}"
