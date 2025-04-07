@@ -1,6 +1,6 @@
 *.iml
 *.log
-../ComposeReborn/.directory
+.directory
 .kotlin
 .gradle
 **/build/

@@ -33,15 +33,19 @@ dependencies{
 }
 
 group = "com.erdodif.capsulate"
-version = "1.0.0"
+version = libs.versions.self.get()
+
 application {
     mainClass.set("com.erdodif.capsulate.ApplicationKt")
     applicationDefaultJvmArgs = listOf()
 }
+
 tasks.withType<Tar>{
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveVersion = libs.versions.self.get()
 }
 
 tasks.withType<Zip>{
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveVersion = libs.versions.self.get()
 }

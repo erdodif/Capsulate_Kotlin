@@ -22,7 +22,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -33,12 +33,12 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -119,7 +119,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = libs.versions.self.get()
     }
     packaging {
         resources {
@@ -162,15 +162,29 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.erdodif.capsulate"
-            packageVersion = "1.0.0"
+            packageVersion = libs.versions.self.get()
+            val versionSteps = libs.versions.self.get().split('.', '-')
+            // Because sem-ver isn't supported everywhere
+            val friendlyVersion = if (
+                versionSteps.last().toIntOrNull() == null || versionSteps.count() > 3
+            ) {
+                "${versionSteps[0]}.${versionSteps[1]}.${
+                    (versionSteps[2].toIntOrNull()?.let { it + 1 }) ?: 1
+                }"
+            } else {
+                versionSteps.joinToString(".")
+            }
             macOS {
+                dmgPackageVersion = if (versionSteps.first() == "0") "1.0.0" else friendlyVersion
                 iconFile.set(project.file("$rootDir/img/logo/logo.icns"))
             }
             windows {
+                msiPackageVersion = friendlyVersion
                 iconFile.set(project.file("$rootDir/img/logo/logo.ico"))
             }
             linux {
                 modules("jdk.security.auth")
+                debPackageVersion = libs.versions.self.get()
                 iconFile.set(project.file("$rootDir/img/logo/logo.png"))
             }
         }
