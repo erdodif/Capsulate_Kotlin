@@ -17,9 +17,10 @@ jobs:
       - name: Use sed
         shell: bash
         run: |
+          sudo apt-get update
+          sudo apt-get -y sed
           cd gradle
-          VERSION="${{ github.ref_name }}"
-          sed -i 's/self[ ]*=[ ]*".*"/self = "'${VERSION:1}'"/g' libs.versions.toml
+          sed -i 's/self[ ]*=[ ]*".*"/self = "'"${{ github.ref_name }}":1'"/g' gradle/libs.versions.toml
           cd -
   release-desktop:
     name: Build Desktop (${{ matrix.os }})
