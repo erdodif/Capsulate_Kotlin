@@ -64,10 +64,10 @@ data class ArrayLit<T : Value>(val value: Array<Exp<T>>, val match: MatchPos) :
     override fun toString(
         state: ParserState,
         parentStrength: Int
-    ): String = value.joinToString(prefix = "{", postfix = "}")
+    ): String = value.joinToString(prefix = "[", postfix = "]")
     { it.toString(state, parentStrength) }
 
-    override fun toString(): String = "ArrayLit: {${value.joinToString()}}"
+    override fun toString(): String = "ArrayLit: [${value.joinToString()}]"
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false

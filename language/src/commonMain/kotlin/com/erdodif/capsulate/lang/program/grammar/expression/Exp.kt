@@ -178,7 +178,7 @@ val pVariable: Parser<Variable> = _nonKeyword[{
 }]
 
 val pArrayLit: Parser<ArrayLit<Value>> = {
-    middle(_char('{'), delimited(pExp, _char(',')), _char('}'))[{ (values, state, match) ->
+    middle(_char('['), delimited(pExp, _char(',')), _char(']'))[{ (values, state, match) ->
         if (values.isNotEmpty() && values.any {
                 it.getType(this.assumptions) != values.first().getType(this.assumptions)
             }) {

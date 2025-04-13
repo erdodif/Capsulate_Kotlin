@@ -88,7 +88,7 @@ data class VArray<T: Value>(
         else -> value.contentEquals(other.value)
     }
 
-    override fun toString(): String = value.joinToString(prefix = "{", postfix = "}")
+    override fun toString(): String = value.joinToString(prefix = "[", postfix = "]")
     override fun hashCode(): Int = value.contentHashCode()
 }
 
