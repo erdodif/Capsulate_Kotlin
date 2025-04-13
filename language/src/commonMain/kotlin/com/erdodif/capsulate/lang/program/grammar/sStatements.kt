@@ -20,6 +20,7 @@ import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
+import kotlin.math.max
 
 fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 
@@ -39,14 +40,14 @@ val nonParallel: Parser<Statement> = {
         sIf,
         sWhile,
         sDoWhile,
-        sExpression,
+        //sExpression,
         sAtom,
     )()
 }
 
 val statement: Parser<Statement> = { orEither(sParallel, nonParallel)() }
 
-val blockOrParallel: (ParserState) -> ParserResult<ArrayList<out Statement>> = { state ->
+val blockOrParallel: (ParserState) -> ParserResult<List<Statement>> = { state ->
     orEither(
         newLined(sParallel) / { arrayListOf(it) },
         orEither(
@@ -56,11 +57,12 @@ val blockOrParallel: (ParserState) -> ParserResult<ArrayList<out Statement>> = {
     )(state)
 }
 
-val statementOrBlock: Parser<ArrayList<out Statement>> =
+val statementOrBlock: Parser<List<Statement>> =
     orEither(blockOrParallel, nonParallel / { arrayListOf(it) })
 
-val sError: Parser<LineError> =
-    delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
+val sError: Parser<LineError> = delimit(some(satisfy { it !in lineEnd })) / {
+    LineError(it.asString(), this.input.substring(0..max(this.position-1,0)).count { it == '\n' })
+}
 
 val sSkip: Parser<Statement> = delimit(_keyword("skip")) * { _, pos -> Skip(pos) }
 val sAbort: Parser<Statement> = delimit(_keyword("abort") * { _, pos -> Abort(pos) })
@@ -110,8 +112,7 @@ val sWhen: Parser<Statement> =
         newLined(_char('}')),
     )) * { (statements, elseBlock), pos ->
         val (blocks, trailing) = statements
-        if (trailing != null) blocks.add(trailing)
-        When(blocks, elseBlock, pos)
+        When(if (trailing != null) blocks + trailing else blocks, elseBlock, pos)
     }
 
 val sWhile: Parser<Statement> =
@@ -134,19 +135,16 @@ val sParallelAssign: Parser<Statement> =
         val (params, values) = it.value
         if (values.count() != params.count())
             fail("The number of parameters does not match the number of values to assign.")
-        else if (values.count() == 1){
+        else if (values.count() == 1) {
             pass(it.match.start, Assign(params.first(), values.first(), it.match))
-        }
-        else{
-            pass(
-                it.match.start,
-                ParallelAssign(params.zip(values) as ArrayList, it.match),
-            )
+        } else {
+            pass(it.match.start, ParallelAssign(params.zip(values), it.match))
         }
     }]
 
 val sAssign: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+        assumptions[variable] = value.getType(assumptions)
         Assign(variable, value, pos)
     }
 

@@ -16,11 +16,16 @@ import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.sFunction
 import com.erdodif.capsulate.lang.program.grammar.function.sMethod
-import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.program.grammar.function.sPattern
+import com.erdodif.capsulate.lang.program.grammar.function.sReturn
+import com.erdodif.capsulate.lang.util.Fail
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util._anyKeyword
+import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._lineEnd
 import com.erdodif.capsulate.lang.util._nonKeyword
@@ -28,36 +33,144 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.freeChar
 import com.erdodif.capsulate.lang.util.reservedChar
+import com.erdodif.capsulate.lang.util.splitEither
 import com.erdodif.capsulate.lang.util.times
 import com.erdodif.capsulate.lang.util.tok
 
-typealias NamedProgram = Pair<String?, ArrayList<Statement>>
-typealias NamedHalfProgram = Pair<String?, ArrayList<Either<Statement, LineError>>>
-typealias Declarations = ArrayList<Either<Method, Function<Value>>>
+data class NamedProgram(
+    val name: String?,
+    val statements: List<Statement>,
+    val methods: List<Method>,
+    val functions: List<Function<Value>>
+) {
+    constructor(name: String?, statements: List<Statement>, declarations: Declarations) : this(
+        name,
+        statements,
+        declarations.methods,
+        declarations.functions
+    )
+}
 
-val sNamed: Parser<NamedProgram> = delimit(
+data class Declarations(val methods: List<Method>, val functions: List<Function<Value>>)
+
+data class HalfNamedProgram(
+    val name: String?,
+    val statements: List<Statement>,
+    val methods: List<Method>,
+    val functions: List<Function<Value>>,
+    val errors: List<LineError>
+) {
+    constructor(
+        name: String?,
+        statements: List<Statement>,
+        innerErrors: List<LineError>,
+        halfDeclarations: HalfDeclarations
+    ) : this(
+        name,
+        statements,
+        halfDeclarations.methods,
+        halfDeclarations.functions,
+        halfDeclarations.errors + innerErrors
+    )
+}
+
+data class HalfDeclarations(
+    val methods: List<Method>,
+    val functions: List<Function<Value>>,
+    val errors: List<LineError>
+)
+
+val sNamed: Parser<Pair<String?, List<Statement>>> = delimit(
     optional(right(_keyword("program"), _nonKeyword)) + many(
         right(many(_lineEnd), statement)
     )
 )
 
-val sHalfNamed: Parser<NamedHalfProgram> = delimit(
+val sHalfNamed: Parser<Triple<String?, List<Statement>, List<LineError>>> = delimit(
     optional(right(_keyword("program"), _nonKeyword)) + many(
         right(many(_lineEnd), or(statement, sError))
     )
-)
+) / { (name, options) ->
+    val (statements, errors) = options.splitEither()
+    Triple(name, statements, errors)
+}
+
+val sHalfFunction: Parser<Pair<Function<Value>, List<LineError>>> = {
+    delimit(
+        right(_keyword("function"), _nonKeyword) + middle(
+            _char('('), optional(delimited(pVariable, _char(','))), _char(')')
+        )
+    )().fold({ (result, state) ->
+        val (name, params) = result
+        val tmpEnv = ParserState(
+            this.input,
+            this.functions + Function(name, params ?: emptyList(), listOf()),
+            this.methods
+        ).also { it.position = state.position }
+        val blocks: ParserResult<List<*>> = tmpEnv.withReturn(
+            delimit(
+                orEither(
+                    middle(
+                        newLined(_char('{')),
+                        some(delimit(asum(sReturn, statement, sError))),
+                        newLined(_char('}'))
+                    ),
+                    asum(sReturn, sAbort, sError) / { listOf(it) })
+            )
+        )
+        position = tmpEnv.position
+        when (blocks) {
+            is Pass -> {
+                val function = Function<Value>(
+                    name,
+                    params ?: emptyList(),
+                    blocks.value.filterIsInstance<Statement>()
+                )
+                functions.add(function)
+                Pass(function to blocks.value.filterIsInstance<LineError>(), tmpEnv, MatchPos.ZERO)
+            }
+
+            is Fail -> blocks
+        }
+    }) { it }
+}
+
+val sHalfMethod: Parser<Pair<Method, List<LineError>>> =
+    (right(_keyword("method"), sPattern) + delimit(
+        orEither(
+            middle(
+                newLined(_char('{')),
+                some(delimit(asum(sReturn, statement, sError))),
+                newLined(_char('}'))
+            ),
+            asum(statement, sAbort, sError) / { listOf(it) })
+    )) / { pattern, block ->
+        val method = Method(pattern, block.filterIsInstance<Statement>())
+        methods.add(method)
+        method to block.filterIsInstance<LineError>()
+    }
 
 
-val halfProgram: Parser<Pair<Declarations, NamedHalfProgram>> =
-    topLevel(delimit(many(or(sMethod, sFunction))) + sHalfNamed)
+val halfProgram: Parser<HalfNamedProgram> =
+    topLevel(delimit(many(or(sHalfMethod, sHalfFunction))) + sHalfNamed) / { (decs, prog) ->
+        val (methodDecs, functionDecs) = decs.splitEither()
+        val methods = methodDecs.map { it.first }
+        val functions = functionDecs.map { it.first }
+        val (name, statements, progErrors) = prog
+        val errors: List<LineError> =
+            methodDecs.flatMap { it.second } + functionDecs.flatMap { it.second } + progErrors
+        HalfNamedProgram(name, statements, methods, functions, errors)
+    }
 
-val program: Parser<Pair<Declarations, NamedProgram>> =
-    topLevel(delimit(many(or(sMethod, sFunction))) + sNamed)
+val program: Parser<NamedProgram> =
+    topLevel(delimit(many(or(sMethod, sFunction))) + sNamed) / { decs, (name, statements) ->
+        val (methods, functions) = decs.splitEither()
+        NamedProgram(name, statements, methods, functions)
+    }
 
 
-
-fun parseProgram(input: String): ParserResult<ArrayList<Statement>> =
-    ParserState(input).parse(topLevel(program).div{ it.second.second })
+fun parseProgram(input: String): ParserResult<List<Statement>> =
+    ParserState(input).parse(topLevel(program).div { it.statements })
 
 fun tokenizeProgram(input: String): ParserResult<List<Token>> =
     ParserState(input)

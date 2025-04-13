@@ -108,7 +108,7 @@ inline fun <T> optional(crossinline parser: Parser<T>): SuccessParser<T?> = {
  *
  * Will fail on no match, the last unsuccessful state gets reset
  */
-inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<out T>> = {
+inline fun <reified T> some(crossinline parser: Parser<T>): Parser<List<T>> = {
     val start = position
     val matches = ArrayList<T>()
     var match: ParserResult<T>
@@ -131,7 +131,7 @@ inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<out
  *
  * Will not fail on no match and the last unsuccessful state gets reset
  */
-inline fun <reified T> many(crossinline parser: Parser<T>): SuccessParser<ArrayList<T>> = {
+inline fun <reified T> many(crossinline parser: Parser<T>): SuccessParser<List<T>> = {
     val start = position
     val matches = ArrayList<T>()
     var match: ParserResult<T>
@@ -402,10 +402,10 @@ val whiteSpace: Parser<Unit> = or(char(' '), char('\t'))[{ Pass(Unit, it.state, 
  */
 inline fun <reified T> delimited2(
     crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
-): Parser<ArrayList<out T>> = (some(left(parser, delimiter)) + parser) / {
+): Parser<List<T>> = (some(left(parser, delimiter)) + parser) / {
     val ret = it.first.toMutableList()
     ret.add(it.second)
-    ret.toCollection(ArrayList())
+    ret.toList()
 }
 
 /**
@@ -415,8 +415,8 @@ inline fun <reified T> delimited2(
  */
 inline fun <reified T> delimited(
     crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
-): Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
-    it.first.apply { add(it.second) }
+): Parser<List<T>> = (many(left(parser, delimiter)) + parser) / {
+    it.first + it.second
 }
 
 /**

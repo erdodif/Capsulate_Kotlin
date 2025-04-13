@@ -208,4 +208,4 @@ val builtInOperators = arrayListOf(
 
 @Suppress("UNCHECKED_CAST")
 val builtInOperatorTable: OperatorTable<Value> =
-    OperatorTable(builtInOperators as ArrayList<Operator<Exp<Value>>>)
+    OperatorTable(builtInOperators as List<Operator<Exp<Value>>>)

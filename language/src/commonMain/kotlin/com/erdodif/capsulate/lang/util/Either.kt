@@ -25,6 +25,31 @@ inline operator fun <T, R, S> Either<T, R>.get(
 }
 
 /**
+ * Splits the list into two parts, based on whether the value is [Left] or [Right]
+ * (split as [Pair.first] for [Left] and [Pair.second] for [Right])
+ *
+ * The order between the [Left] values and [Right] values are respected,
+ * yet the original order can't be restored from this state
+ */
+fun <T, R> List<Either<T, R>>.splitEither():Pair<List<T>, List<R>> =
+    filterIsInstance<Left<T>>().map { it.value } to filterIsInstance<Right<R>>().map { it.value }
+
+/**
+ * Returns a sublist that only contains instances of [Left] in the original list
+ *
+ * This keeps the order between instances
+ */
+fun <T, R> List<Either<T, R>>.filterLeft():  List<T> =
+    filterIsInstance<Left<T>>().map { it.value }
+
+/**
+ * Returns a sublist that only contains instances of [Right] in the original list
+ *
+ * This keeps the order between instances
+ */
+fun <T, R> List<Either<T, R>>.filterRight(): List<R> =
+    filterIsInstance<Right<R>>().map { it.value }
+/**
  * Returns the "value" ([Left]) if possible
  *
  * This function does not make sense when [T] is nullable

@@ -19,7 +19,9 @@ data class UnaryCalculation<T : Value, R : Value>(
     val param: Exp<R>,
     val operator: UnaryOperator<T, R>
 ) : Exp<T> {
-    override fun getType(assumptions: Map<String, Type>): Type = operator.type
+    override fun getType(assumptions: Map<String, Type>): Type =
+        operator.type(param.getType(assumptions))
+
     override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
         param.withRawValue(context) { a: R -> operator.operation(context, a) }
 
@@ -53,7 +55,9 @@ data class BinaryCalculation<T : Value, R : Value>(
     val second: Exp<R>,
     val operator: BinaryOperator<T, R>
 ) : Exp<T>, KParcelable {
-    override fun getType(assumptions: Map<String, Type>): Type = operator.type
+    override fun getType(assumptions: Map<String, Type>): Type =
+        operator.type(first.getType(assumptions), second.getType(assumptions))
+
     override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
         (first to second).withValue(context) { a: R, b: R ->
             Left(

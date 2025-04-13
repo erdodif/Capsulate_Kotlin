@@ -64,8 +64,8 @@ abstract class Statement(
 @KParcelize
 data class If(
     val condition: Exp<*>,
-    val statementsTrue: ArrayList<out Statement>,
-    val statementsFalse: ArrayList<out Statement>,
+    val statementsTrue: List<Statement>,
+    val statementsFalse: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
@@ -73,13 +73,6 @@ data class If(
         condition: Exp<*>,
         statementsTrue: List<Statement>,
         statementsFalse: List<Statement>,
-        match: MatchPos
-    ) : this(condition, ArrayList(statementsTrue), ArrayList(statementsFalse), Uuid.random(), match)
-
-    constructor(
-        condition: Exp<*>,
-        statementsTrue: ArrayList<Statement>,
-        statementsFalse: ArrayList<Statement>,
         match: MatchPos
     ) : this(condition, statementsTrue, statementsFalse, Uuid.random(), match)
 
@@ -221,7 +214,7 @@ data class Abort(override val id: Uuid, override val match: MatchPos) : Statemen
 
 abstract class Loop(
     open val condition: Exp<*>,
-    open val statements: ArrayList<out Statement>,
+    open val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match)
@@ -229,11 +222,11 @@ abstract class Loop(
 @KParcelize
 data class While(
     override val condition: Exp<*>,
-    override val statements: ArrayList<out Statement>,
+    override val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Loop(condition, statements, id, match) {
-    constructor(condition: Exp<*>, statements: ArrayList<out Statement>, match: MatchPos) :
+    constructor(condition: Exp<*>, statements: List<Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult = condition.join(env) {
@@ -280,11 +273,11 @@ data class While(
 @KParcelize
 data class DoWhile(
     override val condition: Exp<*>,
-    override val statements: ArrayList<out Statement>,
+    override val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Loop(condition, statements, id, match) {
-    constructor(condition: Exp<*>, statements: ArrayList<out Statement>, match: MatchPos) :
+    constructor(condition: Exp<*>, statements: List<Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
@@ -358,11 +351,11 @@ data class Select(
 
 @KParcelize
 data class ParallelAssign(
-    val assigns: ArrayList<Pair<String, Exp<Value>>>,
+    val assigns: List<Pair<String, Exp<Value>>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(assigns: ArrayList<Pair<String, Exp<Value>>>, match: MatchPos) :
+    constructor(assigns: List<Pair<String, Exp<Value>>>, match: MatchPos) :
             this(assigns, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
@@ -403,15 +396,15 @@ data class Expression(
 }
 
 @KParcelize
-data class LineError(val content: String) : KParcelable
+data class LineError(val content: String, val line: Int) : KParcelable
 
 @KParcelize
 data class Parallel(
-    val blocks: ArrayList<out ArrayList<out Statement>>,
+    val blocks: List<List<Statement>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(blocks: ArrayList<out ArrayList<out Statement>>, match: MatchPos) :
+    constructor(blocks: List<List<Statement>>, match: MatchPos) :
             this(blocks, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
