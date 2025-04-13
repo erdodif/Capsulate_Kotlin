@@ -39,7 +39,7 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
-include(":server")
+include(":cli")
 include(":platform")
 include(":language")
 include(":struktogram")

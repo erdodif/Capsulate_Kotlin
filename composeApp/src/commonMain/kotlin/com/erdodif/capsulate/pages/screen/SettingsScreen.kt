@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.pages.screen.SettingsScreen.Event
 import com.erdodif.capsulate.utility.screenPresenterFactory
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -34,7 +35,7 @@ class SettingsScreenPresenter(
     override fun present(): SettingsScreen.State {
         return SettingsScreen.State { event ->
             when (event) {
-                is SettingsScreen.Event.Exit -> navigator.pop()
+                is Event.Exit -> navigator.pop()
             }
         }
     }
