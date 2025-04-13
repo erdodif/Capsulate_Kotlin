@@ -12,6 +12,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.ChrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.Comment
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.KeyWord
@@ -99,6 +100,7 @@ class CodeHighlight private constructor(
             is KeyWord -> control
             is IntLit -> number
             is StrLit -> string
+            is ChrLit -> string
             is LineEnd -> parenthesis
             is Symbol -> {
                 if (this.id == '(' || this.id == ')') parenthesis

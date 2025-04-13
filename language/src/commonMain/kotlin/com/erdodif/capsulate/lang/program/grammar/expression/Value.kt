@@ -76,12 +76,6 @@ data class VArray<T : Value>(
     override fun hashCode(): Int = value.contentHashCode()
 }
 
-@KParcelize
-@JvmInline
-value class VCharacter(val value: Char) : Value {
-    override fun toString(): String = value.toString()
-}   // ℂ
-
 enum class Type(vararg val labels: String) {
     NAT("ℕ", "Nat"),
     WHOLE("ℤ", "Whole", "Integer"),
@@ -104,7 +98,7 @@ fun Value.type(): Type = when (this) {
     is VWhole -> Type.WHOLE
     is VStr -> Type.STRING
     is VBool -> Type.BOOL
-    is VCharacter -> Type.CHAR
+    is VChr -> Type.CHAR
     is VArray<*> -> Type.ARRAY
     /*is VFile -> Type.FILE
     is VArray -> Type.ARRAY
