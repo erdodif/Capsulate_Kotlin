@@ -20,6 +20,7 @@ import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.newLined
 import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.program.grammar.sAbort
@@ -87,6 +88,10 @@ data class FunctionCall<T : Value>(
 ) : Exp<T> {
     constructor(function: Function<T>, values: List<Exp<Value>>, match: MatchPos) :
             this(function.name, values, match)
+
+    override fun getType(assumptions: Map<String, Type>): Type {
+        TODO("Not yet implemented")
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> = Right(

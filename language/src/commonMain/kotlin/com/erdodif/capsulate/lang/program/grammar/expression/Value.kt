@@ -7,6 +7,7 @@ import kotlin.jvm.JvmInline
 interface Value : KParcelable {
     override operator fun equals(other: Any?): Boolean
     override fun hashCode(): Int
+    val type: Type
 }
 
 sealed interface VNum : Value {
@@ -20,47 +21,61 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
         get() = _value.toInt()
 
     override fun toString(): String = value.toString()
+    override val type: Type
+        get() = Type.NAT
 }
 
 @KParcelize
 @JvmInline
 value class VWhole(override val value: Int) : VNum { // ℤ
     override fun toString(): String = value.toString()
+    override val type: Type
+        get() = Type.WHOLE
 }
 
 @KParcelize
 @JvmInline
 value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
+    override val type: Type
+        get() = Type.CHAR
 }
 
 @KParcelize
 @JvmInline
 value class VStr(val value: String) : Value {  // 𝕊
     override fun toString(): String = value.toString()
+    override val type: Type
+        get() = Type.STRING
 }
 
 @KParcelize
 @JvmInline
 value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
+    override val type: Type
+        get() = Type.BOOL
 }
 
 @KParcelize
-data object UNSET : Value
+data object UNSET : Value{
+    override val type: Type
+        get() = Type.NEVER
+}
 
 @KParcelize
 @Suppress("UNCHECKED_CAST")
-data class VArray<T : Value>(
+data class VArray<T: Value>(
     private val value: Array<T?>,
-    val type: Type
+    override val type: Type
 ) : Value {
+    val size: Int
+        get() = value.size
     constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
 
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
 
     operator fun get(index: Int): Value = value[index] ?: UNSET
-
     operator fun set(index: Int, value: T) {
         this.value[index] = value
     }
@@ -73,6 +88,7 @@ data class VArray<T : Value>(
         else -> value.contentEquals(other.value)
     }
 
+    override fun toString(): String = value.joinToString(prefix = "{", postfix = "}")
     override fun hashCode(): Int = value.contentHashCode()
 }
 

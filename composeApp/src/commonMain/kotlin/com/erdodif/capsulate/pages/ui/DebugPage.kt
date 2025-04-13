@@ -31,10 +31,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
@@ -140,9 +147,24 @@ class DebugPage : Ui<State> {
                     Text(entry.scope)
                     LazyColumn {
                         items(entry.variables) { variable ->
-                            Row {
+                            Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
-                                    "${variable.id} : ${variable.type.label}",
+                                    buildAnnotatedString {
+                                        val value = variable.value
+                                        if (value is VArray<*>) {
+                                            append("${variable.id} : ${value.type.label}")
+                                            withStyle(
+                                                style = SpanStyle(
+                                                    fontSize = 10.sp,
+                                                    baselineShift = BaselineShift.Superscript
+                                                )
+                                            ) {
+                                                append(value.size.toString())
+                                            }
+                                        } else {
+                                            append("${variable.id} : ${variable.type.label}")
+                                        }
+                                    },
                                     modifier = textModifier
                                 )
                                 Text(

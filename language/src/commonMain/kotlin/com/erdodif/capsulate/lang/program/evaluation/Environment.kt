@@ -29,6 +29,7 @@ sealed interface Environment : KParcelable {
     val seed: Int
     val random: Random
     val parameters: ImmutableList<Parameter>
+    val assumptions: Map<String, Type>
 
     /** Determines whether the asked variable is defined in this context */
     fun present(id: String): Boolean
@@ -71,6 +72,9 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
         get() = env.functions
     override val methods: Map<Pattern, Method>
         get() = env.methods
+    override val assumptions: Map<String, Type>
+        get() = (values + env.parameters.filter { renames.containsKey(it.id) })
+            .associate { it.id to it.type }
 
     @KIgnoredOnParcel
     private val newNames = renames.map { it.value to it.key }.associate { it }
@@ -147,6 +151,9 @@ data class Env(
 
     override val parameters: ImmutableList<Parameter>
         get() = values.toImmutableList()
+
+    override val assumptions: Map<String, Type>
+        get() = values.associate { it.id to it.type }
 
     fun copy(): Env {
         return Env(

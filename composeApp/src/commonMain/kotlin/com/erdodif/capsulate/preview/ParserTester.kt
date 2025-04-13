@@ -152,8 +152,7 @@ private val parsers: List<Pair<Parser<*>, String>> = listOf(
 
 @Preview
 @Composable
-@Suppress("PublicComposablePreview")
-fun ParserTester() = PreviewTheme {
+private fun ParserTester() = PreviewTheme {
     var input by remember { mutableStateOf(TextFieldValue("")) }
     var filter by remember { mutableStateOf("") }
     val tokens = tokenizeProgram(input.text)

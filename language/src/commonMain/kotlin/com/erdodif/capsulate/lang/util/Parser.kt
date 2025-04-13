@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate.lang.util
 
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
@@ -10,13 +11,15 @@ import kotlin.math.min
 open class ParserState(
     val input: String,
     functions: List<Function<Value>> = listOf(),
-    methods: List<Method> = listOf()
+    methods: List<Method> = listOf(),
+    assumptions: List<Pair<String, Type>> = listOf()
 ) {
     var allowReturn: Boolean = false
         protected set
 
     val functions: MutableList<Function<Value>> = functions.toMutableList()
     val methods: MutableList<Method> = methods.toMutableList()
+    val assumptions: MutableMap<String, Type> = assumptions.toMap().toMutableMap()
 
     var position: Int = 0
 

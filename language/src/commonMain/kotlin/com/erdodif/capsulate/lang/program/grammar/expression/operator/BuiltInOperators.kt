@@ -2,7 +2,7 @@ package com.erdodif.capsulate.lang.program.grammar.expression.operator
 
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
-import com.erdodif.capsulate.lang.program.grammar.expression.VArray
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VBool
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
@@ -13,8 +13,6 @@ import com.erdodif.capsulate.lang.program.grammar.or
 import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
-
-// TODO - CAST ON ASSIGNMENT SIDE
 
 @KParcelize
 data object Add : BinaryOperator<VNum, VNum>(
@@ -29,7 +27,10 @@ data object Add : BinaryOperator<VNum, VNum>(
             VWhole(a.value + b.value)
         }
     }
-)
+) {
+    override fun type(firstType: Type, secondType: Type): Type =
+        if (firstType == Type.NAT && secondType == Type.NAT) Type.NAT else Type.WHOLE
+}
 
 @KParcelize
 data object Sub : BinaryOperator<VNum, VNum>(
@@ -38,7 +39,9 @@ data object Sub : BinaryOperator<VNum, VNum>(
     _char('-'),
     Association.LEFT,
     { a, b -> VWhole(a.value - b.value) }
-)
+) {
+    override fun type(firstType: Type, secondType: Type): Type = Type.WHOLE
+}
 
 @KParcelize
 data object Mul : BinaryOperator<VNum, VNum>(
@@ -53,7 +56,10 @@ data object Mul : BinaryOperator<VNum, VNum>(
             VWhole(a.value * b.value)
         }
     }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type =
+        if (firstType == Type.NAT && secondType == Type.NAT) Type.NAT else Type.WHOLE
+}
 
 @KParcelize
 data object Div : BinaryOperator<VNum, VNum>(
@@ -71,7 +77,10 @@ data object Div : BinaryOperator<VNum, VNum>(
             VWhole(a.value / b.value)
         }
     }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type =
+        if (firstType == Type.NAT && secondType == Type.NAT) Type.NAT else Type.WHOLE
+}
 
 @KParcelize
 data object Larger : BinaryOperator<VBool, VNum>(
@@ -80,7 +89,9 @@ data object Larger : BinaryOperator<VBool, VNum>(
     _char('>'),
     Association.NONE,
     { a, b -> VBool(a.value > b.value) }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object Smaller : BinaryOperator<VBool, VNum>(
@@ -89,7 +100,9 @@ data object Smaller : BinaryOperator<VBool, VNum>(
     _char('<'),
     Association.NONE,
     { a, b -> VBool(a.value < b.value) }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object LargerEq : BinaryOperator<VBool, VNum>(
@@ -98,7 +111,9 @@ data object LargerEq : BinaryOperator<VBool, VNum>(
     or(_keyword(">="), _char('≥')),
     Association.NONE,
     { a, b -> VBool(a.value >= b.value) }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object SmallerEq : BinaryOperator<VBool, VNum>(
@@ -107,7 +122,9 @@ data object SmallerEq : BinaryOperator<VBool, VNum>(
     or(_keyword("<="), _char('≤')),
     Association.NONE,
     { a, b -> VBool(a.value <= b.value) }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object Equal : BinaryOperator<Value, Value>(
@@ -122,7 +139,9 @@ data object Equal : BinaryOperator<Value, Value>(
             VBool(a == b)
         }
     }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object NotEqual : BinaryOperator<Value, Value>(
@@ -133,7 +152,9 @@ data object NotEqual : BinaryOperator<Value, Value>(
     { a, b ->
         VBool(a != b)
     }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object And : BinaryOperator<VBool, VBool>(
@@ -142,7 +163,9 @@ data object And : BinaryOperator<VBool, VBool>(
     orEither(_char('&'), _char('∧')),
     Association.LEFT,
     { a, b -> VBool(a.value && b.value) }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object Or : BinaryOperator<VBool, VBool>(
@@ -151,7 +174,9 @@ data object Or : BinaryOperator<VBool, VBool>(
     orEither(_char('|'), _char('v')),
     Association.LEFT,
     { a, b -> VBool(a.value || b.value) }
-)
+){
+    override fun type(firstType: Type, secondType: Type): Type = Type.BOOL
+}
 
 @KParcelize
 data object Sign : UnaryOperator<VNum, VWhole>(
@@ -160,7 +185,9 @@ data object Sign : UnaryOperator<VNum, VWhole>(
     _char('-'),
     Fixation.PREFIX,
     { VWhole(-it.value) }
-)
+){
+    override fun type(param: Type): Type = Type.WHOLE
+}
 
 @KParcelize
 data object Not : UnaryOperator<VBool, VBool>(
@@ -169,7 +196,9 @@ data object Not : UnaryOperator<VBool, VBool>(
     orEither(_char('!'), _char('¬')),
     Fixation.PREFIX,
     { VBool(!it.value) }
-)
+){
+    override fun type(param: Type): Type = Type.BOOL
+}
 
 val builtInOperators = arrayListOf(
     Add, Sub, Sign, Mul, Div,

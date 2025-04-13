@@ -20,13 +20,16 @@ import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.delimited
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.sFunctionCall
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._integer
@@ -66,9 +69,24 @@ open class PendingExpression<R : Value, T : Value>(
 }
 
 interface Exp<T : Value> : KParcelable {
-
+    fun getType(assumptions: Map<String, Type>): Type
     fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>>
     fun toString(state: ParserState, parentStrength: Int = 0): String
+}
+
+fun <T : Value, R : Value> List<Exp<T>>.withValue(
+    env: Environment,
+    onValue: Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
+) = withValue(env, emptyList(), onValue)
+
+private fun <T : Value, R : Value> List<Exp<T>>.withValue(
+    env: Environment,
+    accumulated: List<T>,
+    onValue: Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
+): Either<R, PendingExpression<Value, R>> = if (this.isEmpty()) {
+    onValue(env, accumulated)
+} else {
+    first().withValue(env) tmp@{ this@withValue.drop(1).withValue(env, accumulated + it, onValue) }
 }
 
 fun <R : Value, T : Value> Exp<T>.withRawValue(
@@ -158,13 +176,34 @@ val pVariable: Parser<Variable> = _nonKeyword[{
     if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
     else pass(it.match.start, Variable(it.value, it.match))
 }]
+
+val pArrayLit: Parser<ArrayLit<Value>> = {
+    middle(_char('{'), delimited(pExp, _char(',')), _char('}'))[{ (values, state, match) ->
+        if (values.isNotEmpty() && values.any {
+                it.getType(this.assumptions) != values.first().getType(this.assumptions)
+            }) {
+            Fail(
+                "Type mismatch in Array literal, found types: ${
+                    values.map { it.getType(this.assumptions) }.distinct().joinToString()
+                }", state
+            )
+        } else {
+            Pass(ArrayLit(values.toTypedArray(), match), state, match)
+        }
+    }]()
+}
+
+//val pIndex: Parser<Index> = or()
+
 val litOrder: Array<Parser<Exp<*>>> = arrayOf(
     pIntLit,
     pBoolLit,
     pChrLit,
     pStrLit,
-    pVariable
+    pVariable,
+    pArrayLit
 )
+
 typealias ExParser = Parser<Exp<Value>>
 
 @Suppress("UNCHECKED_CAST", "SpreadOperator")
