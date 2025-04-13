@@ -14,6 +14,7 @@ filekitCore = "0.8.8"
 kermit = "2.0.5"
 kmpfileFilekit = "0.7.0"
 kotlin = "2.1.20"
+kotlinCodepoints = "0.9.0"
 kotlinx-coroutines = "1.10.1"
 kotlinxDatetime = "0.6.1"
 kotlinxIoCore = "0.7.0"
@@ -40,6 +41,7 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kmpfile = { module = "dev.zwander:kmpfile", version.ref = "kmpfileFilekit" }
 kmpfile-filekit = { module = "dev.zwander:kmpfile-filekit", version.ref = "kmpfileFilekit" }
 kmpfile-okio = { module = "dev.zwander:kmpfile-okio", version.ref = "kmpfileFilekit" }
+kotlin-codepoints = { module = "de.cketti.unicode:kotlin-codepoints-deluxe", version.ref = "kotlinCodepoints" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }

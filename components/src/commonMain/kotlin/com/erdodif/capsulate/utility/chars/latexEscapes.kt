@@ -1,9 +1,14 @@
 package com.erdodif.capsulate.utility.chars
+
+import de.cketti.codepoints.deluxe.CodePoint
+import de.cketti.codepoints.deluxe.codePointSequence
+
 fun getFromLatexPrefix(prefix: String): List<String> = if (prefix.isEmpty()) listOf() else
     latexEscapes.keys.filter {
         it.length > prefix.length && prefix == it.substring(0, prefix.length)
     }
-val latexEscapes = mapOf(
+
+val latexEscapes: Map<String, Array<String>> = mapOf(
     Pair("!","!"),
     Pair("#","#"),
     Pair("$","$"),
@@ -2573,4 +2578,6 @@ val latexEscapes = mapOf(
     Pair("mathtt{7}","𝟽"),
     Pair("mathtt{8}","𝟾"),
     Pair("mathtt{9}","𝟿")
-)
+).map{ (match, chars) ->
+    match to chars.codePointSequence().map(CodePoint::toString).toList().toTypedArray()
+}.toMap()

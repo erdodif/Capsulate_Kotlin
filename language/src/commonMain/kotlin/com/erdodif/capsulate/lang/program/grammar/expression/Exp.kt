@@ -140,6 +140,11 @@ val pComment: Parser<Comment> = orEither(
     )
 ) * { comment, pos -> Comment(comment.asString(), pos) }
 
+val pChrLit: Parser<ChrLit> = middle(
+    char('\''),
+    orEither(right(char('\\'), anyChar), right(not(char('\'')), anyChar)),
+    _char('\'')
+) * { res, pos -> ChrLit(res, pos) }
 
 val pStrLit: Parser<StrLit> = middle(
     char('"'),
@@ -156,6 +161,7 @@ val pVariable: Parser<Variable> = _nonKeyword[{
 val litOrder: Array<Parser<Exp<*>>> = arrayOf(
     pIntLit,
     pBoolLit,
+    pChrLit,
     pStrLit,
     pVariable
 )

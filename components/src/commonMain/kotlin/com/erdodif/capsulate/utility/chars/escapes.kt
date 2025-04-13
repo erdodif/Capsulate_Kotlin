@@ -1,9 +1,13 @@
 package com.erdodif.capsulate.utility.chars
 
+import de.cketti.codepoints.deluxe.CodePoint
+import de.cketti.codepoints.deluxe.codePointSequence
+import kotlin.sequences.toList
+
 fun getFromPrefix(prefix: String): List<String> = if (prefix.isEmpty()) listOf() else
     escapes.keys.filter { it.length > prefix.length && prefix == it.substring(0, prefix.length) }
 
-val escapes = mapOf(
+val escapes: Map<String, Array<String>> = mapOf(
     Pair("eq", "=∼∽≈≋∻∾∿≀≃⋍≂≅≌≊≡≣≐≑≒≓≔≕≖≗≘≙≚≛≜≝≞≟≍≎≏≬⋕＝"),
     Pair("eqn", "≠≁≉≄≇≆≢≭"),
     Pair("=n", "≠"),
@@ -1147,4 +1151,6 @@ val escapes = mapOf(
     Pair("(x)", "⒳Ⓧⓧ🅧🅇🆇"),
     Pair("(y)", "⒴Ⓨⓨ🅨🅈🆈"),
     Pair("(z)", "⒵Ⓩⓩ🅩🅉🆉")
-)
+).map{ (match, chars) ->
+    match to chars.codePointSequence().map(CodePoint::toString).toList().toTypedArray()
+}.toMap()

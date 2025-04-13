@@ -24,7 +24,13 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
 
 @KParcelize
 @JvmInline
-value class VWhole(override val value: Int) : VNum { // ZZ
+value class VWhole(override val value: Int) : VNum { // ℤ
+    override fun toString(): String = value.toString()
+}
+
+@KParcelize
+@JvmInline
+value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
 }
 
@@ -36,7 +42,7 @@ value class VStr(val value: String) : Value {  // 𝕊
 
 @KParcelize
 @JvmInline
-value class VBool(val value: Boolean) : Value {
+value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
 }
 

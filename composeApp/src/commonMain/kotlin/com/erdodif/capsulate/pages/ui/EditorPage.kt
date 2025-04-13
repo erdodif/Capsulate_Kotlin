@@ -274,7 +274,7 @@ internal fun codeEdit(): Ui<State> = ui { state, modifier ->
     if (state.input)
         OverlayEffect(state) {
             val result = show(UnicodeOverlay(false))
-            if (result == 0.toChar()) {
+            if (result.isEmpty()) {
                 state.eventHandler(Event.CloseUnicodeInput)
                 return@OverlayEffect
             } else {
@@ -283,7 +283,7 @@ internal fun codeEdit(): Ui<State> = ui { state, modifier ->
                     append(code.text.substring(0, code.selection.start))
                     append(result)
                     append(code.text.substring(code.selection.start, code.text.length))
-                }, TextRange(code.selection.start + 1))))
+                }, TextRange(code.selection.start + result.length))))
                 state.eventHandler(Event.CloseUnicodeInput)
             }
         }
