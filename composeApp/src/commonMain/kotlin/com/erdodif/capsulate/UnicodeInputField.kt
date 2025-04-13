@@ -76,31 +76,31 @@ enum class MatchStatus {
     Nothing
 }
 
-class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char> {
+class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<String> {
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    override fun Content(navigator: OverlayNavigator<Char>) {
+    override fun Content(navigator: OverlayNavigator<String>) {
         val modifier = if (useImePadding) Modifier.imePadding() else Modifier
         val focusRequester = remember { FocusRequester() }
         var value by remember { mutableStateOf(TextFieldValue("\\ ", TextRange(1))) }
         var index by remember { mutableStateOf(0) }
         if (value.text.length < 2) {
-            navigator.finish(' ')
+            navigator.finish("")
             return
         }
         val word = value.text.substring(1, value.text.length - 1)
-        val match = escapes[word] ?: latexEscapes[word]
-        var extraMatches by remember { mutableStateOf(CharArray(0)) }
+        val match: Array<String> = escapes[word] ?: latexEscapes[word] ?: emptyArray()
+        var extraMatches by remember { mutableStateOf(emptyArray<String>()) }
         var matchStatus by remember { mutableStateOf(MatchStatus.Nothing) }
-        val selectedChar = if (match != null && index < match.length) {
+        val selectedChar: String = if (index < match.size) {
             match[index]
         } else {
-            val newIndex = index - (match?.length ?: 0)
+            val newIndex = index - match.size
             if (newIndex < extraMatches.size) {
                 extraMatches[newIndex]
             } else {
-                ' '
+                ""
             }
         }
         var prefixes by remember { mutableStateOf(emptyList<String>()) }
@@ -113,13 +113,13 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
         LaunchedEffect(value) {
             prefixes = getFromPrefix(word) + getFromLatexPrefix(word)
             matchStatus = when {
-                match != null -> MatchStatus.HasMatch
+                match.isNotEmpty() -> MatchStatus.HasMatch
                 prefixes.isNotEmpty() -> MatchStatus.NoMatchButPrefix
                 else -> MatchStatus.Nothing
             }
             extraMatches =
                 prefixes.mapNotNull { escapes[it] ?: latexEscapes[it] }.flatMap { it.toList() }
-                    .filter { it !in (match ?: "") }.toCharArray()
+                    .filter { it !in match }.toTypedArray()
         }
         Scaffold(
             modifier.fillMaxSize().imePadding().background(
@@ -160,7 +160,7 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                 }
             }
         ) { innerPadding ->
-            if (match != null || extraMatches.isNotEmpty()) {
+            if (match.isNotEmpty() || extraMatches.isNotEmpty()) {
                 FlowRow(
                     Modifier.clip(RectangleShape).padding(innerPadding)
                         .verticalScroll(rememberScrollState(0), true),
@@ -169,7 +169,7 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                     key(xHeight) {
                         Spacer(modifier.height(xHeight).fillMaxWidth())
                     }
-                    match?.forEachIndexed { i, char ->
+                    match.forEachIndexed { i, char ->
                         Text(
                             text = char.toString(),
                             fontSize = 24.sp,
@@ -197,15 +197,15 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                                 .size(40.dp)
                                 .padding(1.dp)
                                 .background(
-                                    if (i + (match?.length
-                                            ?: 0) == index
-                                    ) MaterialTheme.colorScheme.tertiaryContainer else
+                                    if (i + match.size == index)
+                                        MaterialTheme.colorScheme.tertiaryContainer
+                                    else
                                         MaterialTheme.colorScheme.surfaceContainerLow,
                                     RoundedCornerShape(5.dp)
                                 ),
-                            color = if (i + (match?.length
-                                    ?: 0) == index
-                            ) MaterialTheme.colorScheme.onTertiaryContainer else
+                            color = if (i + match.size == index)
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            else
                                 MaterialTheme.colorScheme.onPrimaryContainer,
                             textAlign = TextAlign.Center)
                     }
@@ -217,7 +217,7 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
                 verticalAlignment = Alignment.Top
             ) {
                 OutlinedIconButton(
-                    onClick = { navigator.finish(0.toChar()) },
+                    onClick = { navigator.finish("") },
                     modifier = Modifier.padding(horizontal = 10.dp),
                     colors = IconButtonDefaults.iconButtonColors()
                         .copy(containerColor = MaterialTheme.colorScheme.surface)
@@ -234,13 +234,13 @@ class UnicodeOverlay(private val useImePadding: Boolean = false) : Overlay<Char>
 private fun InputBar(
     value: TextFieldValue,
     index: Int,
-    selectedChar: Char,
-    match: String?,
-    extraMatches: CharArray,
+    selectedChar: String,
+    match: Array<String>,
+    extraMatches: Array<String>,
     onIndexChange: (Int) -> Unit,
     onValueChange: (TextFieldValue) -> Unit,
     borderColor: Color,
-    navigator: OverlayNavigator<Char>,
+    navigator: OverlayNavigator<String>,
     focusRequester: FocusRequester
 ) {
     Row(
@@ -252,16 +252,16 @@ private fun InputBar(
             value = value,
             {
                 if (it.text == " ") {
-                    navigator.finish(0.toChar())
+                    navigator.finish("")
                     return@BasicTextField
                 }
                 if (it.text == value.text) {
                     if (!onMobile &&
                         it.selection.collapsed &&
                         it.selection.start != value.selection.start &&
-                        !match.isNullOrEmpty()
+                        !match.isEmpty()
                     ) {
-                        val maxIndex = match.length + extraMatches.size
+                        val maxIndex = match.size + extraMatches.size
                         onIndexChange((index + it.selection.start - value.selection.start + maxIndex) % maxIndex)
                     }
                 } else {
@@ -283,19 +283,20 @@ private fun InputBar(
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    if (match != null) navigator.finish(selectedChar) else navigator.finish(
-                        0.toChar()
+                    if (match.isNotEmpty()) navigator.finish(selectedChar) else navigator.finish(
+                        ""
                     )
                 }
             ),
             textStyle = TextStyle(
-                color = if (match != null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                color = if (match.isNotEmpty()) MaterialTheme.colorScheme.secondary
+                else MaterialTheme.colorScheme.error,
                 fontSize = 30.sp,
                 fontFeatureSettings = "liga 0"
             ),
             cursorBrush = SolidColor(Color.Transparent)
         )
-        if (match != null || extraMatches.isNotEmpty()) {
+        if (match.isNotEmpty() || extraMatches.isNotEmpty()) {
             Text(
                 selectedChar.toString(),
                 fontSize = 40.sp,

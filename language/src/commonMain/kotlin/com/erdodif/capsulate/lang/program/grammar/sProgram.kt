@@ -7,6 +7,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
+import com.erdodif.capsulate.lang.program.grammar.expression.pChrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
@@ -70,6 +71,7 @@ fun tokenizeProgram(input: String): ParserResult<List<Token>> =
                         pIntLit as Parser<Token>,
                         pBoolLit as Parser<Token>,
                         pStrLit as Parser<Token>,
+                        pChrLit as Parser<Token>,
                         (_anyKeyword * { keyword, pos -> KeyWord(keyword, pos) }) as Parser<Token>,
                         (tok(reservedChar) * { char, pos -> Symbol(char, pos) }) as Parser<Token>,
                         (tok(some(freeChar)) * { _, pos -> Token(pos) }),

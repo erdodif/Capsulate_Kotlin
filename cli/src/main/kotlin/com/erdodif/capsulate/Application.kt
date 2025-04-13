@@ -14,8 +14,11 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import com.erdodif.capsulate.lang.program.grammar.Abort
+import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.valueOrNull
 import com.erdodif.capsulate.structogram.Structogram
+import com.erdodif.capsulate.structogram.statements.Command
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -48,14 +51,15 @@ suspend fun getImage(width: Int, height: Int, input: String): ImageBitmap {
     val receiver = Channel<Pair<ImageBitmap, Int>>(1, BufferOverflow.SUSPEND)
     var actualHeight = 0
     coroutineScope {
-        val struk = Structogram.fromString(input).valueOrNull
+        val struk = Structogram.fromString(input).valueOrNull ?: Structogram.fromStatements(
+            Command("No Statement mached!", Abort(MatchPos.ZERO))
+        )
         runDesktopComposeUiTest(width = width, height = if (height <= 0) MAX_HEIGHT else height) {
             setContent {
                 MaterialTheme(colors = colors) {
-                    struk?.Content(
-                        Modifier.fillMaxWidth().onGloballyPositioned {
-                            actualHeight = if (height <= 0) it.size.height else height
-                        })
+                    struk.Content(Modifier.fillMaxWidth().onGloballyPositioned {
+                        actualHeight = if (height <= 0) it.size.height else height
+                    })
                 }
             }
             runBlocking { receiver.send(this@runDesktopComposeUiTest.captureToImage() to actualHeight) }

@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.pages.screen.LandingScreen.Event
 import com.erdodif.capsulate.presets.Preset
 import com.erdodif.capsulate.project.OpenFile
 import com.erdodif.capsulate.project.Project
@@ -102,10 +103,10 @@ class LandingPresenter(
         }
         return LandingScreen.State(presetVisible, sheetState, snackBarHostState) { event ->
             when (event) {
-                is LandingScreen.Event.ToEmptyProject -> navigator.goTo(ProjectScreen(Project()))
-                is LandingScreen.Event.OpenPresetModal -> presetVisible = true
-                is LandingScreen.Event.ClosePresetModal -> presetVisible = false
-                is LandingScreen.Event.SelectPreset -> {
+                is Event.ToEmptyProject -> navigator.goTo(ProjectScreen(Project()))
+                is Event.OpenPresetModal -> presetVisible = true
+                is Event.ClosePresetModal -> presetVisible = false
+                is Event.SelectPreset -> {
                     coroutineScope.launch {
                         sheetState.hide()
                         presetVisible = false
@@ -113,8 +114,8 @@ class LandingPresenter(
                     }
                 }
 
-                is LandingScreen.Event.OpenFile -> filePicker.launch()
-                is LandingScreen.Event.OpenFolder -> directoryPicker.launch()
+                is Event.OpenFile -> filePicker.launch()
+                is Event.OpenFolder -> directoryPicker.launch()
             }
         }
     }

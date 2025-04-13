@@ -2,6 +2,7 @@ package com.erdodif.capsulate.lang.program.grammar.expression.operator
 
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.lang.program.grammar.expression.VBool
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
@@ -16,7 +17,7 @@ import com.erdodif.capsulate.lang.util._keyword
 // TODO - CAST ON ASSIGNMENT SIDE
 
 @KParcelize
-object Add : BinaryOperator<VNum, VNum>(
+data object Add : BinaryOperator<VNum, VNum>(
     14,
     "+",
     _char('+'),
@@ -31,7 +32,7 @@ object Add : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-object Sub : BinaryOperator<VNum, VNum>(
+data object Sub : BinaryOperator<VNum, VNum>(
     12,
     "-",
     _char('-'),
@@ -40,7 +41,7 @@ object Sub : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-object Mul : BinaryOperator<VNum, VNum>(
+data object Mul : BinaryOperator<VNum, VNum>(
     18,
     "*",
     _char('*'),
@@ -55,7 +56,7 @@ object Mul : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-object Div : BinaryOperator<VNum, VNum>(
+data object Div : BinaryOperator<VNum, VNum>(
     16,
     "/",
     _char('/'),
@@ -73,7 +74,7 @@ object Div : BinaryOperator<VNum, VNum>(
 )
 
 @KParcelize
-object Larger : BinaryOperator<VBool, VNum>(
+data object Larger : BinaryOperator<VBool, VNum>(
     5,
     ">",
     _char('>'),
@@ -82,7 +83,7 @@ object Larger : BinaryOperator<VBool, VNum>(
 )
 
 @KParcelize
-object Smaller : BinaryOperator<VBool, VNum>(
+data object Smaller : BinaryOperator<VBool, VNum>(
     5,
     "<",
     _char('<'),
@@ -91,7 +92,7 @@ object Smaller : BinaryOperator<VBool, VNum>(
 )
 
 @KParcelize
-object LargerEq : BinaryOperator<VBool, VNum>(
+data object LargerEq : BinaryOperator<VBool, VNum>(
     5,
     "≥",
     or(_keyword(">="), _char('≥')),
@@ -100,7 +101,7 @@ object LargerEq : BinaryOperator<VBool, VNum>(
 )
 
 @KParcelize
-object SmallerEq : BinaryOperator<VBool, VNum>(
+data object SmallerEq : BinaryOperator<VBool, VNum>(
     5,
     "≤",
     or(_keyword("<="), _char('≤')),
@@ -109,7 +110,7 @@ object SmallerEq : BinaryOperator<VBool, VNum>(
 )
 
 @KParcelize
-object Equal : BinaryOperator<Value, Value>(
+data object Equal : BinaryOperator<Value, Value>(
     4,
     "=",
     _char('='),
@@ -124,7 +125,7 @@ object Equal : BinaryOperator<Value, Value>(
 )
 
 @KParcelize
-object NotEqual : BinaryOperator<Value, Value>(
+data object NotEqual : BinaryOperator<Value, Value>(
     4,
     "≠",
     or(_keyword("!="), _char('≠')),
@@ -135,7 +136,7 @@ object NotEqual : BinaryOperator<Value, Value>(
 )
 
 @KParcelize
-object And : BinaryOperator<VBool, VBool>(
+data object And : BinaryOperator<VBool, VBool>(
     6,
     "∧",
     orEither(_char('&'), _char('∧')),
@@ -144,7 +145,7 @@ object And : BinaryOperator<VBool, VBool>(
 )
 
 @KParcelize
-object Or : BinaryOperator<VBool, VBool>(
+data object Or : BinaryOperator<VBool, VBool>(
     5,
     "∨",
     orEither(_char('|'), _char('v')),
@@ -153,7 +154,7 @@ object Or : BinaryOperator<VBool, VBool>(
 )
 
 @KParcelize
-object Sign : UnaryOperator<VNum, VWhole>(
+data object Sign : UnaryOperator<VNum, VWhole>(
     20,
     "-",
     _char('-'),
@@ -162,7 +163,7 @@ object Sign : UnaryOperator<VNum, VWhole>(
 )
 
 @KParcelize
-object Not : UnaryOperator<VBool, VBool>(
+data object Not : UnaryOperator<VBool, VBool>(
     20,
     "¬",
     orEither(_char('!'), _char('¬')),

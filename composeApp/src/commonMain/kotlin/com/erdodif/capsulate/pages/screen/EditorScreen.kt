@@ -130,7 +130,7 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         LaunchedEffect(file.content) {
             screen.fileChannel.send(file)
         }
-        LaunchedEffect(inputValue) {
+        LaunchedEffect(inputValue.text) {
             initStructogram(inputValue.text) { struk ->
                 structogram = struk.recover {
                     Structogram.fromStatements(Command(it.reason, Skip(MatchPos.ZERO)))
@@ -152,12 +152,16 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         ) { event ->
             when (event) {
                 is Event.TextInput -> {
+                    val old = inputValue.text
                     inputValue = event.code
                     file.content = inputValue.text
                     val text = inputValue.text
-                    tokenJob?.cancel()
-                    tokenJob = coroutineScope.launch {
-                        tokenized = tokenizeProgram(text)
+                    println("$text == $old")
+                    if(text != old){
+                        tokenJob?.cancel()
+                        tokenJob = coroutineScope.launch {
+                            tokenized = tokenizeProgram(text)
+                        }
                     }
                 }
 

@@ -40,6 +40,7 @@ kotlin {
             implementation(libs.circuit.foundation)
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
+            implementation(libs.kotlin.codepoints)
             // -- Modules --
             implementation(projects.platform)
             implementation(projects.language)

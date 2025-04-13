@@ -3,6 +3,7 @@
 ../ComposeReborn/.directory
 .kotlin
 .gradle
+.directory
 **/build/
 xcuserdata
 !src/**/build/
