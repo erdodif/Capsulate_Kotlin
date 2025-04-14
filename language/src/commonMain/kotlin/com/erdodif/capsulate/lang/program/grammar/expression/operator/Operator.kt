@@ -1,7 +1,6 @@
 package com.erdodif.capsulate.lang.program.grammar.expression.operator
 
 import com.erdodif.capsulate.KParcelable
-import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.left
