@@ -7,7 +7,6 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
-import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
@@ -114,7 +113,7 @@ data class PendingFunctionEvaluation<T : Value>(
                     env.functions,
                     env.methods,
                     expression.function.parameters.zip(it)
-                        .map { (param, value) -> Parameter(param.id, value.type(), value) }
+                        .map { (param, value) -> Parameter(param.id, value.type, value) }
                         .toMutableList(),
                     env.seed)
                 PendingFunctionEvaluation(FunctionState(newEnv, expression), callback)

@@ -94,20 +94,28 @@ infix fun <T> Parser<T>.fail(text: String): Fail =
 
 
 infix fun <T> ParserResult<T>.at(index: Int): ParserResult<T> = this.also {
-    assertTrue("Ended on different position " +
-            "(assumed $index, but got ${it.state.position})")
+    assertTrue(
+        "Ended on different position " +
+                "(assumed $index, but got ${it.state.position})"
+    )
     { it.state.position == index }
 }
 
 infix fun <T> ParserResult<T>.withValue(value: T) = this.also {
     assertPass(this)
     this as Pass
-    assertTrue("Parser result mismatch, " +
-            "expected $value, but got ${this.value}") { this.value == value }
+    assertTrue(
+        "Parser result mismatch, " +
+                "expected $value, but got ${this.value}"
+    ) { this.value == value }
 }
 
 infix fun <T> Parser<T>.value(value: Pair<String, T>) =
     assertValue(value.second, ParserState(value.first).parse(this))
+
+infix fun <T, R : ParserResult<T>> R.assert(block: (R) -> Unit): R = this.also {
+    block(this)
+}
 
 infix fun <T> Pass<T>.matches(predicate: (Pass<T>) -> Boolean) = this.also {
     assertTrue(predicate(this))
@@ -133,7 +141,7 @@ infix fun <T> ParserResult<T>.withMatch(match: MatchPos): Pass<T> {
     return this
 }
 
-infix fun <T> ParserResult<T>.withMatch(match: Pair<Int,Int>): Pass<T> {
+infix fun <T> ParserResult<T>.withMatch(match: Pair<Int, Int>): Pass<T> {
     assertPass(this)
     this as Pass
     assertEquals(
@@ -152,13 +160,15 @@ infix fun <T> ParserResult<T>.withMatch(match: Pair<Int,Int>): Pass<T> {
 fun <T> ParserResult<T>.withMatch(start: Int, end: Int): Pass<T> {
     assertPass(this)
     this as Pass
-    assertEquals(start, this.match.start, "MatchPos mismatch! " +
+    assertEquals(
+        start, this.match.start, "MatchPos mismatch! " +
                 "Expected (${start},${end}), " +
                 "but got (${this.match.start},${this.match.end})"
     )
-    assertEquals(end, this.match.end, "MatchPos mismatch! " +
-            "Expected (${start},${end}), " +
-            "but got (${this.match.start},${this.match.end})"
+    assertEquals(
+        end, this.match.end, "MatchPos mismatch! " +
+                "Expected (${start},${end}), " +
+                "but got (${this.match.start},${this.match.end})"
     )
     return this
 }

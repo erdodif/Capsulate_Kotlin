@@ -3,9 +3,10 @@ package com.erdodif.capsulate.lang.program.evaluation
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
-import com.erdodif.capsulate.lang.program.grammar.expression.type
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.Pattern
@@ -47,6 +48,13 @@ sealed interface Environment : KParcelable {
      * If the variable is missing, it will be added into the context
      */
     fun set(id: String, value: Value)
+
+    /**
+     * Sets the array variable's indexed content to the desired value
+     *
+     * The variable cannot be missing at this point
+     */
+    fun set(id: String, index: Int, value: Value)
 
     companion object {
         val EMPTY: Env
@@ -114,14 +122,37 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
         if (newNames[id] != null) {
             env.typeOf(newNames[id]!!)
         } else {
-            values.find { it.id == id }?.type ?: Type.NEVER
+            values.find { it.id == id }?.type ?: NEVER
         }
 
     override fun set(id: String, value: Value) {
         when {
             newNames[id] != null -> env.set(newNames[id]!!, value)
             present(id) -> values[values.indexOfFirst { it.id == id }].value = value
-            else -> values.add(Parameter(id, value.type(), value))
+            else -> values.add(Parameter(id, value.type, value))
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun set(
+        id: String,
+        index: Int,
+        value: Value
+    ) {
+        if (newNames[id] != null) {
+            env.set(newNames[id]!!, index, value)
+            return
+        }
+        val result = get(id)
+        if (result is Left) {
+            val array = result.value.value
+            if (array !is VArray<*>) {
+                error("Parameter named $id is not an array (namely ${array.type})")
+            } else if (array.size < index || index < 1) {
+                error("Index out of bounds (asked for $index in an array size of ${array.size})")
+            } else {
+                (values[values.indexOfFirst { it.id == id }].value as VArray<Value>)[index - 1] = value
+            }
         }
     }
 
@@ -190,7 +221,7 @@ data class Env(
         if (present(id)) Left(unSafeGet(id)) else Right(Unit)
 
     override fun typeOf(id: String): Type =
-        if (present(id)) values.find { it.id == id }!!.type else Type.NEVER
+        if (present(id)) values.find { it.id == id }!!.type else NEVER
 
     /**
      * Sets the variable's content to the desired value
@@ -199,7 +230,26 @@ data class Env(
      */
     override fun set(id: String, value: Value) {
         if (present(id)) values[values.indexOfFirst { it.id == id }].value = value
-        else values.add(Parameter(id, value.type(), value))
+        else values.add(Parameter(id, value.type, value))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun set(
+        id: String,
+        index: Int,
+        value: Value
+    ) {
+        val result = get(id)
+        if (result is Left) {
+            val array = result.value.value
+            if (array !is VArray<*>) {
+                error("Parameter named $id is not an array (namely ${array.type})")
+            } else if (array.size < index || index < 1) {
+                error("Index out of bounds (asked for $index in an array size of ${array.size})")
+            } else {
+                (values[values.indexOfFirst { it.id == id }].value as VArray<Value>)[index - 1] = value
+            }
+        }
     }
 
     override fun toString(): String {

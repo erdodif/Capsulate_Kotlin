@@ -2,6 +2,11 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.util.Either
+import com.erdodif.capsulate.lang.util.Left
+import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Right
 import kotlin.jvm.JvmInline
 
 interface Value : KParcelable {
@@ -22,7 +27,7 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
 
     override fun toString(): String = value.toString()
     override val type: Type
-        get() = Type.NAT
+        get() = NAT
 }
 
 @KParcelize
@@ -30,7 +35,7 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
 value class VWhole(override val value: Int) : VNum { // ℤ
     override fun toString(): String = value.toString()
     override val type: Type
-        get() = Type.WHOLE
+        get() = WHOLE
 }
 
 @KParcelize
@@ -38,7 +43,7 @@ value class VWhole(override val value: Int) : VNum { // ℤ
 value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
     override val type: Type
-        get() = Type.CHAR
+        get() = CHAR
 }
 
 @KParcelize
@@ -46,7 +51,7 @@ value class VChr(val value: Char) : Value {  // ℂ
 value class VStr(val value: String) : Value {  // 𝕊
     override fun toString(): String = value.toString()
     override val type: Type
-        get() = Type.STRING
+        get() = STRING
 }
 
 @KParcelize
@@ -54,24 +59,25 @@ value class VStr(val value: String) : Value {  // 𝕊
 value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
     override val type: Type
-        get() = Type.BOOL
+        get() = BOOL
 }
 
 @KParcelize
-data object UNSET : Value{
+data object UNSET : Value {
     override val type: Type
-        get() = Type.NEVER
+        get() = NEVER
 }
 
 @KParcelize
 @Suppress("UNCHECKED_CAST")
-data class VArray<T: Value>(
+data class VArray<T : Value>(
     private val value: Array<T?>,
     override val type: Type
 ) : Value {
+    constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
+
     val size: Int
         get() = value.size
-    constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
 
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
 
@@ -90,36 +96,49 @@ data class VArray<T: Value>(
 
     override fun toString(): String = value.joinToString(prefix = "[", postfix = "]")
     override fun hashCode(): Int = value.contentHashCode()
-}
 
-enum class Type(vararg val labels: String) {
-    NAT("ℕ", "Nat"),
-    WHOLE("ℤ", "Whole", "Integer"),
-    STRING("𝕊", "String"),
-    BOOL("𝔹", "Boolean"),
-    CHAR("ℂ", "Char"),
-    FILE("File"),
-    ARRAY("Array"),
-    STREAM("Stream"),
-    TUPLE("Pair"),
-    SET("Set"),
-    NEVER("⊥", "Never");
+    @KParcelize
+    data class Index(val id: String, val indexer: Exp<Value>) : Exp<Value> {
+        override fun getType(assumptions: Map<String, Type>): Type =
+            when (val assume = assumptions[id]) {
+                is ARRAY -> assume.contentType
+                else -> NEVER
+            }
 
-    val label: String
-        get() = labels.first()
-}
+        override fun evaluate(context: Environment): Either<Value, PendingExpression<Value, Value>> =
+            indexer.withRawValue(context) {
+                if (it is VNat) {
+                    when (val param = context.get(id)) {
+                        is Left -> when (val value = param.value.value) {
+                            is VArray<*> -> {
+                                if (it.value >= value.value.size) {
+                                    error(
+                                        "Index out of bounds (asked for ${it.value} " +
+                                                "in an array with size of ${value.value.size})"
+                                    )
+                                } else {
+                                    value.value[it.value] as Value
+                                }
+                            }
 
-fun Value.type(): Type = when (this) {
-    is VNat -> Type.NAT
-    is VWhole -> Type.WHOLE
-    is VStr -> Type.STRING
-    is VBool -> Type.BOOL
-    is VChr -> Type.CHAR
-    is VArray<*> -> Type.ARRAY
-    /*is VFile -> Type.FILE
-    is VArray -> Type.ARRAY
-    is VStream -> Type.STREAM
-    is VTuple -> Type.TUPLE
-    is VSet -> Type.SET*/
-    else -> Type.NEVER
+                            else -> error("Can't index non-array ($id : ${value.type})")
+                        }
+
+                        is Right -> error("Can't index on missing parameter '$id'")
+                    }
+                } else {
+                    error(
+                        "Can't index with anything except a Natural number (got ${
+                            indexer.getType(context.assumptions)
+                        })"
+                    )
+                }
+            }
+
+        override fun toString(
+            state: ParserState,
+            parentStrength: Int
+        ): String = "$id[${indexer.toString(state, parentStrength)}]"
+
+    }
 }

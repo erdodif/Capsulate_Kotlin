@@ -16,13 +16,21 @@ import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray.Index
+import com.erdodif.capsulate.lang.program.grammar.expression.VNum
+import com.erdodif.capsulate.lang.program.grammar.expression.withValue
+import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.filterLeft
+import com.erdodif.capsulate.lang.util.filterRight
 import kotlinx.serialization.Serializable
 import kotlin.collections.plus
+import kotlin.text.iterator
+import kotlin.text.set
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -207,9 +215,7 @@ data class Abort(override val id: Uuid, override val match: MatchPos) : Statemen
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
     override fun evaluate(env: Environment) = AbortEvaluation("Abort has been called!")
-
     override fun Formatting.format(state: ParserState) = print("abort")
-
 }
 
 abstract class Loop(
@@ -310,20 +316,44 @@ data class DoWhile(
 
 @KParcelize
 data class Assign(
-    val label: String, val value: Exp<*>, override val id: Uuid,
-    override val match: MatchPos
+    val label: Either<Index, String>, val value: Exp<*>,
+    override val id: Uuid, override val match: MatchPos
 ) : Statement(id, match) {
     constructor(label: String, value: Exp<*>, match: MatchPos) :
+            this(Right(label), value, Uuid.random(), match)
+
+    constructor(label: Either<Index, String>, value: Exp<*>, match: MatchPos) :
             this(label, value, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult = value.join(env) {
-        env.set(label, it)
-        Finished
+    override fun evaluate(env: Environment): EvaluationResult = when (label) {
+        is Right -> value.join(env) {
+            env.set(label.value, it)
+            Finished
+        }
+
+        is Left -> label.value.indexer.join(env) { index ->
+            if (index is VNum) {
+                value.join(env) { value ->
+                    env.set(label.value.id, index.value, value)
+                    Finished
+                }
+            } else {
+                error("Non number indexer found (namely $index)")
+            }
+        }
     }
 
     override fun Formatting.format(state: ParserState): Int {
         print(buildString {
-            append(label)
+            when (label) {
+                is Right -> append(label.value)
+                is Left -> {
+                    append(label.value.id)
+                    append('[')
+                    append(label.value.indexer.toString(state))
+                    append(']')
+                }
+            }
             append(" := ")
             append(value.toString(state))
         })
@@ -351,24 +381,52 @@ data class Select(
 
 @KParcelize
 data class ParallelAssign(
-    val assigns: List<Pair<String, Exp<Value>>>,
+    val assigns: List<Pair<Either<Index, String>, Exp<Value>>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(assigns: List<Pair<String, Exp<Value>>>, match: MatchPos) :
+    constructor(assigns: List<Pair<Either<Index, String>, Exp<Value>>>, match: MatchPos) :
             this(assigns, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        assigns.map { it.second }.joinAll(env) {
-            for (assign in assigns.map { it.first }.zip(it)) env.set(
-                assign.first,
-                assign.second
-            )
-            Finished
+        assigns.map { it.first }.filterLeft().joinAll(env) { indexes ->
+            var count = 0
+            assigns.map { it.second }.joinAll(env) {
+                for (assign in assigns.map { it.first }.zip(it)) {
+                    when (val label = assign.first) {
+                        is Right -> env.set(
+                            label.value,
+                            assign.second
+                        )
+
+                        is Left -> {
+                            when (val index = indexes[count]) {
+                                is VNum -> env.set(
+                                    label.value.id,
+                                    index.value,
+                                    assign.second
+                                )
+
+                                else -> error("Non number indexer found (namely $index)")
+                            }
+                            count += 1
+                        }
+
+                    }
+
+                }
+                Finished
+            }
         }
 
+
     override fun Formatting.format(state: ParserState): Int {
-        print(assigns.joinToString(", ") { it.first.toString() })
+        print(assigns.joinToString(", ") {
+            when (val label = it.first) {
+                is Right -> label.value
+                is Left -> "${label.value.id}[${label.value.indexer.toString(state)}]"
+            }
+        })
         print(" := ")
         print(assigns.joinToString(", ") { it.second.toString(state) })
         breakLine()
@@ -396,7 +454,11 @@ data class Expression(
 }
 
 @KParcelize
-data class LineError(val content: String, val line: Int) : KParcelable
+data class LineError(val content: String, val line: Int) : KParcelable {
+    init { // TODO: Remove
+        println("LINE $line: $content")
+    }
+}
 
 @KParcelize
 data class Parallel(

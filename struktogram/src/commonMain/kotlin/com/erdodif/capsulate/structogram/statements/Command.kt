@@ -57,11 +57,9 @@ class Command(
             is Skip -> "SKIP"
             is Abort -> "ABORT"
             is Expression -> "EXP: ${statement.expression.toString(state)}"
-            is Assign -> "${statement.label} := ${statement.value.toString(state)}"
-            is ParallelAssign -> statement.assigns.map { it.first }.toString().drop(1)
-                .dropLast(1) + " := " +
-                    statement.assigns.map { it.second.toString(state) }.toString().drop(1).dropLast(1)
-            is MethodCall -> statement.toString(state)
+            is Assign -> statement.getFormat(state)
+            is ParallelAssign -> statement.getFormat(state)
+            is MethodCall -> statement.getFormat(state)
             is Return<*> -> "RETURN ${statement.value.toString(state)}"
             else -> "UNSUPPORTED $statement"
         }, statement

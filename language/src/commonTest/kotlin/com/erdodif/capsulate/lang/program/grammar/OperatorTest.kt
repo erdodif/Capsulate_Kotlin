@@ -12,6 +12,8 @@ import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryOper
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryCalculation
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryOperator
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Association
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Fixation
 import com.erdodif.capsulate.lang.util.Fail
@@ -30,7 +32,12 @@ import kotlin.test.Test
 class OperatorTest {
     private companion object {
         @KParcelize
-        private data class TestValue(val char: Char) : Value {
+        private data class TestValue(
+            val char: Char,
+        ) : Value {
+            override val type: Type
+                get() = NEVER
+
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == char) ||
                         (other is TestValue && other.char == char)
@@ -40,6 +47,7 @@ class OperatorTest {
 
         @KParcelize
         private data class TestExp(val matchedChar: Char) : Exp<TestValue> {
+            override fun getType(assumptions: Map<String, Type>): Type = NEVER
             override fun evaluate(context: Environment) = Left(TestValue(matchedChar))
             override fun toString(state: ParserState, parentStrength: Int) = matchedChar.toString()
             override fun equals(other: Any?) =
@@ -49,28 +57,96 @@ class OperatorTest {
             override fun hashCode(): Int = matchedChar.hashCode()
         }
 
-        val strongLeft = BinaryOperator<TestValue, TestValue>(20, "/", _char('/'), Association.LEFT)
-        { _, _ -> TestValue('/') }
-        val weakLeft = BinaryOperator<TestValue, TestValue>(10, "-", _char('-'), Association.LEFT)
-        { _, _ -> TestValue('-') }
-        val strongRight =
-            BinaryOperator<TestValue, TestValue>(20, "*", _char('*'), Association.RIGHT)
-            { _, _ -> TestValue('*') }
-        val weakRight = BinaryOperator<TestValue, TestValue>(10, "+", _char('+'), Association.RIGHT)
-        { _, _ -> TestValue('+') }
-        val unaryPreLeft = UnaryOperator<TestValue, TestValue>(20, "-", _char('-'), Fixation.PREFIX)
-        { _ -> TestValue('~') }
-        val unaryPre = UnaryOperator<TestValue, TestValue>(20, "@", _char('@'), Fixation.PREFIX)
-        { _ -> TestValue('~') }
-        val unaryPostLeft =
-            UnaryOperator<TestValue, TestValue>(20, "~*", _char('*'), Fixation.POSTFIX)
-            { _ -> TestValue('~') }
-        val unaryPost = UnaryOperator<TestValue, TestValue>(20, "#", _char('#'), Fixation.POSTFIX)
-        { _ -> TestValue('~') }
-        val strongNone = BinaryOperator<TestValue, TestValue>(10, "_", _char('_'), Association.NONE)
-        { _, _ -> TestValue('_') }
-        val weakNone = BinaryOperator<TestValue, TestValue>(5, "=", _char('='), Association.NONE)
-        { _, _ -> TestValue('=') }
+        val strongLeft = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            20,
+            "/",
+            _char('/'),
+            Association.LEFT,
+            { _, _ -> TestValue('/') }) {
+            override fun type(firstType: Type, secondType: Type) = NEVER
+        }
+        val weakLeft = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            10,
+            "-",
+            _char('-'),
+            Association.LEFT,
+            { _, _ -> TestValue('-') }) {
+            override fun type(firstType: Type, secondType: Type) = NEVER
+        }
+
+        val strongRight = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            20,
+            "*",
+            _char('*'),
+            Association.RIGHT,
+            { _, _ -> TestValue('*') }) {
+            override fun type(firstType: Type, secondType: Type) = NEVER
+        }
+
+        val weakRight = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            10,
+            "+",
+            _char('+'),
+            Association.RIGHT,
+            { _, _ -> TestValue('+') }) {
+            override fun type(firstType: Type, secondType: Type) = NEVER
+        }
+
+        val unaryPreLeft = @KParcelize object : UnaryOperator<TestValue, TestValue>(
+            20,
+            "-",
+            _char('-'),
+            Fixation.PREFIX,
+            { _ -> TestValue('~') }) {
+            override fun type(firstType: Type) = NEVER
+        }
+
+        val unaryPre = @KParcelize object : UnaryOperator<TestValue, TestValue>(
+            20,
+            "@",
+            _char('@'),
+            Fixation.PREFIX,
+            { _ -> TestValue('~') }) {
+            override fun type(firstType: Type) = NEVER
+        }
+
+        val unaryPostLeft = @KParcelize
+        object : UnaryOperator<TestValue, TestValue>(
+            20,
+            "~*",
+            _char('*'),
+            Fixation.POSTFIX,
+            { _ -> TestValue('~') }) {
+            override fun type(firstType: Type) = NEVER
+        }
+
+        val unaryPost = @KParcelize object : UnaryOperator<TestValue, TestValue>(
+            20,
+            "#",
+            _char('#'),
+            Fixation.POSTFIX,
+            { _ -> TestValue('~') }) {
+            override fun type(firstType: Type) = NEVER
+        }
+
+        val strongNone = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            10,
+            "_",
+            _char('_'),
+            Association.NONE,
+            { _, _ -> TestValue('_') }) {
+            override fun type(firstType: Type, secondType: Type) = NEVER
+        }
+
+        val weakNone = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            5,
+            "=",
+            _char('='),
+            Association.NONE,
+            { _, _ -> TestValue('=') }) {
+            override fun type(firstType: Type, secondType: Type) = NEVER
+        }
+
 
         val operatorsConflict = OperatorTable(
             strongLeft, strongRight, weakLeft, weakRight, unaryPreLeft,

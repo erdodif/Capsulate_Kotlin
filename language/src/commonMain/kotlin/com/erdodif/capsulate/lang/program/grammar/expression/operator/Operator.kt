@@ -32,7 +32,6 @@ enum class Fixation {
     POSTFIX
 }
 
-@KParcelize
 abstract class UnaryOperator<T : Value, R : Value>(
     override val bindingStrength: Int,
     override val label: String = "~",
@@ -61,7 +60,6 @@ abstract class UnaryOperator<T : Value, R : Value>(
     abstract fun type(paramType: Type): Type
 }
 
-@KParcelize
 abstract class BinaryOperator<T : Value, R : Value>(
     override val bindingStrength: Int,
     override val label: String,

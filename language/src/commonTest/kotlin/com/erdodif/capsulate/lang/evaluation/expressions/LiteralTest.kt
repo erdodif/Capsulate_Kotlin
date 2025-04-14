@@ -1,9 +1,11 @@
 package com.erdodif.capsulate.lang.evaluation.expressions
 
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.expression.ChrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.NatLit
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
+import com.erdodif.capsulate.lang.program.grammar.expression.VChr
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.program.grammar.expression.VStr
 import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
@@ -38,5 +40,13 @@ class LiteralTest {
         assertIs<Left<*>>(result)
         assertIs<VStr>(result.value)
         assertEquals("text", result.value.value)
+    }
+
+    @Test
+    fun `evaluate ChrLit`() {
+        val result = ChrLit('c', pos).evaluate(Environment.EMPTY)
+        assertIs<Left<*>>(result)
+        assertIs<VChr>(result.value)
+        assertEquals('c', result.value.value)
     }
 }

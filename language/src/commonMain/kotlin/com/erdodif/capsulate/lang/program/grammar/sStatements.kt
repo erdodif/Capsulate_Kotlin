@@ -1,13 +1,18 @@
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
+import com.erdodif.capsulate.lang.program.grammar.expression.NUM
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.lang.program.grammar.expression.pExp
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
@@ -61,7 +66,9 @@ val statementOrBlock: Parser<List<Statement>> =
     orEither(blockOrParallel, nonParallel / { arrayListOf(it) })
 
 val sError: Parser<LineError> = delimit(some(satisfy { it !in lineEnd })) / {
-    LineError(it.asString(), this.input.substring(0..max(this.position-1,0)).count { it == '\n' })
+    LineError(
+        it.asString(),
+        this.input.substring(0..max(this.position - 1, 0)).count { it == '\n' })
 }
 
 val sSkip: Parser<Statement> = delimit(_keyword("skip")) * { _, pos -> Skip(pos) }
@@ -73,8 +80,7 @@ val sAtom: Parser<Statement> =
     }
 val sWait: Parser<Statement> = delimit(
     right(
-        _keyword("await"),
-        delimit(pExp) + or(sAtom, record(blockOrParallel))
+        _keyword("await"), delimit(pExp) + or(sAtom, record(blockOrParallel))
     ) * { (condition, atomic), pos ->
         Wait(
             condition,
@@ -127,8 +133,27 @@ val sDoWhile: Parser<Statement> = right(
     blockOrParallel + delimit(right(_keyword("while"), pExp)),
 ) * { (block, condition), pos -> DoWhile(condition, block, pos) }
 
+val pIndex: Parser<VArray.Index> =
+    (_nonKeyword + some(middle(_char('['), pExp, _char(']'))))[{ (value, state, match) ->
+        val (id, indexers) = value
+        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id, indexers.first()), state, match)
+        // TODO: Make multiple indexers possible
+        for (indexer in indexers) {
+            if (indexer.getType(assumptions) !is NUM) {
+                result = Fail(
+                    "Tried to use non-number as an indexer (assumed type: ${
+                        indexer.getType(assumptions)
+                    })",
+                    state
+                )
+                break
+            }
+        }
+        result
+    }]
+
 val sParallelAssign: Parser<Statement> =
-    (delimited(_nonKeyword, _char(',')) + right(
+    (delimited(or(pIndex,_nonKeyword), _char(',')) + right(
         tok(string(":=")),
         delimit(delimited(pExp, _char(',')))
     ))[{
@@ -143,12 +168,14 @@ val sParallelAssign: Parser<Statement> =
     }]
 
 val sAssign: Parser<Statement> =
-    delimit(_nonKeyword + right(_keyword(":="), pExp)) * { (variable, value), pos ->
-        assumptions[variable] = value.getType(assumptions)
+    delimit(or(pIndex,_nonKeyword) + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+        if (variable is Right) {
+            assumptions[variable.value] = value.getType(assumptions)
+        }
         Assign(variable, value, pos)
     }
 
-val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specification part
+val pType: Parser<Type> = { pass(0, NEVER) } // TODO :get from specification part
 val sSelect: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":∈"), pType)) * { (label, set), pos ->
         Select(label, set.toString(), pos)
