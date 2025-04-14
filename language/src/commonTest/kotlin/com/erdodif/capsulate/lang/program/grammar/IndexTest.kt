@@ -17,8 +17,8 @@ class IndexTest {
     fun `indexer parses int alone`() {
         index pass "a[1]" assert {
             assertEquals("a", it.value.id)
-            assertIs<IntLit>(it.value.indexer)
-            assertEquals(1, it.value.indexer.value)
+            assertIs<IntLit>(it.value.indexers)
+            assertEquals(1, it.value.indexers.value)
         } at 4
     }
 
@@ -26,8 +26,8 @@ class IndexTest {
     fun `indexer parses int double`() {// TODO: Align test when multiple assignment is possible
         index pass "a[1][2]" assert {
             assertEquals("a", it.value.id)
-            assertIs<IntLit>(it.value.indexer)
-            assertEquals(1, it.value.indexer.value)
+            assertIs<IntLit>(it.value.indexers)
+            assertEquals(1, it.value.indexers.value)
         } at 7
     }
 

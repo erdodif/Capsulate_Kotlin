@@ -136,8 +136,7 @@ val sDoWhile: Parser<Statement> = right(
 val pIndex: Parser<VArray.Index> =
     (_nonKeyword + some(middle(_char('['), pExp, _char(']'))))[{ (value, state, match) ->
         val (id, indexers) = value
-        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id, indexers.first()), state, match)
-        // TODO: Make multiple indexers possible
+        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id, indexers), state, match)
         for (indexer in indexers) {
             if (indexer.getType(assumptions) !is NUM) {
                 result = Fail(

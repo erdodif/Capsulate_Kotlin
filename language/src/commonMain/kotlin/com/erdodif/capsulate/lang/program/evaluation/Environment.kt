@@ -3,6 +3,7 @@ package com.erdodif.capsulate.lang.program.evaluation
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.lang.program.grammar.expression.ARRAY
 import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VArray
@@ -40,7 +41,9 @@ sealed interface Environment : KParcelable {
 
     /** Returns the variable's value */
     fun getValue(id: String): Either<Value, Unit>
+    fun getValue(id: String, vararg indexes: Int)
     fun typeOf(id: String): Type
+    fun typeOf(id: String, vararg indexes: Int)
 
     /**
      * Sets the variable's content to the desired value
@@ -54,7 +57,7 @@ sealed interface Environment : KParcelable {
      *
      * The variable cannot be missing at this point
      */
-    fun set(id: String, index: Int, value: Value)
+    fun set(id: String, value: Value, vararg indexes: Int)
 
     companion object {
         val EMPTY: Env
@@ -118,12 +121,20 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
             }
         }
 
+    override fun getValue(id: String, vararg indexes: Int) {
+        TODO("Not yet implemented")
+    }
+
     override fun typeOf(id: String): Type =
         if (newNames[id] != null) {
             env.typeOf(newNames[id]!!)
         } else {
             values.find { it.id == id }?.type ?: NEVER
         }
+
+    override fun typeOf(id: String, vararg indexes: Int) {
+        TODO("Not yet implemented")
+    }
 
     override fun set(id: String, value: Value) {
         when {
@@ -136,11 +147,11 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
     @Suppress("UNCHECKED_CAST")
     override fun set(
         id: String,
-        index: Int,
-        value: Value
+        value: Value,
+        vararg index: Int
     ) {
         if (newNames[id] != null) {
-            env.set(newNames[id]!!, index, value)
+            env.set(newNames[id]!!, value, *index)
             return
         }
         val result = get(id)
@@ -151,7 +162,8 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
             } else if (array.size < index || index < 1) {
                 error("Index out of bounds (asked for $index in an array size of ${array.size})")
             } else {
-                (values[values.indexOfFirst { it.id == id }].value as VArray<Value>)[index - 1] = value
+                (values[values.indexOfFirst { it.id == id }].value as VArray<Value>)[index - 1] =
+                    value
             }
         }
     }
@@ -220,8 +232,16 @@ data class Env(
     override fun getValue(id: String): Either<Value, Unit> =
         if (present(id)) Left(unSafeGet(id)) else Right(Unit)
 
+    override fun getValue(id: String, vararg indexes: Int) {
+        TODO("Not yet implemented")
+    }
+
     override fun typeOf(id: String): Type =
         if (present(id)) values.find { it.id == id }!!.type else NEVER
+
+    override fun typeOf(id: String, vararg indexes: Int) {
+        TODO("Not yet implemented")
+    }
 
     /**
      * Sets the variable's content to the desired value
@@ -236,18 +256,28 @@ data class Env(
     @Suppress("UNCHECKED_CAST")
     override fun set(
         id: String,
-        index: Int,
-        value: Value
+        value: Value,
+        vararg indexes: Int
     ) {
         val result = get(id)
         if (result is Left) {
             val array = result.value.value
             if (array !is VArray<*>) {
                 error("Parameter named $id is not an array (namely ${array.type})")
-            } else if (array.size < index || index < 1) {
-                error("Index out of bounds (asked for $index in an array size of ${array.size})")
+            } else if (array.size < indexes.first() || indexes.first() < 1) {
+                error("Index out of bounds (asked for $indexes in an array size of ${array.size})")
             } else {
-                (values[values.indexOfFirst { it.id == id }].value as VArray<Value>)[index - 1] = value
+                val theArray = values[values.indexOfFirst { it.id == id }].value as? VArray<*>
+                if(theArray == null || theArray.type !is ARRAY){
+                    error("")
+                }
+                else{
+                    //TODO: do the actual array access
+                    theArray
+                    //[indexes.first() - 1] =
+                    //                    value
+                }
+
             }
         }
     }

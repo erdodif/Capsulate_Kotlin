@@ -18,7 +18,6 @@ import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
 import com.erdodif.capsulate.lang.program.grammar.expression.VArray.Index
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
-import com.erdodif.capsulate.lang.program.grammar.expression.withValue
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
@@ -26,11 +25,8 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.filterLeft
-import com.erdodif.capsulate.lang.util.filterRight
 import kotlinx.serialization.Serializable
 import kotlin.collections.plus
-import kotlin.text.iterator
-import kotlin.text.set
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -331,15 +327,26 @@ data class Assign(
             Finished
         }
 
-        is Left -> label.value.indexer.join(env) { index ->
-            if (index is VNum) {
-                value.join(env) { value ->
-                    env.set(label.value.id, index.value, value)
-                    Finished
-                }
-            } else {
-                error("Non number indexer found (namely $index)")
+        is Left -> label.value.indexers.joinAll(env) { indexers ->
+            if (indexers.any { it !is VNum }) {
+                error(
+                    "Non number indexer found " + indexers
+                        .mapIndexed { i, v -> v to i }
+                        .filter { it.first !is VNum }
+                        .joinToString(prefix = "(", postfix = ")") { (v, i) ->
+                            "$v at $i"
+                        }
+                )
             }
+            value.join(env) { value ->
+                env.set(
+                    label.value.id,
+                    value,
+                    *indexers.mapNotNull { (it as? VNum)?.value }.toIntArray()
+                )
+                Finished
+            }
+
         }
     }
 
@@ -349,9 +356,11 @@ data class Assign(
                 is Right -> append(label.value)
                 is Left -> {
                     append(label.value.id)
-                    append('[')
-                    append(label.value.indexer.toString(state))
-                    append(']')
+                    label.value.indexers.forEach {
+                        append('[')
+                        append(it.toString(state))
+                        append(']')
+                    }
                 }
             }
             append(" := ")
@@ -403,8 +412,8 @@ data class ParallelAssign(
                             when (val index = indexes[count]) {
                                 is VNum -> env.set(
                                     label.value.id,
-                                    index.value,
-                                    assign.second
+                                    assign.second,
+                                    index.value
                                 )
 
                                 else -> error("Non number indexer found (namely $index)")
@@ -424,7 +433,9 @@ data class ParallelAssign(
         print(assigns.joinToString(", ") {
             when (val label = it.first) {
                 is Right -> label.value
-                is Left -> "${label.value.id}[${label.value.indexer.toString(state)}]"
+                is Left -> label.value.id + label.value.indexers.joinToString{
+                    "[${it.toString(state)}]"
+                }
             }
         })
         print(" := ")

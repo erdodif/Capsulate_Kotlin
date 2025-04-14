@@ -79,9 +79,32 @@ data class VArray<T : Value>(
     val size: Int
         get() = value.size
 
+    val depth: Int = ((value.first() as? VArray<*>)?.depth ?: 0) + 1
+
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
 
     operator fun get(index: Int): Value = value[index] ?: UNSET
+    operator fun get(vararg index: Int): Value = when {
+        index.size == 1 -> value[index.first()] ?: UNSET
+        depth > index.size -> error(
+            "The array isn't this deep! Asked for ${index.size} dimensions, this array is only $depth levels deep."
+        )
+
+        index.first() < 1 -> error(
+            "Array index must be positive (given ${index.first()})!"
+        )
+
+        index.first() > value.size -> error(
+            "Array index out of bounds (given ${index.first()}, max index ${value.size})!"
+        )
+
+        value[index.first()] !is VArray<*> -> error(
+            "Internal type is not an Array! (${value[index.first()]?.type ?: NEVER})"
+        )
+
+        else -> (value[index.first()] as? VArray<*>)?.get(*index.drop(1).toIntArray()) ?: UNSET
+    }
+
     operator fun set(index: Int, value: T) {
         this.value[index] = value
     }
@@ -98,7 +121,7 @@ data class VArray<T : Value>(
     override fun hashCode(): Int = value.contentHashCode()
 
     @KParcelize
-    data class Index(val id: String, val indexer: Exp<Value>) : Exp<Value> {
+    data class Index(val id: String, val indexers: List<Exp<Value>>) : Exp<Value> {
         override fun getType(assumptions: Map<String, Type>): Type =
             when (val assume = assumptions[id]) {
                 is ARRAY -> assume.contentType
@@ -106,39 +129,56 @@ data class VArray<T : Value>(
             }
 
         override fun evaluate(context: Environment): Either<Value, PendingExpression<Value, Value>> =
-            indexer.withRawValue(context) {
-                if (it is VNat) {
-                    when (val param = context.get(id)) {
-                        is Left -> when (val value = param.value.value) {
-                            is VArray<*> -> {
-                                if (it.value >= value.value.size) {
-                                    error(
-                                        "Index out of bounds (asked for ${it.value} " +
-                                                "in an array with size of ${value.value.size})"
-                                    )
-                                } else {
-                                    value.value[it.value] as Value
-                                }
-                            }
-
-                            else -> error("Can't index non-array ($id : ${value.type})")
-                        }
-
-                        is Right -> error("Can't index on missing parameter '$id'")
-                    }
-                } else {
+            indexers.withRawValue(context) { indexers ->
+                if (indexers.any { it !is VNum }) {
                     error(
-                        "Can't index with anything except a Natural number (got ${
-                            indexer.getType(context.assumptions)
-                        })"
+                        "Cannot index with non-numbers! Got: " + indexers
+                            .mapIndexed { index, a -> a to index }
+                            .filter { it.first !is VNum }
+                            .joinToString(postfix = ".") { (value, index) -> "${value.type} at ${index + 1}" }
+
                     )
                 }
+                indexers as List<VNum>
+                if (indexers.any { it.value < 1 }) {
+                    error(
+                        "Indexers must be positive! Got: " + indexers
+                            .mapIndexed { index, a -> a to index }
+                            .filter { it.first.value < 1 }
+                            .joinToString(postfix = ".") { (value, index) -> "$value at $index" }
+                    )
+                }
+                when (val param = context.get(id)) {
+                    is Left -> when (val value = param.value.value) {
+                        is VArray<*> -> {
+                            if (indexers[0].value > value.value.size) {
+                                error(
+                                    "Index out of bounds (asked for ${indexers[0].value} " +
+                                            "in an array with size of ${value.value.size})"
+                                )
+                            } else {
+                                (value.value[indexers[0].value] as? VArray<*>)?.get(
+                                    *indexers.drop(1).map(VNum::value).toIntArray()
+                                ) as Value
+                            }
+                        }
+
+                        else -> error("Can't index non-array ($id : ${value.type})")
+                    }
+
+                    is Right -> error("Can't index on missing parameter '$id'")
+                }
             }
+
 
         override fun toString(
             state: ParserState,
             parentStrength: Int
-        ): String = "$id[${indexer.toString(state, parentStrength)}]"
-
+        ): String =
+            id + indexers.joinToString(separator = "") { "[${it.toString(state, parentStrength)}]" }
     }
+}
+
+fun <T: Value> VArray<VArray<T>>.set(value: T, vararg indexes: Int){
+    TODO("Not yet implemented!")
 }

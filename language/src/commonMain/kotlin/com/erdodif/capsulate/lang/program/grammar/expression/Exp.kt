@@ -74,6 +74,21 @@ interface Exp<T : Value> : KParcelable {
     fun toString(state: ParserState, parentStrength: Int = 0): String
 }
 
+fun <T : Value, R : Value> List<Exp<T>>.withRawValue(
+    env: Environment,
+    onValue: Environment.(List<T>) -> R
+) = withRawValue(env, emptyList(), onValue)
+
+private fun <T : Value, R : Value> List<Exp<T>>.withRawValue(
+    env: Environment,
+    accumulated: List<T>,
+    onValue: Environment.(List<T>) -> R
+): Either<R, PendingExpression<Value, R>> = if (this.isEmpty()) {
+    Left(onValue(env, accumulated))
+} else {
+    first().withValue(env) tmp@{ this@withRawValue.drop(1).withRawValue(env, accumulated + it, onValue) }
+}
+
 fun <T : Value, R : Value> List<Exp<T>>.withValue(
     env: Environment,
     onValue: Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
