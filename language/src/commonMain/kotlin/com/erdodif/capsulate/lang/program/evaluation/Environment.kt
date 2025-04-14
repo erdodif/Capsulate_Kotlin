@@ -192,7 +192,6 @@ data class Env(
         ((get(id) as? Left<*>)?.value as? VArray<*>)?.type?.typeOnLevel(depth)
     } ?: NEVER
 
-    // TODO: Type check maybe?
     @Suppress("UNCHECKED_CAST")
     override fun set(
         id: String,
@@ -201,6 +200,9 @@ data class Env(
     ) {
         val result = get(id)
         if (indexes.isEmpty()) {
+            if (assumptions.contains(id) && assumptions[id] != value.type) {
+                error("Type mismatch! ($id has type of ${assumptions[id]}, but value got ${value.type})")
+            }
             when (result) {
                 is Left -> values[values.indexOfFirst { it.id == id }].value = value
                 is Right -> values.add(Parameter(id, value.type, value))

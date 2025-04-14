@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
+import com.erdodif.capsulate.lang.program.grammar.expression.Assume
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.program.grammar.expression.ChrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.Comment
@@ -38,7 +39,8 @@ class CodeHighlight private constructor(
     val error: Color,
     val comment: Color,
     val control: Color,
-    var whiteSpace: Color
+    var whiteSpace: Color,
+    var assume: Color
 ) {
 
     class Builder private constructor() {
@@ -53,6 +55,7 @@ class CodeHighlight private constructor(
         var comment: Color = Color(90, 90, 90)
         var control: Color = Color(218, 121, 42)
         var whiteSpace: Color = Color(75, 75, 75, 134)
+        var type : Color = Color(255,76,231)
 
         companion object {
             @Composable
@@ -74,7 +77,8 @@ class CodeHighlight private constructor(
             error = error,
             comment = comment,
             control = control,
-            whiteSpace = whiteSpace
+            whiteSpace = whiteSpace,
+            assume = type
         )
     }
 
@@ -102,6 +106,7 @@ class CodeHighlight private constructor(
             is StrLit -> string
             is ChrLit -> string
             is LineEnd -> parenthesis
+            is Assume -> assume
             is Symbol -> {
                 if (this.id == '(' || this.id == ')') parenthesis
                 else operator
@@ -172,5 +177,6 @@ val defaultCodeHighLight
             comment = Color(48, 48, 48)
             control = Color(202, 106, 9)
             whiteSpace = Color(146, 146, 146)
+            type = Color(163,76,255)
         }
     }.build()

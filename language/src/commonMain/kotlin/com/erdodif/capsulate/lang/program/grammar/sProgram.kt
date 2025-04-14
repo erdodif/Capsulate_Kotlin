@@ -6,6 +6,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.LineEnd
 import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.expression.pAssumption
 import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pChrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pComment
@@ -16,16 +17,10 @@ import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.program.grammar.function.sFunction
 import com.erdodif.capsulate.lang.program.grammar.function.sMethod
-import com.erdodif.capsulate.lang.program.grammar.function.sPattern
-import com.erdodif.capsulate.lang.program.grammar.function.sReturn
-import com.erdodif.capsulate.lang.util.Fail
-import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util._anyKeyword
-import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._lineEnd
 import com.erdodif.capsulate.lang.util._nonKeyword
@@ -119,6 +114,7 @@ fun tokenizeProgram(input: String): ParserResult<List<Token>> =
                 many(
                     asum(
                         (_lineEnd * { char, pos -> LineEnd(char, pos) }) as Parser<Token>,
+                        pAssumption as Parser<Token>,
                         pVariable as Parser<Token>,
                         pComment as Parser<Token>,
                         pIntLit as Parser<Token>,

@@ -23,6 +23,7 @@ import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.delimited
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.sFunctionCall
+import com.erdodif.capsulate.lang.program.grammar.pType
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -37,7 +38,6 @@ import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.asum
-import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
 import kotlinx.serialization.SerialName
@@ -86,7 +86,9 @@ private fun <T : Value, R : Value> List<Exp<T>>.withRawValue(
 ): Either<R, PendingExpression<Value, R>> = if (this.isEmpty()) {
     Left(onValue(env, accumulated))
 } else {
-    first().withValue(env) tmp@{ this@withRawValue.drop(1).withRawValue(env, accumulated + it, onValue) }
+    first().withValue(env) tmp@{
+        this@withRawValue.drop(1).withRawValue(env, accumulated + it, onValue)
+    }
 }
 
 fun <T : Value, R : Value> List<Exp<T>>.withValue(
@@ -162,6 +164,12 @@ data class Comment(val content: String, override val match: MatchPos) : Token(ma
     override fun copy(match: MatchPos): Token = copy(content = content, match = match)
 }
 
+@KParcelize
+data class Assume(val id: String, val type: Type, override val match: MatchPos) : Token(match) {
+    override fun copy(match: MatchPos): Token = copy(id = id, match = match)
+}
+
+
 val pComment: Parser<Comment> = orEither(
     right(
         (char('/') + _char('/')),
@@ -191,6 +199,14 @@ val pVariable: Parser<Variable> = _nonKeyword[{
     if (it.value[0].isDigit()) fail("Variable name can't start with digit!")
     else pass(it.match.start, Variable(it.value, it.match))
 }]
+
+val pAssumption: Parser<Assume> = {
+    (pVariable + right(_char(':'), pType))[{ (value, _, match) ->
+        val (variable, type) = value
+        assumptions[variable.id] = type
+        pass(match.start, Assume(variable.id, type, match))
+    }]()
+}
 
 val pArrayLit: Parser<ArrayLit<Value>> = {
     middle(_char('['), delimited(pExp, _char(',')), _char(']'))[{ (values, state, match) ->

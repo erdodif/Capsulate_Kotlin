@@ -19,6 +19,7 @@ import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
+import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.newLined
@@ -89,9 +90,8 @@ data class FunctionCall<T : Value>(
     constructor(function: Function<T>, values: List<Exp<Value>>, match: MatchPos) :
             this(function.name, values, match)
 
-    override fun getType(assumptions: Map<String, Type>): Type {
-        TODO("Not yet implemented")
-    }
+    override fun getType(assumptions: Map<String, Type>): Type =
+        assumptions["function:$name:${values.size}"] ?: NEVER
 
     @Suppress("UNCHECKED_CAST")
     override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> = Right(
@@ -112,26 +112,37 @@ val sFunction: Parser<Function<Value>> = {
         )
     )().fold({ (result, state) ->
         val (name, params) = result
+        val label = "function:$name:${params?.count() ?: 0}"
         val tmpEnv = ParserState(
             this.input,
             this.functions + Function(name, params ?: emptyList(), listOf()),
             this.methods
-        ).also { it.position = state.position }
+        ).also {
+            it.position = state.position
+        }
         val blocks = tmpEnv.withReturn(
-            delimit(
+            label, delimit(
                 orEither(
                     middle(
                         newLined(_char('{')),
-                        some(delimit(orEither(sReturn, statement))),
+                        some(delimit(statement)),
                         newLined(_char('}'))
                     ), orEither(sReturn, sAbort) / { arrayListOf(it) })
             )
         )
+        state.semanticErrors.addAll(tmpEnv.semanticErrors)
+        if (tmpEnv.assumptions.contains(label)) {
+            state.assumptions[label] = tmpEnv.assumptions[label]!!
+        }
         position = tmpEnv.position
         when (blocks) {
             is Pass -> {
                 val function = Function<Value>(name, params ?: emptyList(), blocks.value)
-                functions.add(function)
+                if (functions.any { it.name == name && params?.count() == it.parameters.count() }) {
+                    raiseError("Function with ${params?.count() ?: 0} parameters already defined!")
+                } else {
+                    functions.add(function)
+                }
                 Pass(function, tmpEnv, MatchPos.ZERO)
             }
 
@@ -158,8 +169,20 @@ data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
 }
 
 val sReturn: Parser<Statement> = right(_keyword("return"), pExp)[{ (value, state, pos) ->
-    if (allowReturn) Pass(Return<Value>(value, match = pos), state, pos)
-    else Fail("Return is only allowed in a function block!", state)
+    if (allowReturn && currentFunctionLabel != null) {
+        if (assumptions[currentFunctionLabel!!] != null) {
+            if (assumptions[currentFunctionLabel!!] != value.getType(assumptions)) {
+                raiseError(
+                    "Type mismatch on return type ${value.getType(assumptions)}," +
+                            "when the function is " +
+                            "assumed to have return type ${assumptions[currentFunctionLabel!!]}"
+                )
+            }
+        } else {
+            assumptions[currentFunctionLabel!!] = value.getType(assumptions)
+        }
+        Pass(Return<Value>(value, match = pos), state, pos)
+    } else Fail("Return is only allowed in a function block!", state)
 }]
 
 val sFunctionCall: Parser<Exp<Value>> = {

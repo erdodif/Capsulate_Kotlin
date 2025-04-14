@@ -111,8 +111,8 @@ data class VArray<T : Value>(
             "VArray index out of bounds (given ${indexes.first()}, max index ${value.size})!"
         )
 
-        value[indexes.first()] !is VArray<*> -> error(
-            "Internal type is not a VArray! (${value[indexes.first()]?.type ?: NEVER})"
+        value[indexes.first() - 1] !is VArray<*> -> error(
+            "Internal type is not a VArray! (${value[indexes.first() - 1]?.type ?: NEVER})"
         )
 
         else -> Unit
@@ -126,6 +126,11 @@ data class VArray<T : Value>(
     }
 
     operator fun set(vararg indexes: Int, value: T) {
+        if (type.typeOnLevel(indexes.size) != value.type) {
+            error("Type mismatch! " +
+                    "(This array has type of ${type.typeOnLevel(indexes.size)} " +
+                    "on level ${indexes.size}, but the value is ${value.type})")
+        }
         if (indexes.size == 1) {
             this.value[indexes.first() - 1] = value
         } else {

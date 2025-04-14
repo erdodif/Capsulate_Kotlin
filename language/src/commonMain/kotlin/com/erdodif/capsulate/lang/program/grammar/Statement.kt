@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate.lang.program.grammar
 
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
@@ -433,7 +434,7 @@ data class ParallelAssign(
         print(assigns.joinToString(", ") {
             when (val label = it.first) {
                 is Right -> label.value
-                is Left -> label.value.id + label.value.indexers.joinToString{
+                is Left -> label.value.id + label.value.indexers.joinToString {
                     "[${it.toString(state)}]"
                 }
             }
@@ -466,8 +467,8 @@ data class Expression(
 
 @KParcelize
 data class LineError(val content: String, val line: Int) : KParcelable {
-    init { // TODO: Remove
-        println("LINE $line: $content")
+    init {
+        Logger.e("LINEERROR") { " $line: $content" }
     }
 }
 

@@ -1,9 +1,11 @@
 package com.erdodif.capsulate.lang.program.grammar
 
-import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
+import com.erdodif.capsulate.lang.program.grammar.expression.ARRAY
 import com.erdodif.capsulate.lang.program.grammar.expression.NUM
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VArray
+import com.erdodif.capsulate.lang.program.grammar.expression.pAssumption
+import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pExp
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
@@ -35,7 +37,7 @@ fun <T> newLined(parser: Parser<T>): Parser<T> = left(parser, many(_lineBreak))
 val nonParallel: Parser<Statement> = {
     asum(
         sMethodCall,
-        sReturn,
+        sReturn, // Only valid in function
         sSkip,
         sAbort,
         sWait,
@@ -50,7 +52,8 @@ val nonParallel: Parser<Statement> = {
     )()
 }
 
-val statement: Parser<Statement> = { orEither(sParallel, nonParallel)() }
+val statement: Parser<Statement> =
+    { right(many(or(pComment, pAssumption)), orEither(sParallel, nonParallel))() }
 
 val blockOrParallel: (ParserState) -> ParserResult<List<Statement>> = { state ->
     orEither(
@@ -152,31 +155,78 @@ val pIndex: Parser<VArray.Index> =
     }]
 
 val sParallelAssign: Parser<Statement> =
-    (delimited(or(pIndex,_nonKeyword), _char(',')) + right(
+    (delimited(or(pIndex, _nonKeyword), _char(',')) + right(
         tok(string(":=")),
         delimit(delimited(pExp, _char(',')))
     ))[{
         val (params, values) = it.value
         if (values.count() != params.count())
             fail("The number of parameters does not match the number of values to assign.")
-        else if (values.count() == 1) {
-            pass(it.match.start, Assign(params.first(), values.first(), it.match))
-        } else {
-            pass(it.match.start, ParallelAssign(params.zip(values), it.match))
+        else {
+            for ((i, variable) in params.withIndex()) {
+                if (variable is Right) {
+                    if (assumptions[variable.value] != null &&
+                        assumptions[variable.value] != values[i].getType(assumptions)
+                    ) {
+                        raiseError(
+                            "Possible type mismatch! " +
+                                    "(already assumed ${assumptions[variable.value]}, " +
+                                    "but the value has ${values[i].getType(assumptions)}"
+                        )
+                    } else {
+                        assumptions[variable.value] = values[i].getType(assumptions)
+                    }
+                }
+            }
+            if (values.count() == 1) {
+                pass(it.match.start, Assign(params.first(), values.first(), it.match))
+            } else {
+                pass(it.match.start, ParallelAssign(params.zip(values), it.match))
+            }
         }
     }]
 
+
+val pType: Parser<Type> = {
+    or(
+        _nonKeyword,
+        middle(string("Array") + _char('('), pType + right(_char(','), natural), _char(')'))
+    )[{ (value, _, match) ->
+        when (value) {
+            is Left<String> -> {
+                val type = Type.fromLabel(value.value)
+                if (type != null) {
+                    pass(match.start, type)
+                } else {
+                    fail("Failed to match")
+                }
+            }
+
+            is Right -> pass(match.start, ARRAY(value.value.first, value.value.second.toInt()))
+        }
+    }]()
+}
+
 val sAssign: Parser<Statement> =
-    delimit(or(pIndex,_nonKeyword) + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+    delimit(or(pIndex, _nonKeyword) + right(_keyword(":="), pExp)) * { (variable, value), pos ->
         if (variable is Right) {
-            assumptions[variable.value] = value.getType(assumptions)
+            if (assumptions[variable.value] != null &&
+                assumptions[variable.value] != value.getType(assumptions)
+            ) {
+                raiseError(
+                    "Possible type mismatch! " +
+                            "(already assumed ${assumptions[variable.value]}, " +
+                            "but the value has ${value.getType(assumptions)}"
+                )
+            } else {
+                assumptions[variable.value] = value.getType(assumptions)
+            }
         }
         Assign(variable, value, pos)
     }
 
-val pType: Parser<Type> = { pass(0, NEVER) } // TODO :get from specification part
 val sSelect: Parser<Statement> =
-    delimit(_nonKeyword + right(_keyword(":∈"), pType)) * { (label, set), pos ->
+    delimit(_nonKeyword + right(_keyword(":∈"), _nonKeyword)) * { (label, set), pos ->
         Select(label, set.toString(), pos)
     }
 
