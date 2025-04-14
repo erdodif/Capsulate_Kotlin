@@ -3,7 +3,6 @@ package com.erdodif.capsulate.lang.program.evaluation
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.grammar.expression.ARRAY
 import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VArray
@@ -36,38 +35,44 @@ sealed interface Environment : KParcelable {
     /** Determines whether the asked variable is defined in this context */
     fun present(id: String): Boolean
 
-    /** Returns the variable's value */
-    fun get(id: String): Either<Parameter, Unit>
+    /** Returns the variable with the given label (or [Right] if not found)*/
+    fun getParameter(id: String): Either<Parameter, Unit>
 
-    /** Returns the variable's value */
-    fun getValue(id: String): Either<Value, Unit>
-    fun getValue(id: String, vararg indexes: Int)
-    fun typeOf(id: String): Type
-    fun typeOf(id: String, vararg indexes: Int)
+    /** Returns the variable's value (or indexed value, if index is given)*/
+    fun get(id: String, vararg indexes: Int): Either<Value, Unit>
+
+    /**
+     * Get the type of the parameter with the given [id], and depth, if given
+     *
+     * On depth 0, the parameter's own type is returned
+     *
+     * Below 0, the type will be [NEVER]
+     */
+    fun typeOf(id: String, depth: Int = 0): Type
 
     /**
      * Sets the variable's content to the desired value
      *
-     * If the variable is missing, it will be added into the context
-     */
-    fun set(id: String, value: Value)
-
-    /**
-     * Sets the array variable's indexed content to the desired value
+     * If the variable is missing (and not array-accessed), it will be added into the context
      *
-     * The variable cannot be missing at this point
+     * In case at least an indexer is given, said variable cannot be missing (and must be an array)
      */
     fun set(id: String, value: Value, vararg indexes: Int)
+
+    /**
+     * Create a Proxy Environment based on this one
+     *
+     * Every parameter that is present in the [renames] will be available in the proxy environment,
+     * while the remaining parameters will be shadowed
+     */
+    fun proxyWith(renames: Map<String, String>): ProxyEnv = ProxyEnv(renames, this)
+
+    override fun toString(): String
 
     companion object {
         val EMPTY: Env
             get() = Env(mapOf(), mapOf(), mutableListOf())
     }
-
-    override fun toString(): String
-
-    fun proxyWith(renames: Map<String, String>): ProxyEnv = ProxyEnv(renames, this)
-
 }
 
 /**
@@ -84,88 +89,34 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
     override val methods: Map<Pattern, Method>
         get() = env.methods
     override val assumptions: Map<String, Type>
-        get() = (values + env.parameters.filter { renames.containsKey(it.id) })
-            .associate { it.id to it.type }
+        get() = (shadowEnv.assumptions + env.assumptions.filter { renames.containsKey(it.key) })
+    private val shadowEnv = Environment.EMPTY
 
     @KIgnoredOnParcel
     private val newNames = renames.map { it.value to it.key }.associate { it }
 
-    @KIgnoredOnParcel
-    private val values: MutableList<Parameter> = mutableListOf()
-
     override val parameters: ImmutableList<Parameter>
-        get() = (values.map { it.copy("${it.id}⭑") } + env.parameters.mapNotNull {
+        get() = (shadowEnv.parameters + env.parameters.mapNotNull {
             if (renames.containsKey(it.id)) it.copy(id = "⦃${it.id}⩬${renames[it.id]}⦄") else null
         }).toImmutableList()
 
     override fun present(id: String): Boolean =
-        newNames.containsKey(id) || values.any { it.id == id }
+        newNames.containsKey(id) || shadowEnv.present(id)
 
-    override fun get(id: String): Either<Parameter, Unit> =
-        if (newNames[id] != null) {
-            env.get(newNames[id]!!)
-        } else {
-            when (val result = values.find { it.id == id }) {
-                null -> Right(Unit)
-                else -> Left(result)
-            }
-        }
+    override fun getParameter(id: String): Either<Parameter, Unit> =
+        if (newNames[id] != null) env.getParameter(newNames[id]!!) else shadowEnv.getParameter(id)
 
-    override fun getValue(id: String): Either<Value, Unit> =
-        if (newNames[id] != null) {
-            env.getValue(newNames[id]!!)
-        } else {
-            when (val result = values.find { it.id == id }) {
-                null -> Right(Unit)
-                else -> Left(result.value)
-            }
-        }
+    override fun get(id: String, vararg indexes: Int) =
+        if (newNames[id] != null) env.get(newNames[id]!!) else shadowEnv.get(id, indexes = indexes)
 
-    override fun getValue(id: String, vararg indexes: Int) {
-        TODO("Not yet implemented")
-    }
-
-    override fun typeOf(id: String): Type =
-        if (newNames[id] != null) {
-            env.typeOf(newNames[id]!!)
-        } else {
-            values.find { it.id == id }?.type ?: NEVER
-        }
-
-    override fun typeOf(id: String, vararg indexes: Int) {
-        TODO("Not yet implemented")
-    }
-
-    override fun set(id: String, value: Value) {
-        when {
-            newNames[id] != null -> env.set(newNames[id]!!, value)
-            present(id) -> values[values.indexOfFirst { it.id == id }].value = value
-            else -> values.add(Parameter(id, value.type, value))
-        }
-    }
+    override fun typeOf(id: String, depth: Int) =
+        if (newNames[id] != null) env.typeOf(newNames[id]!!, depth) else shadowEnv.typeOf(id, depth)
 
     @Suppress("UNCHECKED_CAST")
-    override fun set(
-        id: String,
-        value: Value,
-        vararg index: Int
-    ) {
-        if (newNames[id] != null) {
-            env.set(newNames[id]!!, value, *index)
-            return
-        }
-        val result = get(id)
-        if (result is Left) {
-            val array = result.value.value
-            if (array !is VArray<*>) {
-                error("Parameter named $id is not an array (namely ${array.type})")
-            } else if (array.size < index || index < 1) {
-                error("Index out of bounds (asked for $index in an array size of ${array.size})")
-            } else {
-                (values[values.indexOfFirst { it.id == id }].value as VArray<Value>)[index - 1] =
-                    value
-            }
-        }
+    override fun set(id: String, value: Value, vararg indexes: Int) = if (newNames[id] != null) {
+        env.set(newNames[id]!!, value, indexes = indexes)
+    } else {
+        shadowEnv.set(id, value, indexes = indexes)
     }
 
 }
@@ -221,38 +172,27 @@ data class Env(
         return values.find { it.id == id }!!.value
     }
 
-    /** Returns the variable's value */
-    override fun get(id: String): Either<Parameter, Unit> =
-        if (present(id)) {
-            val pos = values.indexOfFirst { it.id == id }
-            Left(Parameter(values[pos].id, values[pos].type, values[pos].value))
-        } else Right(Unit)
+    override fun getParameter(id: String): Either<Parameter, Unit> = if (present(id)) {
+        val pos = values.indexOfFirst { it.id == id }
+        Left(Parameter(values[pos].id, values[pos].type, values[pos].value))
+    } else Right(Unit)
 
-    /** Returns the variable's value */
-    override fun getValue(id: String): Either<Value, Unit> =
-        if (present(id)) Left(unSafeGet(id)) else Right(Unit)
-
-    override fun getValue(id: String, vararg indexes: Int) {
-        TODO("Not yet implemented")
+    override fun get(id: String, vararg indexes: Int): Either<Value, Unit> = when {
+        !present(id) -> Right(Unit)
+        indexes.isEmpty() -> Left(unSafeGet(id))
+        else -> when (val array = unSafeGet(id)) {
+            is VArray<*> -> Left(array.get(indexes = indexes))
+            else -> Right(Unit)
+        }
     }
 
-    override fun typeOf(id: String): Type =
-        if (present(id)) values.find { it.id == id }!!.type else NEVER
+    override fun typeOf(id: String, depth: Int) = if (depth == 0) {
+        values.find { it.id == id }?.type
+    } else {
+        ((get(id) as? Left<*>)?.value as? VArray<*>)?.type?.typeOnLevel(depth)
+    } ?: NEVER
 
-    override fun typeOf(id: String, vararg indexes: Int) {
-        TODO("Not yet implemented")
-    }
-
-    /**
-     * Sets the variable's content to the desired value
-     *
-     * If the variable is missing, it will be added into the context
-     */
-    override fun set(id: String, value: Value) {
-        if (present(id)) values[values.indexOfFirst { it.id == id }].value = value
-        else values.add(Parameter(id, value.type, value))
-    }
-
+    // TODO: Type check maybe?
     @Suppress("UNCHECKED_CAST")
     override fun set(
         id: String,
@@ -260,24 +200,26 @@ data class Env(
         vararg indexes: Int
     ) {
         val result = get(id)
-        if (result is Left) {
-            val array = result.value.value
-            if (array !is VArray<*>) {
-                error("Parameter named $id is not an array (namely ${array.type})")
-            } else if (array.size < indexes.first() || indexes.first() < 1) {
-                error("Index out of bounds (asked for $indexes in an array size of ${array.size})")
-            } else {
-                val theArray = values[values.indexOfFirst { it.id == id }].value as? VArray<*>
-                if(theArray == null || theArray.type !is ARRAY){
-                    error("")
-                }
-                else{
-                    //TODO: do the actual array access
-                    theArray
-                    //[indexes.first() - 1] =
-                    //                    value
-                }
+        if (indexes.isEmpty()) {
+            when (result) {
+                is Left -> values[values.indexOfFirst { it.id == id }].value = value
+                is Right -> values.add(Parameter(id, value.type, value))
+            }
+        } else if (result is Right) {
+            error("Cannot find parameter to index into (missing $id)")
+        } else {
+            val array = (result as Left).value
+            when {
+                array !is VArray<*> -> error("Parameter named $id is not an array (namely ${array.type})")
+                array.size < indexes.first() || indexes.first() < 1 ->
+                    error("Index out of bounds (asked for $indexes in an array size of ${array.size})")
 
+                else -> {
+                    val firstIndex = values.indexOfFirst { it.id == id }
+                    val theArray = values[firstIndex].value as VArray<Value>
+                    theArray.set(indexes = indexes, value = value)
+                    values[firstIndex].value = theArray.copy()
+                }
             }
         }
     }

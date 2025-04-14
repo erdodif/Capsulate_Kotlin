@@ -95,71 +95,11 @@ val sHalfNamed: Parser<Triple<String?, List<Statement>, List<LineError>>> = deli
     Triple(name, statements, errors)
 }
 
-val sHalfFunction: Parser<Pair<Function<Value>, List<LineError>>> = {
-    delimit(
-        right(_keyword("function"), _nonKeyword) + middle(
-            _char('('), optional(delimited(pVariable, _char(','))), _char(')')
-        )
-    )().fold({ (result, state) ->
-        val (name, params) = result
-        val tmpEnv = ParserState(
-            this.input,
-            this.functions + Function(name, params ?: emptyList(), listOf()),
-            this.methods
-        ).also { it.position = state.position }
-        val blocks: ParserResult<List<*>> = tmpEnv.withReturn(
-            delimit(
-                orEither(
-                    middle(
-                        newLined(_char('{')),
-                        some(delimit(asum(sReturn, statement, sError))),
-                        newLined(_char('}'))
-                    ),
-                    asum(sReturn, sAbort, sError) / { listOf(it) })
-            )
-        )
-        position = tmpEnv.position
-        when (blocks) {
-            is Pass -> {
-                val function = Function<Value>(
-                    name,
-                    params ?: emptyList(),
-                    blocks.value.filterIsInstance<Statement>()
-                )
-                functions.add(function)
-                Pass(function to blocks.value.filterIsInstance<LineError>(), tmpEnv, MatchPos.ZERO)
-            }
-
-            is Fail -> blocks
-        }
-    }) { it }
-}
-
-val sHalfMethod: Parser<Pair<Method, List<LineError>>> =
-    (right(_keyword("method"), sPattern) + delimit(
-        orEither(
-            middle(
-                newLined(_char('{')),
-                some(delimit(asum(sReturn, statement, sError))),
-                newLined(_char('}'))
-            ),
-            asum(statement, sAbort, sError) / { listOf(it) })
-    )) / { pattern, block ->
-        val method = Method(pattern, block.filterIsInstance<Statement>())
-        methods.add(method)
-        method to block.filterIsInstance<LineError>()
-    }
-
-
 val halfProgram: Parser<HalfNamedProgram> =
-    topLevel(delimit(many(or(sHalfMethod, sHalfFunction))) + sHalfNamed) / { (decs, prog) ->
-        val (methodDecs, functionDecs) = decs.splitEither()
-        val methods = methodDecs.map { it.first }
-        val functions = functionDecs.map { it.first }
+    topLevel(delimit(many(or(sMethod,sFunction))) + sHalfNamed) / { (decs, prog) ->
+        val (methods, functions) = decs.splitEither()
         val (name, statements, progErrors) = prog
-        val errors: List<LineError> =
-            methodDecs.flatMap { it.second } + functionDecs.flatMap { it.second } + progErrors
-        HalfNamedProgram(name, statements, methods, functions, errors)
+        HalfNamedProgram(name, statements, methods, functions, progErrors)
     }
 
 val program: Parser<NamedProgram> =

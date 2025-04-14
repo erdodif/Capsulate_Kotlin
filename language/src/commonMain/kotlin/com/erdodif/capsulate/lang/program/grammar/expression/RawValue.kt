@@ -17,35 +17,35 @@ sealed class RawValue<T : Value>(override val match: MatchPos) : Exp<T>, Token(m
 
 @KParcelize
 data class ChrLit(val value: Char, override val match: MatchPos) : RawValue<VChr>(match) {
-    override fun getType(assumptions: Map<String, Type>): Type = CHAR
+    override fun getType(assumptions: Map<String, Type>): CHAR = CHAR
     override fun get(context: Environment): VChr = VChr(value)
     override fun toString(): String = "ChrLit:$value"
 }
 
 @KParcelize
 data class StrLit(val value: String, override val match: MatchPos) : RawValue<VStr>(match) {
-    override fun getType(assumptions: Map<String, Type>): Type = STRING
+    override fun getType(assumptions: Map<String, Type>): STRING = STRING
     override fun get(context: Environment): VStr = VStr(value)
     override fun toString(): String = "StrLit:$value"
 }
 
 @KParcelize
 data class IntLit(val value: Int, override val match: MatchPos) : RawValue<VWhole>(match) {
-    override fun getType(assumptions: Map<String, Type>): Type = WHOLE
+    override fun getType(assumptions: Map<String, Type>): WHOLE = WHOLE
     override fun get(context: Environment): VWhole = VWhole(value)
     override fun toString(): String = "IntLit:$value"
 }
 
 @KParcelize
 data class NatLit(val value: UInt, override val match: MatchPos) : RawValue<VNat>(match) {
-    override fun getType(assumptions: Map<String, Type>): Type = NAT
+    override fun getType(assumptions: Map<String, Type>): NAT = NAT
     override fun get(context: Environment): VNat = VNat(value)
     override fun toString(): String = "NatLit:$value"
 }
 
 @KParcelize
 data class BoolLit(val value: Boolean, override val match: MatchPos) : RawValue<VBool>(match) {
-    override fun getType(assumptions: Map<String, Type>): Type = BOOL
+    override fun getType(assumptions: Map<String, Type>): BOOL = BOOL
     override fun get(context: Environment): VBool = VBool(value)
     override fun toString(): String = "BoolLit:$value"
 }
@@ -53,13 +53,13 @@ data class BoolLit(val value: Boolean, override val match: MatchPos) : RawValue<
 @KParcelize
 data class ArrayLit<T : Value>(val value: Array<Exp<T>>, val match: MatchPos) :
     Exp<VArray<T>> {
-    override fun getType(assumptions: Map<String, Type>): Type =
+    override fun getType(assumptions: Map<String, Type>): ARRAY =
         ARRAY(value.first().getType(assumptions), value.size)
 
     @Suppress("UNCHECKED_CAST")
     override fun evaluate(context: Environment): Either<VArray<T>, PendingExpression<Value, VArray<T>>> =
         value.toList().withValue(context) { a: List<T> ->
-            Left(VArray<Value>(a.toTypedArray(), a.first().type) as VArray<T>)
+            Left(VArray<Value>(a.toTypedArray()) as VArray<T>)
         }
 
     override fun toString(
@@ -85,7 +85,7 @@ data class Variable(val id: String, override val match: MatchPos) : RawValue<Val
     override fun get(context: Environment): Value {
         val param = context.get(id)
         if (param is Left) {
-            return param.value.value
+            return param.value
         } else {
             error("Variable '$id' is not defined!")
         }

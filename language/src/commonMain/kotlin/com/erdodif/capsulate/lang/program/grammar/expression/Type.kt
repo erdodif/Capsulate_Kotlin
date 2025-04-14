@@ -29,6 +29,15 @@ data class ARRAY(val contentType: Type, val size:Int) : Type("Array") {
     @KIgnoredOnParcel
     override val label: String
         get() = "Array(${contentType.label})"
+
+    fun typeOnLevel(level: Int): Type = when(level){
+        0 -> this
+        1 -> contentType
+        else -> (contentType as? ARRAY)?.typeOnLevel(level-1) ?: NEVER
+    }
+
+    override fun equals(other: Any?): Boolean = other is ARRAY && other.contentType == contentType
+    override fun hashCode(): Int = label.hashCode()
 }
 
 /*Not yet supported*/

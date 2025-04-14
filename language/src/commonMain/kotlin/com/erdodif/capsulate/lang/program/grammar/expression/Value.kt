@@ -16,6 +16,7 @@ interface Value : KParcelable {
 }
 
 sealed interface VNum : Value {
+    override val type: NUM
     val value: Int
 }
 
@@ -26,7 +27,7 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
         get() = _value.toInt()
 
     override fun toString(): String = value.toString()
-    override val type: Type
+    override val type: NAT
         get() = NAT
 }
 
@@ -34,7 +35,7 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
 @JvmInline
 value class VWhole(override val value: Int) : VNum { // ℤ
     override fun toString(): String = value.toString()
-    override val type: Type
+    override val type: WHOLE
         get() = WHOLE
 }
 
@@ -42,7 +43,7 @@ value class VWhole(override val value: Int) : VNum { // ℤ
 @JvmInline
 value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
-    override val type: Type
+    override val type: CHAR
         get() = CHAR
 }
 
@@ -50,7 +51,7 @@ value class VChr(val value: Char) : Value {  // ℂ
 @JvmInline
 value class VStr(val value: String) : Value {  // 𝕊
     override fun toString(): String = value.toString()
-    override val type: Type
+    override val type: STRING
         get() = STRING
 }
 
@@ -58,13 +59,13 @@ value class VStr(val value: String) : Value {  // 𝕊
 @JvmInline
 value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
-    override val type: Type
+    override val type: BOOL
         get() = BOOL
 }
 
 @KParcelize
 data object UNSET : Value {
-    override val type: Type
+    override val type: NEVER
         get() = NEVER
 }
 
@@ -72,41 +73,68 @@ data object UNSET : Value {
 @Suppress("UNCHECKED_CAST")
 data class VArray<T : Value>(
     private val value: Array<T?>,
-    override val type: Type
+    override val type: ARRAY
 ) : Value {
-    constructor(size: Int, type: Type) : this(arrayOfNulls<Any?>(size) as Array<T?>, type)
+    init {
+        require(type.contentType == (value.firstOrNull()?.type ?: NEVER)) {
+            "Array created with inconsistent type " +
+                    "(given $type, but assumed ${value.firstOrNull()?.type ?: NEVER} from first value)"
+        }
+    }
+
+    constructor(value: Array<T?>) :
+            this(value, ARRAY(value.firstOrNull()?.type ?: NEVER, value.size))
+
+    constructor(size: Int, contentType: Type) :
+            this(arrayOfNulls<Any?>(size) as Array<T?>, ARRAY(contentType, size))
 
     val size: Int
         get() = value.size
+    val contentType: Type
+        get() = type.contentType
 
     val depth: Int = ((value.first() as? VArray<*>)?.depth ?: 0) + 1
 
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
 
-    operator fun get(index: Int): Value = value[index] ?: UNSET
-    operator fun get(vararg index: Int): Value = when {
-        index.size == 1 -> value[index.first()] ?: UNSET
-        depth > index.size -> error(
-            "The array isn't this deep! Asked for ${index.size} dimensions, this array is only $depth levels deep."
+    private fun requireValidIndex(vararg indexes: Int): Unit = when {
+        indexes.isEmpty() -> error("Missing index for $type")
+        depth > indexes.size -> error(
+            "The array isn't this deep! Asked for ${indexes.size} dimensions, this array is only $depth levels deep."
         )
 
-        index.first() < 1 -> error(
-            "Array index must be positive (given ${index.first()})!"
+        indexes.first() < 1 -> error(
+            "VArray index must be positive (given ${indexes.first()})!"
         )
 
-        index.first() > value.size -> error(
-            "Array index out of bounds (given ${index.first()}, max index ${value.size})!"
+        indexes.first() > value.size -> error(
+            "VArray index out of bounds (given ${indexes.first()}, max index ${value.size})!"
         )
 
-        value[index.first()] !is VArray<*> -> error(
-            "Internal type is not an Array! (${value[index.first()]?.type ?: NEVER})"
+        value[indexes.first()] !is VArray<*> -> error(
+            "Internal type is not a VArray! (${value[indexes.first()]?.type ?: NEVER})"
         )
 
-        else -> (value[index.first()] as? VArray<*>)?.get(*index.drop(1).toIntArray()) ?: UNSET
+        else -> Unit
     }
 
-    operator fun set(index: Int, value: T) {
-        this.value[index] = value
+    operator fun get(vararg indexes: Int): Value = if (indexes.size == 1) {
+        value[indexes.first() - 1] ?: UNSET
+    } else {
+        requireValidIndex(*indexes)
+        (value[indexes.first() - 1] as? VArray<*>)?.get(*indexes.drop(1).toIntArray()) ?: UNSET
+    }
+
+    operator fun set(vararg indexes: Int, value: T) {
+        if (indexes.size == 1) {
+            this.value[indexes.first() - 1] = value
+        } else {
+            requireValidIndex(*indexes)
+            (this.value[indexes.first() - 1] as? VArray<T>)?.set(
+                indexes = indexes.drop(1).toIntArray(),
+                value = value
+            )
+        }
     }
 
     override fun equals(other: Any?): Boolean = when {
@@ -118,7 +146,7 @@ data class VArray<T : Value>(
     }
 
     override fun toString(): String = value.joinToString(prefix = "[", postfix = "]")
-    override fun hashCode(): Int = value.contentHashCode()
+    override fun hashCode(): Int = type.hashCode() * 3100 + value.contentHashCode()
 
     @KParcelize
     data class Index(val id: String, val indexers: List<Exp<Value>>) : Exp<Value> {
@@ -149,7 +177,7 @@ data class VArray<T : Value>(
                     )
                 }
                 when (val param = context.get(id)) {
-                    is Left -> when (val value = param.value.value) {
+                    is Left -> when (val value = param.value) {
                         is VArray<*> -> {
                             if (indexers[0].value > value.value.size) {
                                 error(
@@ -170,15 +198,7 @@ data class VArray<T : Value>(
                 }
             }
 
-
-        override fun toString(
-            state: ParserState,
-            parentStrength: Int
-        ): String =
+        override fun toString(state: ParserState, parentStrength: Int): String =
             id + indexers.joinToString(separator = "") { "[${it.toString(state, parentStrength)}]" }
     }
-}
-
-fun <T: Value> VArray<VArray<T>>.set(value: T, vararg indexes: Int){
-    TODO("Not yet implemented!")
 }
