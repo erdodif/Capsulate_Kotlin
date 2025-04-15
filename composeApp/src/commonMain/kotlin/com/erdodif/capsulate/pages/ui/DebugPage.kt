@@ -39,12 +39,10 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
@@ -278,8 +276,7 @@ class DebugPage : Ui<State> {
                     modifier = Modifier
                         .padding(2.dp, 15.dp)
                         .fillMaxWidth()
-                        .heightIn(25.dp, 125.dp)
-                        .scrollable(scrollState, Orientation.Vertical)
+                        .heightIn(25.dp, 250.dp)
                         .background(
                             MaterialTheme.colorScheme.surfaceContainerLow,
                             RoundedCornerShape(5.dp)
@@ -288,7 +285,8 @@ class DebugPage : Ui<State> {
                             2.dp,
                             MaterialTheme.colorScheme.surfaceContainer,
                             RoundedCornerShape(5.dp)
-                        ).padding(10.dp),
+                        ).padding(10.dp)
+                        .verticalScroll(rememberScrollState()),
                     color = MaterialTheme.colorScheme.error
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
