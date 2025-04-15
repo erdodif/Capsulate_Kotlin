@@ -43,9 +43,9 @@ abstract class Statement(
     fun onFormat(formatting: Formatting, state: ParserState): Int = formatting.format(state)
     fun getFormat(state: ParserState): String = Formatting(0).apply { format(state) }.finalize()
 
-    fun <R : Value> Exp<R>.join(
+    fun <T : Value> Exp<T>.join(
         context: Environment,
-        onValue: Environment.(R) -> EvaluationResult
+        onValue: Environment.(T) -> EvaluationResult
     ): EvaluationResult = try {
         when (val result = evaluate(context)) {
             is Left -> onValue(context, result.value)
@@ -55,9 +55,9 @@ abstract class Statement(
         AbortEvaluation(e.message ?: "Error while evaluating expression: $e")
     }
 
-    fun List<Exp<Value>>.joinAll(
+    fun <T : Value> List<Exp<T>>.joinAll(
         context: Environment,
-        onEvery: Environment.(List<Value>) -> EvaluationResult
+        onEvery: Environment.(List<T>) -> EvaluationResult
     ): EvaluationResult = if (isEmpty()) onEvery(context, emptyList()) else
         this[0].join(context) {
             this@joinAll.drop(1).joinAll(context) { values ->
@@ -328,7 +328,7 @@ data class Assign(
             Finished
         }
 
-        is Left -> label.value.indexers.joinAll(env) { indexers ->
+        is Left -> (label.value.indexers as List<Exp<Value>>).joinAll(env) { indexers ->
             if (indexers.any { it !is VNum }) {
                 error(
                     "Non number indexer found " + indexers

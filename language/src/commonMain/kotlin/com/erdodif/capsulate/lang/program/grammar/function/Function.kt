@@ -95,7 +95,10 @@ data class FunctionCall<T : Value>(
 
     @Suppress("UNCHECKED_CAST")
     override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> = Right(
-        PendingExpression(this as FunctionCall<Value>, context.functions[name]!!) { Left(it as T) })
+        PendingExpression(
+            this as FunctionCall<Value>,
+            context.functions[name]!! as Function<Value>
+        ) { Left(it as T) })
 
     override fun toString(state: ParserState, parentStrength: Int) =
         values.joinToString(
@@ -154,7 +157,7 @@ val sFunction: Parser<Function<Value>> = {
 
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
-data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
+data class Return<out T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     val value: Exp<T>,
     override val id: Uuid = Uuid.random(),
     override val match: MatchPos

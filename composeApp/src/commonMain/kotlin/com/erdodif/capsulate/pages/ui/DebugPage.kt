@@ -257,7 +257,6 @@ class DebugPage : Ui<State> {
 
     @Composable
     private fun ErrorDialog(state: State) {
-        val scrollState = rememberScrollState(0)
         BasicAlertDialog({ state.eventHandler(Event.Close) }, Modifier) {
             Column(
                 Modifier.padding(50.dp)

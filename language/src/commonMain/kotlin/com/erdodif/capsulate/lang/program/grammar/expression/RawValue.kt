@@ -7,7 +7,7 @@ import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 
-sealed class RawValue<T : Value>(override val match: MatchPos) : Exp<T>, Token(match) {
+sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Token(match) {
     abstract fun get(context: Environment): T
     final override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
         Left(get(context))
@@ -51,8 +51,7 @@ data class BoolLit(val value: Boolean, override val match: MatchPos) : RawValue<
 }
 
 @KParcelize
-data class ArrayLit<T : Value>(val value: Array<Exp<T>>, val match: MatchPos) :
-    Exp<VArray<T>> {
+data class ArrayLit<T : Value>(val value: Array<Exp<T>>, val match: MatchPos) : Exp<VArray<T>> {
     override fun getType(assumptions: Map<String, Type>): ARRAY =
         ARRAY(value.first().getType(assumptions), value.size)
 

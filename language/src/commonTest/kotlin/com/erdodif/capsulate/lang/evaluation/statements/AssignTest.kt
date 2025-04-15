@@ -37,9 +37,9 @@ class AssignTest {
     @Test
     fun `assign overrides existing value`() {
         val env = intEnv()
-        val result1 = Assign("a", IntLit(10, pos), pos).evaluate(env)
+        val result1 = Assign("a", NatLit(10u, pos), pos).evaluate(env)
         assertIs<Finished>(result1)
-        assertEquals(10, (env.parameters[0].value as VWhole).value)
+        assertEquals(10, (env.parameters[0].value as VNat).value)
     }
 
     @Test

@@ -20,6 +20,7 @@ sealed interface VNum : Value {
     val value: Int
 }
 
+//TODO: BigInteger for multiplatform
 @KParcelize
 @JvmInline
 value class VNat(private val _value: UInt) : VNum {   // ℕ
@@ -31,6 +32,7 @@ value class VNat(private val _value: UInt) : VNum {   // ℕ
         get() = NAT
 }
 
+//TODO: BigInteger for multiplatform
 @KParcelize
 @JvmInline
 value class VWhole(override val value: Int) : VNum { // ℤ
@@ -119,6 +121,7 @@ data class VArray<T : Value>(
     }
 
     operator fun get(vararg indexes: Int): Value = if (indexes.size == 1) {
+        requireValidIndex(indexes.first())
         value[indexes.first() - 1] ?: UNSET
     } else {
         requireValidIndex(*indexes)
@@ -127,9 +130,11 @@ data class VArray<T : Value>(
 
     operator fun set(vararg indexes: Int, value: T) {
         if (type.typeOnLevel(indexes.size) != value.type) {
-            error("Type mismatch! " +
-                    "(This array has type of ${type.typeOnLevel(indexes.size)} " +
-                    "on level ${indexes.size}, but the value is ${value.type})")
+            error(
+                "Type mismatch! " +
+                        "(This array has type of ${type.typeOnLevel(indexes.size)} " +
+                        "on level ${indexes.size}, but the value is ${value.type})"
+            )
         }
         if (indexes.size == 1) {
             this.value[indexes.first() - 1] = value
@@ -155,6 +160,8 @@ data class VArray<T : Value>(
 
     @KParcelize
     data class Index(val id: String, val indexers: List<Exp<Value>>) : Exp<Value> {
+        constructor(id: String, vararg indexes: Exp<Value>) : this(id, indexes.toList())
+
         override fun getType(assumptions: Map<String, Type>): Type =
             when (val assume = assumptions[id]) {
                 is ARRAY -> assume.contentType
@@ -175,7 +182,7 @@ data class VArray<T : Value>(
                 indexers as List<VNum>
                 when (val param = context.get(id)) {
                     is Left -> when (val value = param.value) {
-                        is VArray<*> -> value.get(indexes = indexers.map{it.value}.toIntArray())
+                        is VArray<*> -> value.get(indexes = indexers.map { it.value }.toIntArray())
                         else -> error("Can't index non-array ($id : ${value.type})")
                     }
 

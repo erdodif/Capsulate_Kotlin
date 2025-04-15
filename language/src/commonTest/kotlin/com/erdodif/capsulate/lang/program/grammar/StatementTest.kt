@@ -130,28 +130,28 @@ class StatementTest {
     @Test
     fun `when passes regular`() {
         tWhen pass "when{}"
-        tWhen pass "when{a:a}"
-        tWhen pass "when{a:{a}}"
-        tWhen pass "when{a:{a},b:{b}} "
-        tWhen pass "when{a:a,b:{b}} "
-        tWhen pass "when{a:{a},b:b} "
-        tWhen pass "when\n{\na:{a},\nb:{}} "
+        tWhen pass "when{a:skip}"
+        tWhen pass "when{a:{skip}}"
+        tWhen pass "when{a:{skip},b:{skip}} "
+        tWhen pass "when{a:skip,b:{skip}} "
+        tWhen pass "when{a:{skip},b:skip} "
+        tWhen pass "when\n{\na:{skip},\nb:{}} "
     }
 
     @Test
     fun `when passes with trailing coma`(){
-        tWhen pass "when{a:{a},b:b,} "
-        tWhen pass "when\n{\na:{a},\nb:{d},}\n "
-        tWhen pass "when\n{\na:{a},\n}"
+        tWhen pass "when{a:{skip},b:skip,} "
+        tWhen pass "when\n{\na:{skip},\nb:{skip},}\n "
+        tWhen pass "when\n{\na:{skip},\n}"
     }
 
     @Test
     fun `when passes with else block`(){
-        tWhen pass "when{else:{b}}"
-        tWhen pass "when{a:{a}\nelse:{b}} "
-        tWhen pass "when\n{\na:\n{a},\nelse:{d}} "
-        tWhen pass "when\n{\na:{a}\n,\nelse:{\nd\n}}\n "
-        tWhen pass "when\n{\na:\n{a},\nelse:\n{d}} "
+        tWhen pass "when{else:{skip}}"
+        tWhen pass "when{a:{skip}\nelse:{skip}} "
+        tWhen pass "when\n{\na:\n{skip},\nelse:{skip}} "
+        tWhen pass "when\n{\na:{skip}\n,\nelse:{\nskip\n}}\n "
+        tWhen pass "when\n{\na:\n{skip},\nelse:\n{skip}} "
     }
 
     @Test

@@ -107,7 +107,7 @@ val sIf: Parser<Statement> =
             }
 
 val sWhen: Parser<Statement> =
-    (middle(
+    (delimit(middle(
         newLined(_keyword("when")) + newLined(_char('{')),
         (many(left(left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(',')))) +
                 optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
@@ -118,7 +118,7 @@ val sWhen: Parser<Statement> =
                         optional(newLined(_char(','))),
                     )
                 ),
-        newLined(_char('}')),
+        newLined(_char('}'))),
     )) * { (statements, elseBlock), pos ->
         val (blocks, trailing) = statements
         When(if (trailing != null) blocks + trailing else blocks, elseBlock, pos)

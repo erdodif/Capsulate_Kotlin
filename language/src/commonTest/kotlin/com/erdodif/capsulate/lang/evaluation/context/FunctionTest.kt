@@ -93,7 +93,7 @@ class FunctionTest {
         val underTest2 = FunctionCall(constant2, listOf(), pos)
         var context =
             EvaluationContext(
-                Env(listOf(constant1, constant2)),
+                Env(listOf(constant1, constant2) as List<Function<Value>>),
                 Assign("a", BinaryCalculation<VNum, VNum>(underTest1, underTest2, Add), pos)
             )
         context.step()
@@ -129,7 +129,7 @@ class FunctionTest {
         val underTest =
             FunctionCall(function, listOf(FunctionCall(constant, listOf(), pos) as Exp<Value>), pos)
         var context =
-            EvaluationContext(Env(listOf(function, constant)), Assign("a", underTest, pos))
+            EvaluationContext(Env(listOf(function, constant) as List<Function<Value>>), Assign("a", underTest, pos))
         context.step()
         assertNotNull(context.functionOngoing)
         context.step()

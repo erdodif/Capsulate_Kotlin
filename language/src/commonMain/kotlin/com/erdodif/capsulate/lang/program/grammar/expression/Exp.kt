@@ -45,7 +45,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @KParcelize
-open class PendingExpression<R : Value, T : Value>(
+open class PendingExpression<R : Value, out T : Value>(
     open val call: FunctionCall<R>,
     open val function: Function<R>,
     open val onValue: @Serializable Environment.(R) -> Either<T, PendingExpression<Value, T>>
@@ -69,7 +69,7 @@ open class PendingExpression<R : Value, T : Value>(
     }
 }
 
-interface Exp<T : Value> : KParcelable {
+interface Exp<out T : Value> : KParcelable {
     fun getType(assumptions: Map<String, Type>): Type
     fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>>
     fun toString(state: ParserState, parentStrength: Int = 0): String
@@ -202,7 +202,7 @@ val pVariable: Parser<Variable> = _nonKeyword[{
 }]
 
 val pAssumption: Parser<Assume> = {
-    (pVariable + right(_char(':'), pType))[{ (value, _, match) ->
+    (pVariable + right(_keyword("is"), pType))[{ (value, _, match) ->
         val (variable, type) = value
         assumptions[variable.id] = type
         pass(match.start, Assume(variable.id, type, match))
@@ -244,7 +244,7 @@ inline fun pAtom(): ExParser = {
     //                                               v___v-----| would be null
     asum(
         sFunctionCall, pIndex, *litOrder, middle(_char('('), pExp, _char(')'))
-    )() as ParserResult<Exp<Value>>
+    )()
 }
 
 val pExp: Parser<Exp<Value>> = builtInOperatorTable.parser(pAtom())

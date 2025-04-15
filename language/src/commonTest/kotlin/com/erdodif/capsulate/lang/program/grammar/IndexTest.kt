@@ -11,23 +11,30 @@ import kotlin.test.assertIs
 
 class IndexTest {
 
-    val index = topLevel(pIndex)
+    private val index = topLevel(pIndex)
+    private val assign = topLevel(sAssign)
 
     @Test
     fun `indexer parses int alone`() {
         index pass "a[1]" assert {
             assertEquals("a", it.value.id)
-            assertIs<IntLit>(it.value.indexers)
-            assertEquals(1, it.value.indexers.value)
+            assertEquals(1, it.value.indexers.size)
+            val index = it.value.indexers.first()
+            assertIs<IntLit>(index)
+            assertEquals(1, index.value)
         } at 4
     }
 
     @Test
-    fun `indexer parses int double`() {// TODO: Align test when multiple assignment is possible
-        index pass "a[1][2]" assert {
+    fun `indexer parses int double`() {
+        index pass "a[1][3]" assert {
             assertEquals("a", it.value.id)
-            assertIs<IntLit>(it.value.indexers)
-            assertEquals(1, it.value.indexers.value)
+            assertEquals(2, it.value.indexers.size)
+            val (first, second) = it.value.indexers
+            assertIs<IntLit>(first)
+            assertEquals(1, first.value)
+            assertIs<IntLit>(second)
+            assertEquals(3, second.value)
         } at 7
     }
 
@@ -36,10 +43,15 @@ class IndexTest {
         index fail "a" at 1
     }
 
-    /* TODO: Continue
     @Test
-    fun `assignment passes with indexer`(){
-        sAssign
+    fun `assignment passes with indexer at the right position`(){
+        assign pass "a[1] := 2" at 9
+        assign pass "a[1][2] := b[1]" at 15
     }
-    */
+
+    @Test
+    fun `assignment passes with array literal`(){
+        assign pass "a[1] := [2,3]" at 13
+        assign pass "a[1][2] := [1,2,3,4]" at 20
+    }
 }
