@@ -25,7 +25,7 @@ class IndexerTest {
             VArray.Index("a", IntLit(1, ZERO), IntLit(1, ZERO)).evaluate(env)
         }
         assertFailsWith<IllegalStateException> {
-            VArray.Index("a", IntLit(2, ZERO)).evaluate(env)
+            VArray.Index("a", IntLit(4, ZERO)).evaluate(env)
         }
     }
 

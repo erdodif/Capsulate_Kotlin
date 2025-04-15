@@ -101,7 +101,7 @@ data class VArray<T : Value>(
 
     private fun requireValidIndex(vararg indexes: Int): Unit = when {
         indexes.isEmpty() -> error("Missing index for $type")
-        depth > indexes.size -> error(
+        depth < indexes.size -> error(
             "The array isn't this deep! Asked for ${indexes.size} dimensions, this array is only $depth levels deep."
         )
 
@@ -113,7 +113,7 @@ data class VArray<T : Value>(
             "VArray index out of bounds (given ${indexes.first()}, max index ${value.size})!"
         )
 
-        value[indexes.first() - 1] !is VArray<*> -> error(
+        indexes.size > 1 && value[indexes.first() - 1] !is VArray<*> -> error(
             "Internal type is not a VArray! (${value[indexes.first() - 1]?.type ?: NEVER})"
         )
 

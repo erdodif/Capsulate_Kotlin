@@ -27,6 +27,7 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.tok
 import com.erdodif.capsulate.matches
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 
 class OperatorTest {
@@ -57,95 +58,90 @@ class OperatorTest {
             override fun hashCode(): Int = matchedChar.hashCode()
         }
 
-        val strongLeft = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+        @KParcelize
+        private class TestBinaryOperator<T : Value, R : Value>(
+            override val bindingStrength: Int,
+            override val label: String,
+            override val operatorParser: Parser<*>,
+            val ass: Association,
+            val op: @Serializable Environment.(R, R) -> T
+        ) : BinaryOperator<T, R>(bindingStrength, label, operatorParser, ass, op) {
+            override fun type(firstType: Type, secondType: Type): Type = NEVER
+        }
+
+        @KParcelize
+        private class TestUnaryOperator<T : Value, R : Value>(
+            override val bindingStrength: Int,
+            override val label: String = "~",
+            override val operatorParser: Parser<*>,
+            val fix: Fixation,
+            val op: @Serializable (Environment.(R) -> T)
+        ) : UnaryOperator<T, R>(bindingStrength, label, operatorParser, fix, op) {
+            override fun type(paramType: Type): Type = NEVER
+        }
+
+        val strongLeft = TestBinaryOperator<TestValue, TestValue>(
             20,
             "/",
             _char('/'),
-            Association.LEFT,
-            { _, _ -> TestValue('/') }) {
-            override fun type(firstType: Type, secondType: Type) = NEVER
-        }
-        val weakLeft = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+            Association.LEFT
+        ) { _, _ -> TestValue('/') }
+        val weakLeft = TestBinaryOperator<TestValue, TestValue>(
             10,
             "-",
             _char('-'),
-            Association.LEFT,
-            { _, _ -> TestValue('-') }) {
-            override fun type(firstType: Type, secondType: Type) = NEVER
-        }
+            Association.LEFT
+        ) { _, _ -> TestValue('-') }
 
-        val strongRight = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+        val strongRight = TestBinaryOperator<TestValue, TestValue>(
             20,
             "*",
             _char('*'),
-            Association.RIGHT,
-            { _, _ -> TestValue('*') }) {
-            override fun type(firstType: Type, secondType: Type) = NEVER
-        }
+            Association.RIGHT
+        ) { _, _ -> TestValue('*') }
 
-        val weakRight = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+        val weakRight = TestBinaryOperator<TestValue, TestValue>(
             10,
             "+",
             _char('+'),
-            Association.RIGHT,
-            { _, _ -> TestValue('+') }) {
-            override fun type(firstType: Type, secondType: Type) = NEVER
-        }
+            Association.RIGHT
+        ) { _, _ -> TestValue('+') }
 
-        val unaryPreLeft = @KParcelize object : UnaryOperator<TestValue, TestValue>(
+        val unaryPreLeft = TestUnaryOperator<TestValue, TestValue>(
             20,
             "-",
             _char('-'),
-            Fixation.PREFIX,
-            { _ -> TestValue('~') }) {
-            override fun type(firstType: Type) = NEVER
-        }
+            Fixation.PREFIX
+        ) { _ -> TestValue('~') }
 
-        val unaryPre = @KParcelize object : UnaryOperator<TestValue, TestValue>(
+        val unaryPre = TestUnaryOperator<TestValue, TestValue>(
             20,
             "@",
             _char('@'),
-            Fixation.PREFIX,
-            { _ -> TestValue('~') }) {
-            override fun type(firstType: Type) = NEVER
-        }
+            Fixation.PREFIX
+        ) { _ -> TestValue('~') }
 
-        val unaryPostLeft = @KParcelize
-        object : UnaryOperator<TestValue, TestValue>(
-            20,
-            "~*",
-            _char('*'),
-            Fixation.POSTFIX,
-            { _ -> TestValue('~') }) {
-            override fun type(firstType: Type) = NEVER
-        }
+        val unaryPostLeft = TestUnaryOperator<TestValue, TestValue>(
+            20, "~*", _char('*'), Fixation.POSTFIX
+        ) { _ -> TestValue('~') }
 
-        val unaryPost = @KParcelize object : UnaryOperator<TestValue, TestValue>(
-            20,
-            "#",
-            _char('#'),
-            Fixation.POSTFIX,
-            { _ -> TestValue('~') }) {
-            override fun type(firstType: Type) = NEVER
-        }
+        val unaryPost = TestUnaryOperator<TestValue, TestValue>(
+            20, "#", _char('#'), Fixation.POSTFIX
+        ) { _ -> TestValue('~') }
 
-        val strongNone = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+        val strongNone = TestBinaryOperator<TestValue, TestValue>(
             10,
             "_",
             _char('_'),
-            Association.NONE,
-            { _, _ -> TestValue('_') }) {
-            override fun type(firstType: Type, secondType: Type) = NEVER
-        }
+            Association.NONE
+        ) { _, _ -> TestValue('_') }
 
-        val weakNone = @KParcelize object : BinaryOperator<TestValue, TestValue>(
+        val weakNone = TestBinaryOperator<TestValue, TestValue>(
             5,
             "=",
             _char('='),
-            Association.NONE,
-            { _, _ -> TestValue('=') }) {
-            override fun type(firstType: Type, secondType: Type) = NEVER
-        }
+            Association.NONE
+        ) { _, _ -> TestValue('=') }
 
 
         val operatorsConflict = OperatorTable(
