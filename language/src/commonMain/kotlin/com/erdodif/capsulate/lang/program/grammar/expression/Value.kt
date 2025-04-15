@@ -173,29 +173,9 @@ data class VArray<T : Value>(
                     )
                 }
                 indexers as List<VNum>
-                if (indexers.any { it.value < 1 }) {
-                    error(
-                        "Indexers must be positive! Got: " + indexers
-                            .mapIndexed { index, a -> a to index }
-                            .filter { it.first.value < 1 }
-                            .joinToString(postfix = ".") { (value, index) -> "$value at $index" }
-                    )
-                }
                 when (val param = context.get(id)) {
                     is Left -> when (val value = param.value) {
-                        is VArray<*> -> {
-                            if (indexers[0].value > value.value.size) {
-                                error(
-                                    "Index out of bounds (asked for ${indexers[0].value} " +
-                                            "in an array with size of ${value.value.size})"
-                                )
-                            } else {
-                                (value.value[indexers[0].value] as? VArray<*>)?.get(
-                                    *indexers.drop(1).map(VNum::value).toIntArray()
-                                ) as Value
-                            }
-                        }
-
+                        is VArray<*> -> value.get(indexes = indexers.map{it.value}.toIntArray())
                         else -> error("Can't index non-array ($id : ${value.type})")
                     }
 

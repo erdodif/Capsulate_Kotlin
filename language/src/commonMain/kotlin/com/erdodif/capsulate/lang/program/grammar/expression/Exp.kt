@@ -23,6 +23,7 @@ import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.delimited
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.sFunctionCall
+import com.erdodif.capsulate.lang.program.grammar.pIndex
 import com.erdodif.capsulate.lang.program.grammar.pType
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
@@ -242,7 +243,7 @@ inline fun pAtom(): ExParser = {
     // Can't be directly assigned, or else the pExp reference -|
     //                                               v___v-----| would be null
     asum(
-        sFunctionCall, *litOrder, middle(_char('('), pExp, _char(')'))
+        sFunctionCall, pIndex, *litOrder, middle(_char('('), pExp, _char(')'))
     )() as ParserResult<Exp<Value>>
 }
 
