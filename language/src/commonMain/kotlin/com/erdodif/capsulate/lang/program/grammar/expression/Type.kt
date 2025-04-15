@@ -9,6 +9,8 @@ sealed class Type(open vararg val labels: String) : KParcelable {
     open val label: String
         get() = labels.firstOrNull() ?: "${this::class}"
 
+    override fun toString(): String = label
+
     companion object {
         fun fromLabel(label: String): Type? = when (label) {
             in NAT.labels -> NAT
@@ -79,6 +81,8 @@ data class ARRAY(val contentType: Type, val size: Int) : Type("Array") {
         other is ARRAY && other.contentType == contentType && other.size == size
 
     override fun hashCode(): Int = label.hashCode()
+    override fun toString(): String =
+        primitiveType.label + dimensions.reversed().joinToString(separator = "") { "($it)" }
 }
 
 /*Not yet supported*/
