@@ -64,6 +64,11 @@ data class ARRAY(val contentType: Type, val size: Int) : Type("Array") {
     override val label: String
         get() = "Array(${contentType.label})"
 
+    val primitiveType: Type
+        get() = if (contentType is ARRAY) contentType.primitiveType else contentType
+    val dimensions: List<Int>
+        get() = if (contentType is ARRAY) listOf(size) + contentType.dimensions else listOf(size)
+
     fun typeOnLevel(level: Int): Type = when (level) {
         0 -> this
         1 -> contentType
@@ -72,6 +77,7 @@ data class ARRAY(val contentType: Type, val size: Int) : Type("Array") {
 
     override fun equals(other: Any?): Boolean =
         other is ARRAY && other.contentType == contentType && other.size == size
+
     override fun hashCode(): Int = label.hashCode()
 }
 
