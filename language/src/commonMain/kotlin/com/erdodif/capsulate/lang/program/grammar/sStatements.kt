@@ -1,13 +1,20 @@
 package com.erdodif.capsulate.lang.program.grammar
 
+import com.erdodif.capsulate.lang.program.grammar.expression.ARRAY
+import com.erdodif.capsulate.lang.program.grammar.expression.NUM
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray
+import com.erdodif.capsulate.lang.program.grammar.expression.pAssumption
+import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pExp
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
+import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Parser
 import com.erdodif.capsulate.lang.util.ParserResult
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._keyword
@@ -19,7 +26,9 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
+import com.erdodif.capsulate.lang.util.toIntOrNull
 import com.erdodif.capsulate.lang.util.tok
+import kotlin.math.max
 
 fun <T> delimit(parser: Parser<T>): Parser<T> = left(parser, many(_lineEnd))
 
@@ -29,7 +38,7 @@ fun <T> newLined(parser: Parser<T>): Parser<T> = left(parser, many(_lineBreak))
 val nonParallel: Parser<Statement> = {
     asum(
         sMethodCall,
-        sReturn,
+        sReturn, // Only valid in function
         sSkip,
         sAbort,
         sWait,
@@ -39,14 +48,15 @@ val nonParallel: Parser<Statement> = {
         sIf,
         sWhile,
         sDoWhile,
-        sExpression,
+        //sExpression,
         sAtom,
     )()
 }
 
-val statement: Parser<Statement> = { orEither(sParallel, nonParallel)() }
+val statement: Parser<Statement> =
+    { right(many(or(pComment, pAssumption)), orEither(sParallel, nonParallel))() }
 
-val blockOrParallel: (ParserState) -> ParserResult<ArrayList<out Statement>> = { state ->
+val blockOrParallel: (ParserState) -> ParserResult<List<Statement>> = { state ->
     orEither(
         newLined(sParallel) / { arrayListOf(it) },
         orEither(
@@ -56,11 +66,14 @@ val blockOrParallel: (ParserState) -> ParserResult<ArrayList<out Statement>> = {
     )(state)
 }
 
-val statementOrBlock: Parser<ArrayList<out Statement>> =
+val statementOrBlock: Parser<List<Statement>> =
     orEither(blockOrParallel, nonParallel / { arrayListOf(it) })
 
-val sError: Parser<LineError> =
-    delimit(some(satisfy { it !in lineEnd })) / { LineError(it.asString()) }
+val sError: Parser<LineError> = delimit(some(satisfy { it !in lineEnd })) / {
+    LineError(
+        it.asString(),
+        this.input.substring(0..max(this.position - 1, 0)).count { it == '\n' })
+}
 
 val sSkip: Parser<Statement> = delimit(_keyword("skip")) * { _, pos -> Skip(pos) }
 val sAbort: Parser<Statement> = delimit(_keyword("abort") * { _, pos -> Abort(pos) })
@@ -71,8 +84,7 @@ val sAtom: Parser<Statement> =
     }
 val sWait: Parser<Statement> = delimit(
     right(
-        _keyword("await"),
-        delimit(pExp) + or(sAtom, record(blockOrParallel))
+        _keyword("await"), delimit(pExp) + or(sAtom, record(blockOrParallel))
     ) * { (condition, atomic), pos ->
         Wait(
             condition,
@@ -96,22 +108,23 @@ val sIf: Parser<Statement> =
             }
 
 val sWhen: Parser<Statement> =
-    (middle(
-        newLined(_keyword("when")) + newLined(_char('{')),
-        (many(left(left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(',')))) +
-                optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
-                optional(
-                    middle(
-                        newLined(_keyword("else") + _char(':')),
-                        statementOrBlock,
-                        optional(newLined(_char(','))),
-                    )
-                ),
-        newLined(_char('}')),
+    (delimit(
+        middle(
+            newLined(_keyword("when")) + newLined(_char('{')),
+            (many(left(left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(',')))) +
+                    optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
+                    optional(
+                        middle(
+                            newLined(_keyword("else") + _char(':')),
+                            statementOrBlock,
+                            optional(newLined(_char(','))),
+                        )
+                    ),
+            newLined(_char('}'))
+        ),
     )) * { (statements, elseBlock), pos ->
         val (blocks, trailing) = statements
-        if (trailing != null) blocks.add(trailing)
-        When(blocks, elseBlock, pos)
+        When(if (trailing != null) blocks + trailing else blocks, elseBlock, pos)
     }
 
 val sWhile: Parser<Statement> =
@@ -126,33 +139,104 @@ val sDoWhile: Parser<Statement> = right(
     blockOrParallel + delimit(right(_keyword("while"), pExp)),
 ) * { (block, condition), pos -> DoWhile(condition, block, pos) }
 
+val pIndex: Parser<VArray.Index> =
+    (_nonKeyword + some(middle(_char('['), pExp, _char(']'))))[{ (value, state, match) ->
+        val (id, indexers) = value
+        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id, indexers), state, match)
+        for (indexer in indexers) {
+            if (indexer.getType(assumptions) !is NUM) {
+                result = Fail(
+                    "Tried to use non-number as an indexer (assumed type: ${
+                        indexer.getType(assumptions)
+                    })",
+                    state
+                )
+                break
+            }
+        }
+        result
+    }]
+
 val sParallelAssign: Parser<Statement> =
-    (delimited(_nonKeyword, _char(',')) + right(
+    (delimited(or(pIndex, _nonKeyword), _char(',')) + right(
         tok(string(":=")),
         delimit(delimited(pExp, _char(',')))
     ))[{
         val (params, values) = it.value
         if (values.count() != params.count())
             fail("The number of parameters does not match the number of values to assign.")
-        else if (values.count() == 1){
-            pass(it.match.start, Assign(params.first(), values.first(), it.match))
-        }
-        else{
-            pass(
-                it.match.start,
-                ParallelAssign(params.zip(values) as ArrayList, it.match),
-            )
+        else {
+            for ((i, variable) in params.withIndex()) {
+                if (variable is Right) {
+                    if (assumptions[variable.value] != null &&
+                        assumptions[variable.value] != values[i].getType(assumptions)
+                    ) {
+                        raiseError(
+                            "Possible type mismatch! " +
+                                    "(already assumed ${assumptions[variable.value]}, " +
+                                    "but the value has ${values[i].getType(assumptions)}"
+                        )
+                    } else {
+                        assumptions[variable.value] = values[i].getType(assumptions)
+                    }
+                }
+            }
+            if (values.count() == 1) {
+                pass(it.match.start, Assign(params.first(), values.first(), it.match))
+            } else {
+                pass(it.match.start, ParallelAssign(params.zip(values), it.match))
+            }
         }
     }]
 
+
+val pType: Parser<Type> = {
+    or(
+        _nonKeyword,
+        middle(string("Array") + _char('('), pType + right(_char(','), natural), _char(')'))
+    )[{ (value, _, match) ->
+        when (value) {
+            is Left<String> -> {
+                val type = Type.fromLabel(value.value)
+                if (type != null) {
+                    pass(match.start, type)
+                } else {
+                    fail("Failed to match")
+                }
+            }
+
+            is Right -> {
+                val size = value.value.second.toIntOrNull()
+                if (size == null) {
+                    fail("Cannot create platform Integer from ${value.value.second}")
+                } else {
+                    pass(match.start, ARRAY(value.value.first, size))
+                }
+            }
+        }
+    }]()
+}
+
 val sAssign: Parser<Statement> =
-    delimit(_nonKeyword + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+    delimit(or(pIndex, _nonKeyword) + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+        if (variable is Right) {
+            if (assumptions[variable.value] != null &&
+                assumptions[variable.value] != value.getType(assumptions)
+            ) {
+                raiseError(
+                    "Possible type mismatch! " +
+                            "(already assumed ${assumptions[variable.value]}, " +
+                            "but the value has ${value.getType(assumptions)}"
+                )
+            } else {
+                assumptions[variable.value] = value.getType(assumptions)
+            }
+        }
         Assign(variable, value, pos)
     }
 
-val pType: Parser<Type> = { pass(0, Type.NEVER) } // TODO :get from specification part
 val sSelect: Parser<Statement> =
-    delimit(_nonKeyword + right(_keyword(":∈"), pType)) * { (label, set), pos ->
+    delimit(_nonKeyword + right(_keyword(":∈"), _nonKeyword)) * { (label, set), pos ->
         Select(label, set.toString(), pos)
     }
 

@@ -11,6 +11,7 @@ val keywords = arrayOf(
     "true",
     "false",
     "not",
+    "is",
     "if",
     "else",
     "when",

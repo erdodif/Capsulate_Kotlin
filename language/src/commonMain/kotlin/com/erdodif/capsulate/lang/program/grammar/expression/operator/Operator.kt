@@ -1,7 +1,6 @@
 package com.erdodif.capsulate.lang.program.grammar.expression.operator
 
 import com.erdodif.capsulate.KParcelable
-import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.left
@@ -11,6 +10,7 @@ import com.erdodif.capsulate.lang.program.grammar.orEither
 import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.rightAssoc
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.many
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -31,8 +31,7 @@ enum class Fixation {
     POSTFIX
 }
 
-@KParcelize
-open class UnaryOperator<T : Value, R : Value>(
+abstract class UnaryOperator<T : Value, R : Value>(
     override val bindingStrength: Int,
     override val label: String = "~",
     override val operatorParser: Parser<*>,
@@ -56,10 +55,11 @@ open class UnaryOperator<T : Value, R : Value>(
         Fixation.PREFIX -> "$label\$ $bindingStrength"
         Fixation.POSTFIX -> "\$$label $bindingStrength"
     }
+
+    abstract fun type(paramType: Type): Type
 }
 
-@KParcelize
-open class BinaryOperator<T : Value, R : Value>(
+abstract class BinaryOperator<T : Value, R : Value>(
     override val bindingStrength: Int,
     override val label: String,
     override val operatorParser: Parser<*>,
@@ -82,6 +82,7 @@ open class BinaryOperator<T : Value, R : Value>(
         Association.RIGHT -> "\$$label\$ R$bindingStrength"
         Association.NONE -> "\$$label\$ N$bindingStrength"
     }
+    abstract fun type(firstType: Type, secondType: Type): Type
 
 }
 

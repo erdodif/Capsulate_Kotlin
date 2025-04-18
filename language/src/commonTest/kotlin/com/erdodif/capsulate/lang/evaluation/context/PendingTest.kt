@@ -6,8 +6,10 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.FunctionState
 import com.erdodif.capsulate.lang.program.grammar.Abort
+import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VStr
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
@@ -27,6 +29,8 @@ class PendingTest {
     private object TestValue : Value {
         override fun equals(other: Any?): Boolean = false
         override fun hashCode(): Int = 0
+        override val type: Type
+            get() = NEVER
     }
 
     @Test

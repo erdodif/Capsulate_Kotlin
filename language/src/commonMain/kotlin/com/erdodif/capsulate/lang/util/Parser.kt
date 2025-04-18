@@ -2,6 +2,8 @@
 
 package com.erdodif.capsulate.lang.util
 
+import com.erdodif.capsulate.lang.program.grammar.LineError
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.function.Function
 import com.erdodif.capsulate.lang.program.grammar.function.Method
@@ -10,13 +12,19 @@ import kotlin.math.min
 open class ParserState(
     val input: String,
     functions: List<Function<Value>> = listOf(),
-    methods: List<Method> = listOf()
+    methods: List<Method> = listOf(),
+    assumptions: List<Pair<String, Type>> = listOf()
 ) {
     var allowReturn: Boolean = false
         protected set
 
     val functions: MutableList<Function<Value>> = functions.toMutableList()
     val methods: MutableList<Method> = methods.toMutableList()
+    val assumptions: MutableMap<String, Type> = assumptions.toMap().toMutableMap()
+    val semanticErrors: MutableList<LineError> = ArrayList<LineError>()
+    val line: Int
+        get() = input.substring(0, position).count { it == '\n' } + 1
+    var currentFunctionLabel: String? = null
 
     var position: Int = 0
 
@@ -63,15 +71,19 @@ open class ParserState(
         }
     }
 
-    internal inline fun <T> withReturn(crossinline parser: Parser<T>): ParserResult<T> {
+    internal inline fun <T> withReturn(label:String,crossinline parser: Parser<T>): ParserResult<T> {
         allowReturn = true
+        currentFunctionLabel = label
         val result = parser()
+        currentFunctionLabel = null
         allowReturn = false
         return result
     }
 
+    inline fun raiseError(cause: String) = semanticErrors.add(LineError(cause, line))
+
     operator fun get(start: Int, end: Int): String = input[start, end]
-    operator fun get(match: MatchPos): String = input.get(match.start, match.end)
+    operator fun get(match: MatchPos): String = input[match.start, match.end]
 }
 
 sealed class ParserResult<out T>(open val state: ParserState) {

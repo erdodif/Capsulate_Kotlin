@@ -44,7 +44,6 @@ import com.erdodif.capsulate.utility.theme.Theme
 import com.erdodif.capsulate.structogram.statements.ComposableStatement
 import com.erdodif.capsulate.utility.PreviewTheme
 import kotlinx.coroutines.runBlocking
-import com.erdodif.capsulate.lang.program.grammar.Statement as GrammarStatement
 import kotlinx.coroutines.yield
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.random.Random
@@ -128,29 +127,24 @@ class Structogram private constructor(
             return if (result is Pass) {
                 val functions = mutableListOf<ComposableFunction>()
                 val methods = mutableListOf<ComposableMethod>()
-                val (declarations, namedProgram) = result.value
-                declarations.map {
-                    it[{ method ->
-                        methods.add(ComposableMethod(method, parserState))
-                    }, { function ->
-                        functions.add(ComposableFunction(function, parserState))
-                    }]
+                val namedProgram = result.value
+                namedProgram.methods.forEach {
+                    yield()
+                    methods.add(ComposableMethod(it, parserState))
                 }
-                val parsedStatements = namedProgram.second.filterNot { it is Right<*> }
-                    .map {
-                        yield()
-                        it as Left<*>
-                        val statement: GrammarStatement = it.value as GrammarStatement
-                        ComposableStatement.fromStatement(
-                            parserState,
-                            statement
-                        )
-                    }.toTypedArray()
+                namedProgram.functions.forEach {
+                    yield()
+                    functions.add(ComposableFunction(it, parserState))
+                }
+                val parsedStatements = namedProgram.statements.map {
+                    yield()
+                    ComposableStatement.fromStatement(parserState, it)
+                }
                 if (parsedStatements.isNotEmpty()) {
                     Left(
                         Structogram(
-                            parsedStatements,
-                            namedProgram.first,
+                            parsedStatements.toTypedArray(),
+                            namedProgram.name,
                             functions.toTypedArray(),
                             methods.toTypedArray()
                         )

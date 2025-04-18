@@ -53,7 +53,7 @@ class ParallelStatement(
     private vararg var blocks: Array<ComposableStatement<*>>
 ) : ComposableStatement<Parallel>(statement) {
     constructor(
-        blocks: ArrayList<ArrayList<ComposableStatement<*>>>,
+        blocks: List<List<ComposableStatement<*>>>,
         statement: Parallel
     ) : this(
         statement,

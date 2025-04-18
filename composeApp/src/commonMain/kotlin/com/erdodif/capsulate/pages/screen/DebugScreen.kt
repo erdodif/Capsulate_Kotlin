@@ -100,16 +100,8 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
             mutableStateOf(debug.getCallStack(screen.structogram.name ?: "Program"))
         }
         return State(
-            screen.structogram,
-            listState,
-            statement,
-            envState,
-            step,
-            debug.seed,
-            error,
-            debug.functionOngoing != null,
-            evalLoading,
-            stackTrace
+            screen.structogram, listState, statement, envState, step, debug.seed, error,
+            debug.functionOngoing != null, evalLoading, stackTrace
         ) { event ->
             when (event) {
                 is Event.StepForward -> {

@@ -12,6 +12,8 @@ import com.erdodif.capsulate.lang.program.grammar.expression.operator.BinaryOper
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryCalculation
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.UnaryOperator
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Association
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Fixation
 import com.erdodif.capsulate.lang.util.Fail
@@ -25,12 +27,18 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.tok
 import com.erdodif.capsulate.matches
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 
 class OperatorTest {
     private companion object {
         @KParcelize
-        private data class TestValue(val char: Char) : Value {
+        private data class TestValue(
+            val char: Char,
+        ) : Value {
+            override val type: Type
+                get() = NEVER
+
             override fun equals(other: Any?) =
                 (other is TestExp && other.matchedChar == char) ||
                         (other is TestValue && other.char == char)
@@ -40,6 +48,7 @@ class OperatorTest {
 
         @KParcelize
         private data class TestExp(val matchedChar: Char) : Exp<TestValue> {
+            override fun getType(assumptions: Map<String, Type>): Type = NEVER
             override fun evaluate(context: Environment) = Left(TestValue(matchedChar))
             override fun toString(state: ParserState, parentStrength: Int) = matchedChar.toString()
             override fun equals(other: Any?) =
@@ -49,28 +58,91 @@ class OperatorTest {
             override fun hashCode(): Int = matchedChar.hashCode()
         }
 
-        val strongLeft = BinaryOperator<TestValue, TestValue>(20, "/", _char('/'), Association.LEFT)
-        { _, _ -> TestValue('/') }
-        val weakLeft = BinaryOperator<TestValue, TestValue>(10, "-", _char('-'), Association.LEFT)
-        { _, _ -> TestValue('-') }
-        val strongRight =
-            BinaryOperator<TestValue, TestValue>(20, "*", _char('*'), Association.RIGHT)
-            { _, _ -> TestValue('*') }
-        val weakRight = BinaryOperator<TestValue, TestValue>(10, "+", _char('+'), Association.RIGHT)
-        { _, _ -> TestValue('+') }
-        val unaryPreLeft = UnaryOperator<TestValue, TestValue>(20, "-", _char('-'), Fixation.PREFIX)
-        { _ -> TestValue('~') }
-        val unaryPre = UnaryOperator<TestValue, TestValue>(20, "@", _char('@'), Fixation.PREFIX)
-        { _ -> TestValue('~') }
-        val unaryPostLeft =
-            UnaryOperator<TestValue, TestValue>(20, "~*", _char('*'), Fixation.POSTFIX)
-            { _ -> TestValue('~') }
-        val unaryPost = UnaryOperator<TestValue, TestValue>(20, "#", _char('#'), Fixation.POSTFIX)
-        { _ -> TestValue('~') }
-        val strongNone = BinaryOperator<TestValue, TestValue>(10, "_", _char('_'), Association.NONE)
-        { _, _ -> TestValue('_') }
-        val weakNone = BinaryOperator<TestValue, TestValue>(5, "=", _char('='), Association.NONE)
-        { _, _ -> TestValue('=') }
+        @KParcelize
+        private class TestBinaryOperator<T : Value, R : Value>(
+            override val bindingStrength: Int,
+            override val label: String,
+            override val operatorParser: Parser<*>,
+            val ass: Association,
+            val op: @Serializable Environment.(R, R) -> T
+        ) : BinaryOperator<T, R>(bindingStrength, label, operatorParser, ass, op) {
+            override fun type(firstType: Type, secondType: Type): Type = NEVER
+        }
+
+        @KParcelize
+        private class TestUnaryOperator<T : Value, R : Value>(
+            override val bindingStrength: Int,
+            override val label: String = "~",
+            override val operatorParser: Parser<*>,
+            val fix: Fixation,
+            val op: @Serializable (Environment.(R) -> T)
+        ) : UnaryOperator<T, R>(bindingStrength, label, operatorParser, fix, op) {
+            override fun type(paramType: Type): Type = NEVER
+        }
+
+        val strongLeft = TestBinaryOperator<TestValue, TestValue>(
+            20,
+            "/",
+            _char('/'),
+            Association.LEFT
+        ) { _, _ -> TestValue('/') }
+        val weakLeft = TestBinaryOperator<TestValue, TestValue>(
+            10,
+            "-",
+            _char('-'),
+            Association.LEFT
+        ) { _, _ -> TestValue('-') }
+
+        val strongRight = TestBinaryOperator<TestValue, TestValue>(
+            20,
+            "*",
+            _char('*'),
+            Association.RIGHT
+        ) { _, _ -> TestValue('*') }
+
+        val weakRight = TestBinaryOperator<TestValue, TestValue>(
+            10,
+            "+",
+            _char('+'),
+            Association.RIGHT
+        ) { _, _ -> TestValue('+') }
+
+        val unaryPreLeft = TestUnaryOperator<TestValue, TestValue>(
+            20,
+            "-",
+            _char('-'),
+            Fixation.PREFIX
+        ) { _ -> TestValue('~') }
+
+        val unaryPre = TestUnaryOperator<TestValue, TestValue>(
+            20,
+            "@",
+            _char('@'),
+            Fixation.PREFIX
+        ) { _ -> TestValue('~') }
+
+        val unaryPostLeft = TestUnaryOperator<TestValue, TestValue>(
+            20, "~*", _char('*'), Fixation.POSTFIX
+        ) { _ -> TestValue('~') }
+
+        val unaryPost = TestUnaryOperator<TestValue, TestValue>(
+            20, "#", _char('#'), Fixation.POSTFIX
+        ) { _ -> TestValue('~') }
+
+        val strongNone = TestBinaryOperator<TestValue, TestValue>(
+            10,
+            "_",
+            _char('_'),
+            Association.NONE
+        ) { _, _ -> TestValue('_') }
+
+        val weakNone = TestBinaryOperator<TestValue, TestValue>(
+            5,
+            "=",
+            _char('='),
+            Association.NONE
+        ) { _, _ -> TestValue('=') }
+
 
         val operatorsConflict = OperatorTable(
             strongLeft, strongRight, weakLeft, weakRight, unaryPreLeft,

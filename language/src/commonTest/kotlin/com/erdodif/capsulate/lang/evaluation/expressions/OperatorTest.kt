@@ -15,6 +15,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.operator.Mul
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Smaller
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.SmallerEq
 import com.erdodif.capsulate.lang.program.grammar.expression.operator.Sub
+import com.erdodif.capsulate.lang.util.bg
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -24,58 +25,58 @@ class OperatorTest {
 
     @Test
     fun `Add over VNat`() {
-        val result = Add.operation(Environment.EMPTY, VNat(2U), VNat(3U))
-        assertIs<VNum>(result)
-        assertEquals(5, result.value)
+        val result = Add.operation(Environment.EMPTY, VNat(2), VNat(3))
+        assertIs<VNum<*>>(result)
+        assertEquals(5.bg, result.value)
     }
 
     @Test
     fun `Add over VWhole`() {
         val result = Add.operation(Environment.EMPTY, VWhole(2), VWhole(-3))
-        assertIs<VNum>(result)
-        assertEquals(-1, result.value)
+        assertIs<VNum<*>>(result)
+        assertEquals((-1).bg, result.value)
     }
 
     @Test
     fun `Sub over VNat`() {
-        val result = Sub.operation(Environment.EMPTY, VNat(5U), VNat(3U))
-        assertIs<VNum>(result)
-        assertEquals(2, result.value)
+        val result = Sub.operation(Environment.EMPTY, VNat(5), VNat(3))
+        assertIs<VNum<*>>(result)
+        assertEquals(2.bg, result.value)
     }
 
     @Test
     fun `Sub over VWhole`() {
         val result = Sub.operation(Environment.EMPTY, VWhole(2), VWhole(-3))
-        assertIs<VNum>(result)
-        assertEquals(5, result.value)
+        assertIs<VNum<*>>(result)
+        assertEquals(5.bg, result.value)
     }
 
     @Test
     fun `Mul over VNat`() {
-        val result = Mul.operation(Environment.EMPTY, VNat(5U), VNat(3U))
-        assertIs<VNum>(result)
-        assertEquals(15, result.value)
+        val result = Mul.operation(Environment.EMPTY, VNat(5), VNat(3))
+        assertIs<VNum<*>>(result)
+        assertEquals(15.bg, result.value)
     }
 
     @Test
     fun `Mul over VWhole`() {
         val result = Mul.operation(Environment.EMPTY, VWhole(2), VWhole(-3))
-        assertIs<VNum>(result)
-        assertEquals(-6, result.value)
+        assertIs<VNum<*>>(result)
+        assertEquals((-6).bg, result.value)
     }
 
     @Test
     fun `Div over VNat`() {
-        val result = Div.operation(Environment.EMPTY, VNat(2U), VNat(2U))
-        assertIs<VNum>(result)
-        assertEquals(1, result.value)
+        val result = Div.operation(Environment.EMPTY, VNat(2), VNat(2))
+        assertIs<VNum<*>>(result)
+        assertEquals(1.bg, result.value)
     }
 
     @Test
     fun `Div over VWhole`() {
         val result = Div.operation(Environment.EMPTY, VWhole(5), VWhole(-2))
-        assertIs<VNum>(result)
-        assertEquals(-2, result.value)
+        assertIs<VNum<*>>(result)
+        assertEquals((-2).bg, result.value)
     }
 
     @Test

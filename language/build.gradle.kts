@@ -19,13 +19,13 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-    
+
     iosX64()
     iosArm64()
     iosSimulatorArm64()
-    
+
     jvm()
-    
+
     sourceSets {
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -40,11 +40,13 @@ kotlin {
             implementation(libs.kermit)
             implementation(libs.kotlinx.io.core)
             implementation(libs.kotlinx.collections.immutable)
+            implementation(libs.bignum)
             // -- Modules --
             implementation(projects.platform)
         }
-        commonTest.dependencies{
+        commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(kotlin("reflect"))
         }
         androidTarget {
             @OptIn(ExperimentalKotlinGradlePluginApi::class)

@@ -11,7 +11,6 @@ sealed class Operator<T : Exp<*>>(
 ) {
     operator fun compareTo(other: Operator<T>) =
         this.bindingStrength.compareTo(other.bindingStrength)
-
     abstract fun parse(strongerParser: Parser<T>): Parser<T>
 }
 
@@ -28,7 +27,7 @@ class OperatorTable<T : Value>(private var operators: Map<Int, List<Operator<Exp
             get(index + 1, atomParser)
         } else {
             operators[operators.keys.sorted()[index]]!!.parse<T>(
-                get(index + 1, atomParser) as Parser<Exp<T>>
+                get(index + 1, atomParser)
             )
         })
 

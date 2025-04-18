@@ -2,8 +2,6 @@ package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,10 +30,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
+import androidx.compose.ui.unit.sp
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.pages.screen.DebugScreen
 import com.erdodif.capsulate.pages.screen.DebugScreen.Event
 import com.erdodif.capsulate.utility.screenUiFactory
@@ -85,7 +92,7 @@ class DebugPage : Ui<State> {
                 flingBehavior = rememberSnapFlingBehavior(state.strucListState)
             ) {
                 item {
-                    Box(itemModifier) {
+                    Box(itemModifier.verticalScroll(rememberScrollState())) {
                         state.structogram.Content(
                             modifier = Modifier.fillMaxWidth(),
                             draggable = false,
@@ -94,7 +101,7 @@ class DebugPage : Ui<State> {
                     }
                 }
                 items(state.structogram.methods) { method ->
-                    Box(itemModifier) {
+                    Box(itemModifier.verticalScroll(rememberScrollState())) {
                         method.asStructogram().Content(
                             modifier = Modifier.fillMaxWidth(),
                             draggable = false,
@@ -103,7 +110,7 @@ class DebugPage : Ui<State> {
                     }
                 }
                 items(state.structogram.functions) { function ->
-                    Box(itemModifier) {
+                    Box(itemModifier.verticalScroll(rememberScrollState())) {
                         function.asStructogram().Content(
                             modifier = Modifier.fillMaxWidth(),
                             draggable = false,
@@ -116,15 +123,15 @@ class DebugPage : Ui<State> {
     }
 
     @Composable
-    private fun CallStack(trace: List<EvaluationContext.StackTraceEntry>) {
+    private fun CallStack(state: State) {
         val listState = rememberLazyListState()
         val textModifier = Modifier.padding(horizontal = 5.dp)
         ScrollableLazyRow(
             state = listState,
             flingBehavior = rememberSnapFlingBehavior(listState),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp)
         ) {
-            items(trace) { entry ->
+            items(state.stackTrace, { it.variables.hashCode() }) { entry ->
                 Column(
                     Modifier
                         .padding(2.dp)
@@ -140,9 +147,31 @@ class DebugPage : Ui<State> {
                     Text(entry.scope)
                     LazyColumn {
                         items(entry.variables) { variable ->
-                            Row {
+                            Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
-                                    "${variable.id} : ${variable.type.label}",
+                                    buildAnnotatedString {
+                                        val value = variable.value
+                                        if (value is VArray<*>) {
+                                            append("${variable.id} : ${value.type.primitiveType.label}")
+                                            withStyle(
+                                                style = SpanStyle(
+                                                    color = Color(57, 57, 57, 50).compositeOver(
+                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                    ),
+                                                    fontStyle = FontStyle.Italic,
+                                                    fontSize = 12.sp
+                                                )
+                                            ) {
+                                                for (size in value.type.dimensions) {
+                                                    append('(')
+                                                    append(size.toString())
+                                                    append(')')
+                                                }
+                                            }
+                                        } else {
+                                            append("${variable.id} : ${variable.type.label}")
+                                        }
+                                    },
                                     modifier = textModifier
                                 )
                                 Text(
@@ -174,7 +203,7 @@ class DebugPage : Ui<State> {
             Modifier.safeDrawingPadding().padding(horizontal = 5.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            CallStack(state.stackTrace)
+            CallStack(state)
             Column {
                 Text("Seed: ${state.seed}")
                 if (state.activeStatement == null && !state.functionOngoing) {
@@ -226,7 +255,6 @@ class DebugPage : Ui<State> {
 
     @Composable
     private fun ErrorDialog(state: State) {
-        val scrollState = rememberScrollState(0)
         BasicAlertDialog({ state.eventHandler(Event.Close) }, Modifier) {
             Column(
                 Modifier.padding(50.dp)
@@ -245,8 +273,7 @@ class DebugPage : Ui<State> {
                     modifier = Modifier
                         .padding(2.dp, 15.dp)
                         .fillMaxWidth()
-                        .heightIn(25.dp, 125.dp)
-                        .scrollable(scrollState, Orientation.Vertical)
+                        .heightIn(25.dp, 250.dp)
                         .background(
                             MaterialTheme.colorScheme.surfaceContainerLow,
                             RoundedCornerShape(5.dp)
@@ -255,7 +282,8 @@ class DebugPage : Ui<State> {
                             2.dp,
                             MaterialTheme.colorScheme.surfaceContainer,
                             RoundedCornerShape(5.dp)
-                        ).padding(10.dp),
+                        ).padding(10.dp)
+                        .verticalScroll(rememberScrollState()),
                     color = MaterialTheme.colorScheme.error
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

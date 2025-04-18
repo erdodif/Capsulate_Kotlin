@@ -6,6 +6,7 @@ import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.lang.util.bg
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -30,8 +31,8 @@ class SkipTest {
         assertEquals(3, env.parameters.size)
         assertEquals(0, env.functions.size)
         assertEquals(0, env.methods.size)
-        assertEquals(1, (env.parameters[0].value as VNat).value)
-        assertEquals(4, (env.parameters[1].value as VNat).value)
-        assertEquals(7, (env.parameters[2].value as VNat).value)
+        assertEquals(1.bg, (env.parameters[0].value as VNat).value)
+        assertEquals(4.bg, (env.parameters[1].value as VNat).value)
+        assertEquals(7.bg, (env.parameters[2].value as VNat).value)
     }
 }

@@ -12,10 +12,13 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.SuccessParser
+import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.getEither
 import com.erdodif.capsulate.lang.util.times
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 
 inline val anyChar: Parser<Char>
     get() = {
@@ -108,7 +111,7 @@ inline fun <T> optional(crossinline parser: Parser<T>): SuccessParser<T?> = {
  *
  * Will fail on no match, the last unsuccessful state gets reset
  */
-inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<out T>> = {
+inline fun <reified T> some(crossinline parser: Parser<T>): Parser<List<T>> = {
     val start = position
     val matches = ArrayList<T>()
     var match: ParserResult<T>
@@ -131,7 +134,7 @@ inline fun <reified T> some(crossinline parser: Parser<T>): Parser<ArrayList<out
  *
  * Will not fail on no match and the last unsuccessful state gets reset
  */
-inline fun <reified T> many(crossinline parser: Parser<T>): SuccessParser<ArrayList<T>> = {
+inline fun <reified T> many(crossinline parser: Parser<T>): SuccessParser<List<T>> = {
     val start = position
     val matches = ArrayList<T>()
     var match: ParserResult<T>
@@ -375,18 +378,18 @@ inline fun satisfy(
 /**
  * Looks for decimal digit
  */
-val digit: Parser<Short> = satisfy { it in '0'..'9' } / { (it.code - '0'.code).toShort() }
+val digit: Parser<Char> = satisfy { it in '0'..'9' }
 
 /**
  * Looks for a non-negative integer
  */
-val natural: Parser<UInt> = some(digit) / { it.fold(0) { a, b -> a * 10 + b.toInt() }.toUInt() }
+val natural: Parser<BigInteger> = some(digit) / { it.asString().toBigInteger(base = 10) }
 
 /**
  * Looks for a signed integer
  */
-val int: Parser<Int> = and(optional(char('-')), natural) / { (sign, num) ->
-    if (sign == null) num.toInt() else -(num.toInt())
+val int: Parser<BigInteger> = and(optional(char('-')), natural) / { (sign, num) ->
+    if (sign == null) num else -num
 }
 
 /**
@@ -402,10 +405,10 @@ val whiteSpace: Parser<Unit> = or(char(' '), char('\t'))[{ Pass(Unit, it.state, 
  */
 inline fun <reified T> delimited2(
     crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
-): Parser<ArrayList<out T>> = (some(left(parser, delimiter)) + parser) / {
+): Parser<List<T>> = (some(left(parser, delimiter)) + parser) / {
     val ret = it.first.toMutableList()
     ret.add(it.second)
-    ret.toCollection(ArrayList())
+    ret.toList()
 }
 
 /**
@@ -415,8 +418,8 @@ inline fun <reified T> delimited2(
  */
 inline fun <reified T> delimited(
     crossinline parser: Parser<T>, crossinline delimiter: Parser<*>
-): Parser<ArrayList<T>> = (many(left(parser, delimiter)) + parser) / {
-    it.first.apply { add(it.second) }
+): Parser<List<T>> = (many(left(parser, delimiter)) + parser) / {
+    it.first + it.second
 }
 
 /**

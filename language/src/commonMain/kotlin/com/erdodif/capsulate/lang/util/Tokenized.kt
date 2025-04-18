@@ -17,6 +17,7 @@ import com.erdodif.capsulate.lang.program.grammar.some
 import com.erdodif.capsulate.lang.program.grammar.stringCaseLess
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace
 import com.erdodif.capsulate.lang.program.grammar.whiteSpaceChars
+import com.ionspin.kotlin.bignum.integer.BigInteger
 
 val pLineBreak: Parser<Char> = satisfy { it in lineBreak }
 val pLineEnd: Parser<Char> = satisfy { it in lineEnd }
@@ -34,14 +35,13 @@ inline fun <T> tok(crossinline parser: Parser<T>): Parser<T> = {
     }
 }
 
-fun isWordChar(char: Char): Boolean =
+inline fun isWordChar(char: Char): Boolean =
     char !in whiteSpaceChars && char !in reservedChars && char !in lineEnd
 
 /**
  * Looks for non reserved char
  */
-val freeChar: Parser<Char> =
-    satisfy(::isWordChar)
+val freeChar: Parser<Char> = satisfy(::isWordChar)
 
 /**
  * Looks for a word made of non reserved characters
@@ -55,7 +55,7 @@ inline fun _keyword(string: String): Parser<String> =
 
 val _anyKeyword: Parser<String> = asum(*keywords.map { _keyword(it) }.toTypedArray())
 
-val reservedChar: Parser<Char> = asum(*reservedChars.map { char(it) }.toTypedArray())
+val reservedChar: Parser<Char> = satisfy { it in reservedChars }
 val _reservedChar: Parser<Char> = tok(reservedChar)
 
 val _nonKeyword: Parser<String> = tok(freeWord)[{
@@ -66,9 +66,9 @@ val _nonKeyword: Parser<String> = tok(freeWord)[{
     }
 }]
 
-val _natural: Parser<UInt> = tok(natural)
+val _natural: Parser<BigInteger> = tok(natural)
 
-val _integer: Parser<Int> = tok(int)
+val _integer: Parser<BigInteger> = tok(int)
 
 val _lineEnd: Parser<Char> = tok(pLineEnd)
 val _lineBreak: Parser<Char> = tok(pLineBreak)

@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate.lang.program.grammar
 
+import co.touchlab.kermit.Logger
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
@@ -16,11 +17,18 @@ import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
+import com.erdodif.capsulate.lang.program.grammar.expression.VArray.Index
+import com.erdodif.capsulate.lang.program.grammar.expression.VNum
+import com.erdodif.capsulate.lang.util.toInt
+import com.erdodif.capsulate.lang.util.toIntOrNull
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.filterLeft
 import kotlinx.serialization.Serializable
 import kotlin.collections.plus
 import kotlin.uuid.ExperimentalUuidApi
@@ -38,9 +46,9 @@ abstract class Statement(
     fun onFormat(formatting: Formatting, state: ParserState): Int = formatting.format(state)
     fun getFormat(state: ParserState): String = Formatting(0).apply { format(state) }.finalize()
 
-    fun <R : Value> Exp<R>.join(
+    fun <T : Value> Exp<T>.join(
         context: Environment,
-        onValue: Environment.(R) -> EvaluationResult
+        onValue: Environment.(T) -> EvaluationResult
     ): EvaluationResult = try {
         when (val result = evaluate(context)) {
             is Left -> onValue(context, result.value)
@@ -50,9 +58,9 @@ abstract class Statement(
         AbortEvaluation(e.message ?: "Error while evaluating expression: $e")
     }
 
-    fun List<Exp<Value>>.joinAll(
+    fun <T : Value> List<Exp<T>>.joinAll(
         context: Environment,
-        onEvery: Environment.(List<Value>) -> EvaluationResult
+        onEvery: Environment.(List<T>) -> EvaluationResult
     ): EvaluationResult = if (isEmpty()) onEvery(context, emptyList()) else
         this[0].join(context) {
             this@joinAll.drop(1).joinAll(context) { values ->
@@ -64,8 +72,8 @@ abstract class Statement(
 @KParcelize
 data class If(
     val condition: Exp<*>,
-    val statementsTrue: ArrayList<out Statement>,
-    val statementsFalse: ArrayList<out Statement>,
+    val statementsTrue: List<Statement>,
+    val statementsFalse: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
@@ -73,13 +81,6 @@ data class If(
         condition: Exp<*>,
         statementsTrue: List<Statement>,
         statementsFalse: List<Statement>,
-        match: MatchPos
-    ) : this(condition, ArrayList(statementsTrue), ArrayList(statementsFalse), Uuid.random(), match)
-
-    constructor(
-        condition: Exp<*>,
-        statementsTrue: ArrayList<Statement>,
-        statementsFalse: ArrayList<Statement>,
         match: MatchPos
     ) : this(condition, statementsTrue, statementsFalse, Uuid.random(), match)
 
@@ -214,14 +215,12 @@ data class Abort(override val id: Uuid, override val match: MatchPos) : Statemen
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
     override fun evaluate(env: Environment) = AbortEvaluation("Abort has been called!")
-
     override fun Formatting.format(state: ParserState) = print("abort")
-
 }
 
 abstract class Loop(
     open val condition: Exp<*>,
-    open val statements: ArrayList<out Statement>,
+    open val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match)
@@ -229,11 +228,11 @@ abstract class Loop(
 @KParcelize
 data class While(
     override val condition: Exp<*>,
-    override val statements: ArrayList<out Statement>,
+    override val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Loop(condition, statements, id, match) {
-    constructor(condition: Exp<*>, statements: ArrayList<out Statement>, match: MatchPos) :
+    constructor(condition: Exp<*>, statements: List<Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult = condition.join(env) {
@@ -280,11 +279,11 @@ data class While(
 @KParcelize
 data class DoWhile(
     override val condition: Exp<*>,
-    override val statements: ArrayList<out Statement>,
+    override val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Loop(condition, statements, id, match) {
-    constructor(condition: Exp<*>, statements: ArrayList<out Statement>, match: MatchPos) :
+    constructor(condition: Exp<*>, statements: List<Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
@@ -317,20 +316,58 @@ data class DoWhile(
 
 @KParcelize
 data class Assign(
-    val label: String, val value: Exp<*>, override val id: Uuid,
-    override val match: MatchPos
+    val label: Either<Index, String>, val value: Exp<*>,
+    override val id: Uuid, override val match: MatchPos
 ) : Statement(id, match) {
     constructor(label: String, value: Exp<*>, match: MatchPos) :
+            this(Right(label), value, Uuid.random(), match)
+
+    constructor(label: Either<Index, String>, value: Exp<*>, match: MatchPos) :
             this(label, value, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult = value.join(env) {
-        env.set(label, it)
-        Finished
+    override fun evaluate(env: Environment): EvaluationResult = when (label) {
+        is Right -> value.join(env) {
+            env.set(label.value, it)
+            Finished
+        }
+
+        is Left -> label.value.indexers.joinAll(env) { indexers ->
+            if (indexers.any { it !is VNum<*> }) {
+                error(
+                    "Non number indexer found " + indexers
+                        .mapIndexed { i, v -> v to i }
+                        .filter { it.first !is VNum<*> }
+                        .joinToString(prefix = "(", postfix = ")") { (v, i) ->
+                            "$v at $i"
+                        }
+                )
+            }
+            value.join(env) { value ->
+                env.set(
+                    label.value.id,
+                    value,
+                    *indexers.mapNotNull { ((it as? VNum<*>)?.value as? BigInteger)?.toIntOrNull() }
+                        .toIntArray()
+                )
+                Finished
+            }
+
+        }
     }
 
     override fun Formatting.format(state: ParserState): Int {
         print(buildString {
-            append(label)
+            when (label) {
+                is Right -> append(label.value)
+                is Left -> {
+                    append(label.value.id)
+                    label.value.indexers.forEach {
+                        append('[')
+                        append(it.toString(state))
+                        append(']')
+                    }
+                }
+            }
             append(" := ")
             append(value.toString(state))
         })
@@ -358,24 +395,55 @@ data class Select(
 
 @KParcelize
 data class ParallelAssign(
-    val assigns: ArrayList<Pair<String, Exp<Value>>>,
+    val assigns: List<Pair<Either<Index, String>, Exp<Value>>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(assigns: ArrayList<Pair<String, Exp<Value>>>, match: MatchPos) :
+    constructor(assigns: List<Pair<Either<Index, String>, Exp<Value>>>, match: MatchPos) :
             this(assigns, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        assigns.map { it.second }.joinAll(env) {
-            for (assign in assigns.map { it.first }.zip(it)) env.set(
-                assign.first,
-                assign.second
-            )
-            Finished
+        assigns.map { it.first }.filterLeft().joinAll(env) { indexes ->
+            var count = 0
+            assigns.map { it.second }.joinAll(env) {
+                for (assign in assigns.map { it.first }.zip(it)) {
+                    when (val label = assign.first) {
+                        is Right -> env.set(
+                            label.value,
+                            assign.second
+                        )
+
+                        is Left -> {
+                            when (val index = indexes[count]) {
+                                is VNum<*> -> env.set(
+                                    label.value.id,
+                                    assign.second,
+                                    (index.value as? BigInteger)?.toInt()
+                                        ?: error("Decimal index is not supported!")
+                                )
+
+                                else -> error("Non number indexer found (namely $index)")
+                            }
+                            count += 1
+                        }
+
+                    }
+
+                }
+                Finished
+            }
         }
 
+
     override fun Formatting.format(state: ParserState): Int {
-        print(assigns.joinToString(", ") { it.first.toString() })
+        print(assigns.joinToString(", ") {
+            when (val label = it.first) {
+                is Right -> label.value
+                is Left -> label.value.id + label.value.indexers.joinToString {
+                    "[${it.toString(state)}]"
+                }
+            }
+        })
         print(" := ")
         print(assigns.joinToString(", ") { it.second.toString(state) })
         breakLine()
@@ -403,15 +471,19 @@ data class Expression(
 }
 
 @KParcelize
-data class LineError(val content: String) : KParcelable
+data class LineError(val content: String, val line: Int) : KParcelable {
+    init {
+        Logger.e("LINEERROR") { " $line: $content" }
+    }
+}
 
 @KParcelize
 data class Parallel(
-    val blocks: ArrayList<out ArrayList<out Statement>>,
+    val blocks: List<List<Statement>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(blocks: ArrayList<out ArrayList<out Statement>>, match: MatchPos) :
+    constructor(blocks: List<List<Statement>>, match: MatchPos) :
             this(blocks, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =

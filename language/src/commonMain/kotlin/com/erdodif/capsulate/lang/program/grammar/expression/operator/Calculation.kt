@@ -5,6 +5,7 @@ import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
+import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.grammar.expression.withRawValue
 import com.erdodif.capsulate.lang.program.grammar.expression.withValue
@@ -18,6 +19,8 @@ data class UnaryCalculation<T : Value, R : Value>(
     val param: Exp<R>,
     val operator: UnaryOperator<T, R>
 ) : Exp<T> {
+    override fun getType(assumptions: Map<String, Type>): Type =
+        operator.type(param.getType(assumptions))
 
     override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
         param.withRawValue(context) { a: R -> operator.operation(context, a) }
@@ -52,6 +55,8 @@ data class BinaryCalculation<T : Value, R : Value>(
     val second: Exp<R>,
     val operator: BinaryOperator<T, R>
 ) : Exp<T>, KParcelable {
+    override fun getType(assumptions: Map<String, Type>): Type =
+        operator.type(first.getType(assumptions), second.getType(assumptions))
 
     override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
         (first to second).withValue(context) { a: R, b: R ->
