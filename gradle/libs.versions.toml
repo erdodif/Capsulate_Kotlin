@@ -6,7 +6,7 @@ android-targetSdk = "35"
 androidx-activityCompose = "1.10.1"
 androidx-lifecycle = "2.8.4"
 bignum = "0.3.10"
-circuitFoundation = "0.27.0"
+circuitFoundation = "0.27.1"
 compose-plugin = "1.7.3"
 composeDnd = "0.3.0"
 coreSplashscreen = "1.0.1"
@@ -16,7 +16,7 @@ kermit = "2.0.5"
 kmpfileFilekit = "0.7.0"
 kotlin = "2.1.20"
 kotlinCodepoints = "0.9.0"
-kotlinx-coroutines = "1.10.1"
+kotlinx-coroutines = "1.10.2"
 kotlinxDatetime = "0.6.1"
 kotlinxIoCore = "0.7.0"
 kotlinxSerializationJson = "1.8.0"
@@ -35,6 +35,7 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
+circuitx-gesture-navigation = { module = "com.slack.circuit:circuitx-gesture-navigation", version.ref = "circuitFoundation" }
 compose-dnd = { module = "com.mohamedrejeb.dnd:compose-dnd", version.ref = "composeDnd" }
 detekt-rules-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektRulesCompose" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }

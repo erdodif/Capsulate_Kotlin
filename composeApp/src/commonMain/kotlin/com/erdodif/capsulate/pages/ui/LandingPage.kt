@@ -69,7 +69,7 @@ class LandingPage : Ui<LandingScreen.State> {
         val windowSize = currentWindowAdaptiveInfo()
         if (windowSize.windowSizeClass.windowWidthSizeClass == COMPACT_WIDTH) {
             Column(
-                modifier = modifier.background(MaterialTheme.colorScheme.surface),
+                modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -78,7 +78,7 @@ class LandingPage : Ui<LandingScreen.State> {
             }
         } else {
             Row(
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {

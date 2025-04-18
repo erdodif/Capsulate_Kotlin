@@ -96,7 +96,7 @@ data object Div : BinaryOperator<VNum<*>, VNum<*>>(
 
 @KParcelize
 data object Larger : BinaryOperator<VBool, VNum<*>>(
-    5,
+    4,
     ">",
     _char('>'),
     Association.NONE,
@@ -107,7 +107,7 @@ data object Larger : BinaryOperator<VBool, VNum<*>>(
 
 @KParcelize
 data object Smaller : BinaryOperator<VBool, VNum<*>>(
-    5,
+    4,
     "<",
     _char('<'),
     Association.NONE,
@@ -118,7 +118,7 @@ data object Smaller : BinaryOperator<VBool, VNum<*>>(
 
 @KParcelize
 data object LargerEq : BinaryOperator<VBool, VNum<*>>(
-    5,
+    4,
     "≥",
     or(_keyword(">="), _char('≥')),
     Association.NONE,
@@ -129,7 +129,7 @@ data object LargerEq : BinaryOperator<VBool, VNum<*>>(
 
 @KParcelize
 data object SmallerEq : BinaryOperator<VBool, VNum<*>>(
-    5,
+    4,
     "≤",
     or(_keyword("<="), _char('≤')),
     Association.NONE,
@@ -170,7 +170,7 @@ data object NotEqual : BinaryOperator<Value, Value>(
 
 @KParcelize
 data object And : BinaryOperator<VBool, VBool>(
-    6,
+    3,
     "∧",
     orEither(_char('&'), _char('∧')),
     Association.LEFT,
@@ -181,7 +181,7 @@ data object And : BinaryOperator<VBool, VBool>(
 
 @KParcelize
 data object Or : BinaryOperator<VBool, VBool>(
-    5,
+    2,
     "∨",
     orEither(_char('|'), _char('v')),
     Association.LEFT,

@@ -147,7 +147,7 @@ class DebugPage : Ui<State> {
                     Text(entry.scope)
                     LazyColumn {
                         items(entry.variables) { variable ->
-                            Row(verticalAlignment = Alignment.Bottom) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     buildAnnotatedString {
                                         val value = variable.value

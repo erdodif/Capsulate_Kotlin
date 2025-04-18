@@ -19,6 +19,7 @@ import com.erdodif.capsulate.pages.screen.LandingScreen
 import com.erdodif.capsulate.pages.screen.LandingPresenter
 import com.erdodif.capsulate.pages.screen.PresetPresenter
 import com.erdodif.capsulate.pages.screen.ProjectPresenter
+import com.erdodif.capsulate.pages.screen.ProjectScreen
 import com.erdodif.capsulate.pages.ui.DebugPage
 import com.erdodif.capsulate.pages.ui.EditorPage
 import com.erdodif.capsulate.pages.ui.LandingPage
@@ -29,10 +30,15 @@ import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
-import com.slack.circuit.foundation.internal.BackHandler
+import com.slack.circuit.foundation.animation.AnimatedNavDecoration
+import com.slack.circuit.foundation.animation.AnimatedScreenTransform
 import com.slack.circuit.foundation.rememberCircuitNavigator
+import com.slack.circuit.runtime.ExperimentalCircuitApi
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.Job
+import kotlin.reflect.KClass
 
 val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modifier ->
     Column(modifier, verticalArrangement = Arrangement.Center) {
@@ -49,13 +55,13 @@ val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modif
 
 val applicationExitJob = Job()
 
+@OptIn(ExperimentalCircuitApi::class)
 @Composable
 fun App() {
     val backStack = rememberSaveableBackStack(root = LandingScreen)
     val navigator = rememberCircuitNavigator(backStack) {
         applicationExitJob.complete()
     }
-    BackHandler(true, navigator::pop)
     val circuit = Circuit.Builder()
         .addPresenterFactory(LandingPresenter.Factory)
         .addUiFactory(LandingPage.Factory)
@@ -80,6 +86,13 @@ fun App() {
                         navigator = navigator,
                         backStack = backStack,
                         modifier = Modifier.fillMaxSize(),
+                        decoration = AnimatedNavDecoration(
+                            animatedScreenTransforms = mapOf<KClass<out Screen>, AnimatedScreenTransform>(
+                                ProjectScreen::class to DefaultScreenTransform
+                            ).toImmutableMap(),
+                            decoratorFactory = GestureNavigationDecorationFactory {
+                                navigator.pop()
+                            }),
                         unavailableRoute = defaultScreenError
                     )
                 }
