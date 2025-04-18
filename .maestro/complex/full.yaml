@@ -1,0 +1,11 @@
+appId: com.erdodif.capsulate
+---
+- launchApp
+- tapOn: "Empty File"
+- tapOn:
+    point: "50%,11%"
+- inputText:
+    text: "a := 1"
+- copyTextFrom:
+      "a.*"
+- assertTrue: "${\"a•:=•1\" == maestro.copiedText}"
