@@ -22,7 +22,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -33,12 +33,12 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -51,6 +51,7 @@ kotlin {
             implementation(libs.kotlin.test.junit)
         }
         commonMain.dependencies {
+            // -- Compose --
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.animation)
@@ -58,31 +59,37 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.compose.dnd)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.kotlin.test)
-            implementation(libs.kermit)
-            implementation(libs.kmpfile)
-            implementation(libs.kmpfile.filekit)
-            implementation(libs.kmpfile.okio)
-            implementation(libs.okio)
-            implementation(libs.filekit.core)
-            implementation(libs.filekit.compose)
-            implementation(libs.circuit.foundation)
-            implementation(libs.circuit.overlay)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.compose.dnd)
             implementation(libs.material.kolor)
             implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.multiplatform.settings.serialization)
             implementation(libs.adaptive)
             implementation(libs.adaptive.layout)
             implementation(libs.adaptive.navigation)
-            implementation(libs.kotlinx.datetime)
             implementation(libs.androidx.core.splashscreen)
+            // -- Misc --
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.io.core)
+            // -- File handling --
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.compose)
+            implementation(libs.kmpfile)
+            implementation(libs.kmpfile.filekit)
+            implementation(libs.kmpfile.okio)
+            implementation(libs.okio)
+
+            // -- Navigation - Circuit --
+            implementation(libs.circuit.foundation)
+            implementation(libs.circuit.overlay)
+            implementation(libs.circuitx.gesture.navigation)
+            // -- Logging
             implementation(libs.slf4j.api)
             implementation(libs.slf4j.simple)
+            implementation(libs.kermit)
             // -- Modules --
             implementation(projects.platform)
             implementation(projects.components)

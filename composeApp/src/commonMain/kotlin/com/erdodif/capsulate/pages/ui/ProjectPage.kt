@@ -1,10 +1,13 @@
 package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -21,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import com.erdodif.capsulate.DefaultScreenTransform
 import com.erdodif.capsulate.defaultScreenError
 import com.erdodif.capsulate.lang.util.valueOrNull
 import com.erdodif.capsulate.pages.screen.ProjectScreen
@@ -29,7 +33,15 @@ import com.erdodif.capsulate.pages.screen.ProjectScreen.State
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.slack.circuit.foundation.NavigableCircuitContent
+import com.slack.circuit.foundation.animation.AnimatedNavDecoration
+import com.slack.circuit.foundation.animation.AnimatedScreenTransform
+import com.slack.circuit.runtime.ExperimentalCircuitApi
+import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.runtime.ui.Ui
+import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
+import kotlinx.collections.immutable.toImmutableMap
+import kotlin.reflect.KClass
+import kotlin.to
 import kotlin.uuid.ExperimentalUuidApi
 
 private val regularColors: ButtonColors
@@ -50,6 +62,7 @@ private val openedColors: ButtonColors
 class ProjectPage : Ui<State> {
     companion object Factory : Ui.Factory by screenUiFactory<ProjectScreen>(::ProjectPage)
 
+    @OptIn(ExperimentalCircuitApi::class)
     @Composable
     override fun Content(
         state: State, modifier: Modifier
@@ -63,6 +76,13 @@ class ProjectPage : Ui<State> {
                 backStack = state.editorBackStack,
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
                     .consumeWindowInsets(paddingValues),
+                decoration = AnimatedNavDecoration(
+                    animatedScreenTransforms = mapOf<KClass<out Screen>, AnimatedScreenTransform>(
+                        ProjectScreen::class to DefaultScreenTransform
+                    ).toImmutableMap(),
+                    decoratorFactory = GestureNavigationDecorationFactory {
+                        state.editorNavigator.pop()
+                    }),
                 unavailableRoute = defaultScreenError
             )
         }
@@ -71,9 +91,11 @@ class ProjectPage : Ui<State> {
     @OptIn(ExperimentalUuidApi::class)
     @Composable
     private fun TopBar(state: State) {
+        val padding = WindowInsets.safeDrawing.asPaddingValues()
         ScrollableLazyRow(
             modifier = Modifier.padding(3.dp).background(MaterialTheme.colorScheme.surface)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(top = padding.calculateTopPadding()),
             verticalAlignment = Alignment.CenterVertically
         ) {
             itemsIndexed(state.project.openFiles) { index, openFile ->
