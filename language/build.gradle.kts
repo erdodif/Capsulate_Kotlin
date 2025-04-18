@@ -40,6 +40,7 @@ kotlin {
             implementation(libs.kermit)
             implementation(libs.kotlinx.io.core)
             implementation(libs.kotlinx.collections.immutable)
+            implementation(libs.bignum)
             // -- Modules --
             implementation(projects.platform)
         }

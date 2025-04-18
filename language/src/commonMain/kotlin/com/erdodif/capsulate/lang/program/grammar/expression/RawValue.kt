@@ -2,10 +2,13 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 
 sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Token(match) {
     abstract fun get(context: Environment): T
@@ -30,14 +33,24 @@ data class StrLit(val value: String, override val match: MatchPos) : RawValue<VS
 }
 
 @KParcelize
-data class IntLit(val value: Int, override val match: MatchPos) : RawValue<VWhole>(match) {
+data class IntLit(
+    val value: @com.erdodif.capsulate.RawValue BigInteger,
+    override val match: MatchPos
+) : RawValue<VWhole>(match) {
+    constructor(value: Int, match: MatchPos) : this(value.toBigInteger(), match)
+
     override fun getType(assumptions: Map<String, Type>): WHOLE = WHOLE
     override fun get(context: Environment): VWhole = VWhole(value)
     override fun toString(): String = "IntLit:$value"
 }
 
 @KParcelize
-data class NatLit(val value: UInt, override val match: MatchPos) : RawValue<VNat>(match) {
+data class NatLit(
+    val value: @com.erdodif.capsulate.RawValue BigInteger,
+    override val match: MatchPos
+) : RawValue<VNat>(match) {
+    constructor(value: Int, match: MatchPos) : this(value.toBigInteger(), match)
+
     override fun getType(assumptions: Map<String, Type>): NAT = NAT
     override fun get(context: Environment): VNat = VNat(value)
     override fun toString(): String = "NatLit:$value"

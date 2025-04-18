@@ -26,6 +26,7 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
+import com.erdodif.capsulate.lang.util.toIntOrNull
 import com.erdodif.capsulate.lang.util.tok
 import kotlin.math.max
 
@@ -107,18 +108,20 @@ val sIf: Parser<Statement> =
             }
 
 val sWhen: Parser<Statement> =
-    (delimit(middle(
-        newLined(_keyword("when")) + newLined(_char('{')),
-        (many(left(left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(',')))) +
-                optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
-                optional(
-                    middle(
-                        newLined(_keyword("else") + _char(':')),
-                        statementOrBlock,
-                        optional(newLined(_char(','))),
-                    )
-                ),
-        newLined(_char('}'))),
+    (delimit(
+        middle(
+            newLined(_keyword("when")) + newLined(_char('{')),
+            (many(left(left(pExp, newLined(_char(':'))) + statementOrBlock, newLined(_char(',')))) +
+                    optional(left(pExp, newLined(_char(':'))) + statementOrBlock)) +
+                    optional(
+                        middle(
+                            newLined(_keyword("else") + _char(':')),
+                            statementOrBlock,
+                            optional(newLined(_char(','))),
+                        )
+                    ),
+            newLined(_char('}'))
+        ),
     )) * { (statements, elseBlock), pos ->
         val (blocks, trailing) = statements
         When(if (trailing != null) blocks + trailing else blocks, elseBlock, pos)
@@ -202,7 +205,14 @@ val pType: Parser<Type> = {
                 }
             }
 
-            is Right -> pass(match.start, ARRAY(value.value.first, value.value.second.toInt()))
+            is Right -> {
+                val size = value.value.second.toIntOrNull()
+                if (size == null) {
+                    fail("Cannot create platform Integer from ${value.value.second}")
+                } else {
+                    pass(match.start, ARRAY(value.value.first, size))
+                }
+            }
         }
     }]()
 }

@@ -32,6 +32,7 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.times
+import com.erdodif.capsulate.lang.util.toInt
 import com.erdodif.capsulate.lang.specification.coc.Type as CocType
 
 data class Var(val name: String, override val match: MatchPos) : Token(match)

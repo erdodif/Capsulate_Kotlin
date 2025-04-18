@@ -5,6 +5,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.pBoolLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pIntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pStrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
+import com.erdodif.capsulate.lang.util.bg
 import com.erdodif.capsulate.match
 import com.erdodif.capsulate.pass
 import kotlin.test.Test
@@ -19,8 +20,8 @@ class ExpressionTest {
 
     @Test
     fun intLit_pass() {
-        topLevel(pIntLit) pass "1234" match { it.value == 1234 }
-        topLevel(pIntLit) pass "-1234" match { it.value == -1234 }
+        topLevel(pIntLit) pass "1234" match { it.value == 1234.bg }
+        topLevel(pIntLit) pass "-1234" match { it.value == (-1234).bg }
     }
 
     @Test

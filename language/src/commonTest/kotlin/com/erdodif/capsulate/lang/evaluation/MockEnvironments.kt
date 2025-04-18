@@ -31,9 +31,9 @@ object MockEnvironments {
 
     fun intEnv(): Environment = Env(
         mapOf(), mapOf(), mutableListOf(
-            Parameter("a", NAT, VNat(1U)),
-            Parameter("b", NAT, VNat(4U)),
-            Parameter("c", NAT, VNat(7U))
+            Parameter("a", NAT, VNat(1)),
+            Parameter("b", NAT, VNat(4)),
+            Parameter("c", NAT, VNat(7))
         )
     )
 

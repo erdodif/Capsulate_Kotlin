@@ -4,6 +4,7 @@ import com.erdodif.capsulate.assert
 import com.erdodif.capsulate.at
 import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
+import com.erdodif.capsulate.lang.util.bg
 import com.erdodif.capsulate.pass
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,7 +22,7 @@ class IndexTest {
             assertEquals(1, it.value.indexers.size)
             val index = it.value.indexers.first()
             assertIs<IntLit>(index)
-            assertEquals(1, index.value)
+            assertEquals(1.bg, index.value)
         } at 4
     }
 
@@ -32,9 +33,9 @@ class IndexTest {
             assertEquals(2, it.value.indexers.size)
             val (first, second) = it.value.indexers
             assertIs<IntLit>(first)
-            assertEquals(1, first.value)
+            assertEquals(1.bg, first.value)
             assertIs<IntLit>(second)
-            assertEquals(3, second.value)
+            assertEquals(3.bg, second.value)
         } at 7
     }
 

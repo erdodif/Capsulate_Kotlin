@@ -2,11 +2,16 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.RawValue
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
+import com.erdodif.capsulate.lang.util.toInt
+import com.ionspin.kotlin.bignum.BigNumber
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import kotlin.jvm.JvmInline
 
 interface Value : KParcelable {
@@ -15,27 +20,34 @@ interface Value : KParcelable {
     val type: Type
 }
 
-sealed interface VNum : Value {
+sealed interface VNum<T : BigNumber<T>> : Value {
     override val type: NUM
-    val value: Int
+    val value: BigNumber<T>
 }
 
-//TODO: BigInteger for multiplatform
 @KParcelize
 @JvmInline
-value class VNat(private val _value: UInt) : VNum {   // ℕ
-    override val value: Int
-        get() = _value.toInt()
+value class VNat(override val value: @RawValue BigInteger) : VNum<BigInteger> { // ℕ
+    constructor(value: String) : this(value.toBigInteger())
+    constructor(value: Int) : this(value.toBigInteger())
+
+    init {
+        require(!value.isNegative) {
+            "Natural number cannot be negative"
+        }
+    }
 
     override fun toString(): String = value.toString()
     override val type: NAT
         get() = NAT
 }
 
-//TODO: BigInteger for multiplatform
 @KParcelize
 @JvmInline
-value class VWhole(override val value: Int) : VNum { // ℤ
+value class VWhole(override val value: @RawValue BigInteger) : VNum<BigInteger> { // ℤ
+    constructor(value: String) : this(value.toBigInteger())
+    constructor(value: Int) : this(value.toBigInteger())
+
     override fun toString(): String = value.toString()
     override val type: WHOLE
         get() = WHOLE
@@ -51,7 +63,7 @@ value class VChr(val value: Char) : Value {  // ℂ
 
 @KParcelize
 @JvmInline
-value class VStr(val value: String) : Value {  // 𝕊
+value class VStr(val value: String) : Value { // 𝕊
     override fun toString(): String = value.toString()
     override val type: STRING
         get() = STRING
@@ -170,19 +182,31 @@ data class VArray<T : Value>(
 
         override fun evaluate(context: Environment): Either<Value, PendingExpression<Value, Value>> =
             indexers.withRawValue(context) { indexers ->
-                if (indexers.any { it !is VNum }) {
+                if (indexers.any { it !is VNum<*> || it.value !is BigInteger }) {
                     error(
                         "Cannot index with non-numbers! Got: " + indexers
                             .mapIndexed { index, a -> a to index }
-                            .filter { it.first !is VNum }
+                            .filter { it.first !is VNum<*> }
                             .joinToString(postfix = ".") { (value, index) -> "${value.type} at ${index + 1}" }
 
                     )
                 }
-                indexers as List<VNum>
+                indexers as List<VNum<BigInteger>>
+                if (indexers.any { it.value.compareTo(Int.MAX_VALUE.toBigInteger()) > 0 }) {
+                    error(
+                        "Cannot index with numbers larger than the platform's maximum number " +
+                                "(which is ${Int.MAX_VALUE})! Got: " + indexers
+                            .mapIndexed { index, a -> a to index }
+                            .filter { it.first.value.compareTo(Int.MAX_VALUE.toBigInteger()) > 0 }
+                            .joinToString(postfix = ".") { (value, index) -> "${value.value} at ${index + 1}" }
+
+                    )
+                }
                 when (val param = context.get(id)) {
                     is Left -> when (val value = param.value) {
-                        is VArray<*> -> value.get(indexes = indexers.map { it.value }.toIntArray())
+                        is VArray<*> -> value.get(indexes = indexers.map { (it.value as BigInteger).toInt() }
+                            .toIntArray())
+
                         else -> error("Can't index non-array ($id : ${value.type})")
                     }
 

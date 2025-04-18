@@ -17,6 +17,7 @@ import com.erdodif.capsulate.lang.program.grammar.some
 import com.erdodif.capsulate.lang.program.grammar.stringCaseLess
 import com.erdodif.capsulate.lang.program.grammar.whiteSpace
 import com.erdodif.capsulate.lang.program.grammar.whiteSpaceChars
+import com.ionspin.kotlin.bignum.integer.BigInteger
 
 val pLineBreak: Parser<Char> = satisfy { it in lineBreak }
 val pLineEnd: Parser<Char> = satisfy { it in lineEnd }
@@ -65,9 +66,9 @@ val _nonKeyword: Parser<String> = tok(freeWord)[{
     }
 }]
 
-val _natural: Parser<UInt> = tok(natural)
+val _natural: Parser<BigInteger> = tok(natural)
 
-val _integer: Parser<Int> = tok(int)
+val _integer: Parser<BigInteger> = tok(int)
 
 val _lineEnd: Parser<Char> = tok(pLineEnd)
 val _lineBreak: Parser<Char> = tok(pLineBreak)

@@ -9,6 +9,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.lang.program.grammar.expression.VWhole
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos.Constants.ZERO
+import com.erdodif.capsulate.lang.util.bg
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -54,7 +55,7 @@ class IndexerTest {
         val result = VArray.Index("a", IntLit(1, ZERO)).evaluate(env)
         assertIs<Left<*>>(result)
         assertIs<VWhole>(result.value)
-        assertEquals(1, result.value.value)
+        assertEquals(1.bg, result.value.value)
     }
 
     @Test
@@ -74,9 +75,9 @@ class IndexerTest {
     fun `indexer correct on the second depth`() {
         val value = VArray<VArray<VWhole>>(arrayOf(VArray(arrayOf(VWhole(1), VWhole(2), VWhole(3)))))
         val env = Env(values = listOf(Parameter("a", value.type, value)))
-        val result = VArray.Index("a", IntLit(1, ZERO), NatLit(2u, ZERO)).evaluate(env)
+        val result = VArray.Index("a", IntLit(1, ZERO), NatLit(2, ZERO)).evaluate(env)
         assertIs<Left<*>>(result)
         assertIs<VWhole>(result.value)
-        assertEquals(2, result.value.value)
+        assertEquals(2.bg, result.value.value)
     }
 }

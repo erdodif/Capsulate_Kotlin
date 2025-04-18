@@ -29,16 +29,16 @@ class CharTest {
 
     @Test
     fun `digit passes with correct value`() {
-        digit pass "0" withValue 0 at 1 withMatch (0 to 1)
-        digit pass "1" withValue 1 at 1 withMatch (0 to 1)
-        digit pass "2" withValue 2 at 1 withMatch (0 to 1)
-        digit pass "3" withValue 3 at 1 withMatch (0 to 1)
-        digit pass "4" withValue 4 at 1 withMatch (0 to 1)
-        digit pass "5" withValue 5 at 1 withMatch (0 to 1)
-        digit pass "6" withValue 6 at 1 withMatch (0 to 1)
-        digit pass "7" withValue 7 at 1 withMatch (0 to 1)
-        digit pass "8" withValue 8 at 1 withMatch (0 to 1)
-        digit pass "9" withValue 9 at 1 withMatch (0 to 1)
+        digit pass "0" withValue '0' at 1 withMatch (0 to 1)
+        digit pass "1" withValue '1' at 1 withMatch (0 to 1)
+        digit pass "2" withValue '2' at 1 withMatch (0 to 1)
+        digit pass "3" withValue '3' at 1 withMatch (0 to 1)
+        digit pass "4" withValue '4' at 1 withMatch (0 to 1)
+        digit pass "5" withValue '5' at 1 withMatch (0 to 1)
+        digit pass "6" withValue '6' at 1 withMatch (0 to 1)
+        digit pass "7" withValue '7' at 1 withMatch (0 to 1)
+        digit pass "8" withValue '8' at 1 withMatch (0 to 1)
+        digit pass "9" withValue '9' at 1 withMatch (0 to 1)
     }
 
     @Test

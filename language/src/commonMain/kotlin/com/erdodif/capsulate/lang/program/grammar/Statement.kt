@@ -19,6 +19,9 @@ import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
 import com.erdodif.capsulate.lang.program.grammar.expression.VArray.Index
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
+import com.erdodif.capsulate.lang.util.toInt
+import com.erdodif.capsulate.lang.util.toIntOrNull
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
@@ -328,12 +331,12 @@ data class Assign(
             Finished
         }
 
-        is Left -> (label.value.indexers as List<Exp<Value>>).joinAll(env) { indexers ->
-            if (indexers.any { it !is VNum }) {
+        is Left -> label.value.indexers.joinAll(env) { indexers ->
+            if (indexers.any { it !is VNum<*> }) {
                 error(
                     "Non number indexer found " + indexers
                         .mapIndexed { i, v -> v to i }
-                        .filter { it.first !is VNum }
+                        .filter { it.first !is VNum<*> }
                         .joinToString(prefix = "(", postfix = ")") { (v, i) ->
                             "$v at $i"
                         }
@@ -343,7 +346,8 @@ data class Assign(
                 env.set(
                     label.value.id,
                     value,
-                    *indexers.mapNotNull { (it as? VNum)?.value }.toIntArray()
+                    *indexers.mapNotNull { ((it as? VNum<*>)?.value as? BigInteger)?.toIntOrNull() }
+                        .toIntArray()
                 )
                 Finished
             }
@@ -411,10 +415,11 @@ data class ParallelAssign(
 
                         is Left -> {
                             when (val index = indexes[count]) {
-                                is VNum -> env.set(
+                                is VNum<*> -> env.set(
                                     label.value.id,
                                     assign.second,
-                                    index.value
+                                    (index.value as? BigInteger)?.toInt()
+                                        ?: error("Decimal index is not supported!")
                                 )
 
                                 else -> error("Non number indexer found (namely $index)")

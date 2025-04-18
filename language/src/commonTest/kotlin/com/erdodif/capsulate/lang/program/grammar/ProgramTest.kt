@@ -3,6 +3,7 @@ package com.erdodif.capsulate.lang.program.grammar
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.Variable
+import com.erdodif.capsulate.lang.util.bg
 import com.erdodif.capsulate.lang.util.errorOrNull
 import com.erdodif.capsulate.pass
 import kotlin.test.Test
@@ -19,7 +20,7 @@ class ProgramTest {
             assertIs<Assign>(a)
             assertEquals("a", a.label.errorOrNull)
             assertIs<IntLit>(a.value)
-            assertEquals(1, a.value.value)
+            assertEquals(1.bg, a.value.value)
             assertEquals(3, a.value.match.start)
             assertEquals(4, a.value.match.end)
             assertIs<Assign>(b)
@@ -41,7 +42,7 @@ class ProgramTest {
             assertIs<Assign>(a)
             assertEquals("a", a.label.errorOrNull)
             assertIs<IntLit>(a.value)
-            assertEquals(1, a.value.value)
+            assertEquals(1.bg, a.value.value)
             assertIs<Assign>(b)
             assertEquals("b", b.label.errorOrNull)
             assertIs<StrLit>(b.value)

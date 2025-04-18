@@ -12,10 +12,13 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.SuccessParser
+import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.getEither
 import com.erdodif.capsulate.lang.util.times
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 
 inline val anyChar: Parser<Char>
     get() = {
@@ -375,18 +378,18 @@ inline fun satisfy(
 /**
  * Looks for decimal digit
  */
-val digit: Parser<Short> = satisfy { it in '0'..'9' } / { (it.code - '0'.code).toShort() }
+val digit: Parser<Char> = satisfy { it in '0'..'9' }
 
 /**
  * Looks for a non-negative integer
  */
-val natural: Parser<UInt> = some(digit) / { it.fold(0) { a, b -> a * 10 + b.toInt() }.toUInt() }
+val natural: Parser<BigInteger> = some(digit) / { it.asString().toBigInteger(base = 10) }
 
 /**
  * Looks for a signed integer
  */
-val int: Parser<Int> = and(optional(char('-')), natural) / { (sign, num) ->
-    if (sign == null) num.toInt() else -(num.toInt())
+val int: Parser<BigInteger> = and(optional(char('-')), natural) / { (sign, num) ->
+    if (sign == null) num else -num
 }
 
 /**

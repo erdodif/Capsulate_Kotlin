@@ -5,6 +5,7 @@ android-minSdk = "27"
 android-targetSdk = "35"
 androidx-activityCompose = "1.10.1"
 androidx-lifecycle = "2.8.4"
+bignum = "0.3.10"
 circuitFoundation = "0.27.0"
 compose-plugin = "1.7.3"
 composeDnd = "0.3.0"
@@ -31,6 +32,7 @@ kotlinx-collection = "0.3.8"
 
 [libraries]
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
 compose-dnd = { module = "com.mohamedrejeb.dnd:compose-dnd", version.ref = "composeDnd" }
