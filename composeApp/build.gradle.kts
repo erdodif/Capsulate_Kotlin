@@ -42,6 +42,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.core.splashscreen)
             implementation(libs.kotlin.test.junit)
             implementation(libs.material)
         }
@@ -68,7 +69,6 @@ kotlin {
             implementation(libs.adaptive)
             implementation(libs.adaptive.layout)
             implementation(libs.adaptive.navigation)
-            implementation(libs.androidx.core.splashscreen)
             // -- Misc --
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.serialization.json)

@@ -131,7 +131,7 @@ class DebugPage : Ui<State> {
             flingBehavior = rememberSnapFlingBehavior(listState),
             modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp)
         ) {
-            items(state.stackTrace, { it.variables.hashCode() }) { entry ->
+            items(state.stackTrace, { it.hashCode() }) { entry ->
                 Column(
                     Modifier
                         .padding(2.dp)

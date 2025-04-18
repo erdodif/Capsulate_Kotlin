@@ -105,7 +105,21 @@ data class EvaluationContext private constructor(
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
     }
 
-    data class StackTraceEntry(val scope: String, val variables: List<Parameter>)
+    data class StackTraceEntry(val scope: String, val variables: List<Parameter>){
+        override fun hashCode(): Int = variables.hashCode()  + 31 * scope.hashCode()
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as StackTraceEntry
+
+            if (scope != other.scope) return false
+            if (variables != other.variables) return false
+
+            return true
+        }
+    }
 
     fun getCallStack(label: String = "Program"): List<StackTraceEntry> = buildList {
         add(StackTraceEntry(label, env.parameters))
