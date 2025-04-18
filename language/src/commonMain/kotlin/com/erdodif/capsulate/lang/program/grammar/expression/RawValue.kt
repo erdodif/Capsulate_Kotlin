@@ -2,7 +2,6 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.evaluation.Environment
-import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
