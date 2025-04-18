@@ -9,3 +9,27 @@ appId: com.erdodif.capsulate
 - copyTextFrom:
       "a.*"
 - assertTrue: "${\"a•:=•1\" == maestro.copiedText}"
+- back
+- swipe:
+    from: "Drag"
+    direction: LEFT
+- tapOn: "Format"
+- copyTextFrom:
+    "a.*"
+- assertTrue: "${\"a•:=•1\" == maestro.copiedText}"
+- tapOn: "Save file"
+- tapOn: "program.struk"
+- inputText:
+    text: "a.struk"
+- tapOn: "SAVE"
+- stopApp
+- launchApp
+- tapOn: "Open File"
+- scrollUntilVisible:
+   element: "a.struk"
+   direction: DOWN
+   speed: 60
+- tapOn: "a.struk"
+- copyTextFrom:
+    "a.*"
+- assertTrue: "${\"a•:=•1\" == maestro.copiedText}"
