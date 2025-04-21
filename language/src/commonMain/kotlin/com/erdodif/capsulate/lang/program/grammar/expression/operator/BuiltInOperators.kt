@@ -191,7 +191,7 @@ data object Or : BinaryOperator<VBool, VBool>(
 }
 
 @KParcelize
-data object Sign : UnaryOperator<VNum<*>, VWhole>(
+data object Sign : UnaryOperator<VWhole, VNum<BigInteger>>(
     20,
     "-",
     _char('-'),

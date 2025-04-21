@@ -97,7 +97,7 @@ data class FunctionCall<T : Value>(
     override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> = Right(
         PendingExpression(
             this as FunctionCall<Value>,
-            context.functions[name]!! as Function<Value>
+            context.functions[name]!!
         ) { Left(it as T) })
 
     override fun toString(state: ParserState, parentStrength: Int) =
@@ -123,7 +123,7 @@ val sFunction: Parser<Function<Value>> = {
         ).also {
             it.position = state.position
         }
-        val blocks = tmpEnv.withReturn(
+        val blocks = tmpEnv.withFunctionScope(
             label, delimit(
                 orEither(
                     middle(
@@ -172,7 +172,7 @@ data class Return<out T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
 }
 
 val sReturn: Parser<Statement> = right(_keyword("return"), pExp)[{ (value, state, pos) ->
-    if (allowReturn && currentFunctionLabel != null) {
+    if (inFunctionScope && currentFunctionLabel != null) {
         if (assumptions[currentFunctionLabel!!] != null) {
             if (assumptions[currentFunctionLabel!!] != value.getType(assumptions)) {
                 raiseError(

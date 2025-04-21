@@ -83,11 +83,15 @@ val sMethod: Parser<Method> =
     }
 
 val sMethodCall: Parser<Statement> = delimit(sKnownPattern)[{
-    val (pattern, params) = it.value
-    val method = methods.firstOrNull { it.pattern == pattern }
-    if (method == null) {
-        fail("Can't find any method with the given pattern '$pattern'")
+    if (inFunctionScope) {
+        fail("Cannot use call for a method in a function!")
     } else {
-        pass(it.match.start, MethodCall(method, params, it.match))
+        val (pattern, params) = it.value
+        val method = methods.firstOrNull { it.pattern == pattern }
+        if (method == null) {
+            fail("Can't find any method with the given pattern '$pattern'")
+        } else {
+            pass(it.match.start, MethodCall(method, params, it.match))
+        }
     }
 }]
