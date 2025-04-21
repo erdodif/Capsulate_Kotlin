@@ -35,6 +35,7 @@ import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util._char
 import com.erdodif.capsulate.lang.util._integer
 import com.erdodif.capsulate.lang.util._keyword
+import com.erdodif.capsulate.lang.util._natural
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.asString
 import com.erdodif.capsulate.lang.util.asum
@@ -192,6 +193,7 @@ val pStrLit: Parser<StrLit> = middle(
     many(orEither(right(char('\\'), anyChar), right(not(char('"')), anyChar))),
     _char('"')
 ) * { res, pos -> StrLit(res.asString(), pos) }
+val pNatLit: Parser<NatLit> = _natural * { lit, pos -> NatLit(lit, pos) }
 val pIntLit: Parser<IntLit> = _integer * { lit, pos -> IntLit(lit, pos) }
 val pBoolLit: Parser<BoolLit> =
     or(_keyword("true"), _keyword("false")) * { lit, pos -> BoolLit(lit is Left<*>, pos) }
@@ -224,9 +226,8 @@ val pArrayLit: Parser<ArrayLit<Value>> = {
     }]()
 }
 
-//val pIndex: Parser<Index> = or()
-
 val litOrder: Array<Parser<Exp<*>>> = arrayOf(
+    //pNatLit, temporarily
     pIntLit,
     pBoolLit,
     pChrLit,

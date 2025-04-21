@@ -18,6 +18,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Comment
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.program.grammar.expression.KeyWord
 import com.erdodif.capsulate.lang.program.grammar.expression.LineEnd
+import com.erdodif.capsulate.lang.program.grammar.expression.NatLit
 import com.erdodif.capsulate.lang.program.grammar.expression.StrLit
 import com.erdodif.capsulate.lang.program.grammar.expression.Symbol
 import com.erdodif.capsulate.lang.program.grammar.expression.Token
@@ -103,6 +104,7 @@ class CodeHighlight private constructor(
             is Variable -> variable
             is KeyWord -> control
             is IntLit -> number
+            is NatLit -> number
             is StrLit -> string
             is ChrLit -> string
             is LineEnd -> parenthesis
