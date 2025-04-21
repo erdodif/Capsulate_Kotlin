@@ -79,22 +79,34 @@ val sSkip: Parser<Statement> = delimit(_keyword("skip")) * { _, pos -> Skip(pos)
 val sAbort: Parser<Statement> = delimit(_keyword("abort") * { _, pos -> Abort(pos) })
 
 val sAtom: Parser<Statement> =
-    delimit(middle(_keyword("["), blockOrParallel, _keyword("]"))) * { atom, pos ->
-        Atomic(atom, pos)
-    }
+    delimit(middle(_keyword("["), blockOrParallel, _keyword("]")))[{ (atom, state, pos) ->
+        if (inFunctionScope) {
+            Fail("Cannot use Atomic statement in a function!", state)
+        } else {
+            Pass(Atomic(atom, pos), state, pos)
+        }
+    }]
 val sWait: Parser<Statement> = delimit(
     right(
         _keyword("await"), delimit(pExp) + or(sAtom, record(blockOrParallel))
-    ) * { (condition, atomic), pos ->
-        Wait(
-            condition,
-            when (val inner = atomic) {
-                is Left -> inner.value as Atomic
-                is Right -> Atomic(inner.value.first, inner.value.second)
-            },
-            pos
-        )
-    }
+    )[{ (combined, state, pos) ->
+        val (condition, atomic) = combined
+        if (inFunctionScope) {
+            Fail("Cannot use Await statement in a function!", state)
+        } else {
+            Pass(
+                Wait(
+                    condition,
+                    when (val inner = atomic) {
+                        is Left -> inner.value as Atomic
+                        is Right -> Atomic(inner.value.first, inner.value.second)
+                    },
+                    pos
+                ), state, pos
+            )
+        }
+
+    }]
 )
 
 val sExpression: Parser<Statement> = delimit(pExp) * { exp, pos -> Expression(exp, pos) }
@@ -218,22 +230,27 @@ val pType: Parser<Type> = {
 }
 
 val sAssign: Parser<Statement> =
-    delimit(or(pIndex, _nonKeyword) + right(_keyword(":="), pExp)) * { (variable, value), pos ->
+    delimit(or(pIndex, _nonKeyword) + right(_keyword(":="), pExp))[{ (combined, state, match) ->
+        val variable = combined.first
+        val value = combined.second
+        var out: ParserResult<Statement> = Pass(Assign(variable, value, match), state, match)
         if (variable is Right) {
-            if (assumptions[variable.value] != null &&
-                assumptions[variable.value] != value.getType(assumptions)
-            ) {
-                raiseError(
-                    "Possible type mismatch! " +
-                            "(already assumed ${assumptions[variable.value]}, " +
-                            "but the value has ${value.getType(assumptions)}"
-                )
+            if (assumptions[variable.value] != null) {
+                if (assumptions[variable.value] != value.getType(assumptions)) {
+                    raiseError(
+                        "Possible type mismatch! " +
+                                "(already assumed ${assumptions[variable.value]}, " +
+                                "but the value has ${value.getType(assumptions)}"
+                    )
+                    out = Fail("Type mismatch!", state)
+                }
             } else {
                 assumptions[variable.value] = value.getType(assumptions)
+                raiseError("${variable.value} : ${assumptions[variable.value]}")
             }
         }
-        Assign(variable, value, pos)
-    }
+        out
+    }]
 
 val sSelect: Parser<Statement> =
     delimit(_nonKeyword + right(_keyword(":∈"), _nonKeyword)) * { (label, set), pos ->
@@ -244,6 +261,12 @@ val sParallel: Parser<Statement> = {
     (delimited2(
         middle(newLined(_char('{')), many(delimit(statement)), newLined(_char('}'))),
         _char('|') + many(_lineBreak),
-    ) * { stmt, pos -> Parallel(stmt, pos) as Statement })()
+    )[{ (stmt, state, pos) ->
+        if (inFunctionScope) {
+            Fail("Cannot use Await statement in a function!", state)
+        } else {
+            Pass(Parallel(stmt, pos) as Statement, state, pos)
+        }
+    }])()
 }
 

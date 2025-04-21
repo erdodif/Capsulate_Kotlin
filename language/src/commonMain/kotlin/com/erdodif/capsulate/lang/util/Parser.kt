@@ -15,8 +15,6 @@ open class ParserState(
     methods: List<Method> = listOf(),
     assumptions: List<Pair<String, Type>> = listOf()
 ) {
-    var allowReturn: Boolean = false
-        protected set
 
     val functions: MutableList<Function<Value>> = functions.toMutableList()
     val methods: MutableList<Method> = methods.toMutableList()
@@ -25,6 +23,8 @@ open class ParserState(
     val line: Int
         get() = input.substring(0, position).count { it == '\n' } + 1
     var currentFunctionLabel: String? = null
+    val inFunctionScope: Boolean
+        get() = currentFunctionLabel != null
 
     var position: Int = 0
 
@@ -71,12 +71,10 @@ open class ParserState(
         }
     }
 
-    internal inline fun <T> withReturn(label:String,crossinline parser: Parser<T>): ParserResult<T> {
-        allowReturn = true
+    internal inline fun <T> withFunctionScope(label:String, crossinline parser: Parser<T>): ParserResult<T> {
         currentFunctionLabel = label
         val result = parser()
         currentFunctionLabel = null
-        allowReturn = false
         return result
     }
 
