@@ -5,8 +5,10 @@ import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Parallel
+import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.util.MatchPos
 import kotlin.random.Random
 
 @ConsistentCopyVisibility
@@ -14,21 +16,22 @@ import kotlin.random.Random
 data class EvaluationContext private constructor(
     var env: Environment,
     private var currentStatement: Statement?,
-    val seed: Int = Random.Default.nextInt(),
     var error: String? = null,
     var returnValue: Value? = null,
-    val entries: ArrayList<Statement> = arrayListOf(),
+    private val entries: ArrayList<Statement> = arrayListOf(),
     private var atomicOngoing: EvaluationContext? = null,
     internal var function: PendingFunctionEvaluation<*>? = null,
 ) : KParcelable {
     constructor(
         env: Environment,
         currentStatement: Statement?,
-        seed: Int = Random.Default.nextInt()
-    ) : this(env, currentStatement, seed, null)
+    ) : this(env, currentStatement, null)
 
     @KIgnoredOnParcel
-    val random = Random(seed)
+    private val random = Random(env.seed)
+
+    val seed: Int
+        get() = env.seed
     val functionOngoing: PendingFunctionEvaluation<*>?
         get() = function ?: (currentStatement as? PendingMethodEvaluation)?.context?.functionOngoing
 
@@ -65,7 +68,7 @@ data class EvaluationContext private constructor(
                 currentStatement = entries.removeAt(random.nextInt(entries.size))
             }
         } else if (current is EvalSequence) {
-            val next = current.statements[0]
+            val next = current.statements.firstOrNull() ?: Skip(MatchPos.ZERO)
             if (next is Parallel || next is Atomic) {
                 current.evaluate(env)
                 if (current.statements.count() > 0) {
@@ -91,7 +94,7 @@ data class EvaluationContext private constructor(
 
             is EvalSequence -> entries.add(stack)
             is AtomicEvaluation -> atomicOngoing =
-                EvaluationContext(env, EvalSequence(stack.statements), seed)
+                EvaluationContext(env, EvalSequence(stack.statements))
 
             is SingleStatement -> entries.add(stack.next)
             is ParallelEvaluation -> entries.addAll(stack.entries)
@@ -105,8 +108,8 @@ data class EvaluationContext private constructor(
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
     }
 
-    data class StackTraceEntry(val scope: String, val variables: List<Parameter>){
-        override fun hashCode(): Int = variables.hashCode()  + 31 * scope.hashCode()
+    data class StackTraceEntry(val scope: String, val variables: List<Parameter>) {
+        override fun hashCode(): Int = variables.hashCode() + 31 * scope.hashCode()
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

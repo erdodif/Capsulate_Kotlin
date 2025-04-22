@@ -159,9 +159,11 @@ val sFunction: Parser<Function<Value>> = {
 @KParcelize
 data class Return<out T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     val value: Exp<T>,
-    override val id: Uuid = Uuid.random(),
+    override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
+    constructor(value: Exp<T>, match: MatchPos) : this(value, Uuid.random(), match)
+
     @OptIn(ExperimentalUuidApi::class)
     override fun evaluate(env: Environment): EvaluationResult = value.join(env) { returnValue: T ->
         ReturnEvaluation(returnValue)

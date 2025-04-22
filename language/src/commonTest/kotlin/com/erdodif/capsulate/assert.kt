@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate
 
+import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -11,7 +12,25 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+inline fun EvaluationContext.assertAborted(){
+    assertNull(functionOngoing)
+    assertNull(head)
+    assertNull(returnValue)
+    assertNotNull(error)
+}
+
+inline fun EvaluationContext.assertFinished(){
+    assertNull(functionOngoing)
+    assertNull(head)
+    assertNull(returnValue)
+    assertNull(error)
+}
+
+inline fun EvaluationContext.performStep(count: Int) = (1..count).forEach { step() }
 
 inline fun <T> assertPass(value: ParserResult<T>): Pass<T> =
     assertIs<Pass<T>>(
