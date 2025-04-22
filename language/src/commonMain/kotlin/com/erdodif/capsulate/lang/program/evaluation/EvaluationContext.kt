@@ -88,6 +88,7 @@ data class EvaluationContext private constructor(
             is AbortEvaluation -> {
                 error = stack.reason
                 entries.clear()
+                function = null
                 atomicOngoing = null
                 currentStatement = null
             }

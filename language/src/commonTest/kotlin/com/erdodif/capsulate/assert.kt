@@ -16,21 +16,32 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-inline fun EvaluationContext.assertAborted(){
-    assertNull(functionOngoing)
-    assertNull(head)
-    assertNull(returnValue)
-    assertNotNull(error)
+inline fun EvaluationContext.assertEnded() {
+    assertNull(
+        functionOngoing,
+        "There's still a function ongoing with ${functionOngoing?.head} on $functionOngoing."
+    )
+    assertNull(head, "Expected end of statements, but still got: $head.")
+    assertNull(
+        returnValue,
+        "Expected no return value, but a return value of $returnValue has been set."
+    )
 }
 
-inline fun EvaluationContext.assertFinished(){
-    assertNull(functionOngoing)
-    assertNull(head)
-    assertNull(returnValue)
-    assertNull(error)
+inline fun EvaluationContext.assertAborted() {
+    assertEnded()
+    assertNotNull(error, "Expected error, actual null")
 }
 
-inline fun EvaluationContext.performStep(count: Int) = (1..count).forEach { step() }
+inline fun EvaluationContext.assertFinished() {
+    assertEnded()
+    assertNull(error, "Expected no error, but got: \"$error\"")
+}
+
+inline fun EvaluationContext.performStep(count: Int) = (1..count).forEach {
+    assertNotNull(head, "Execution ended early at step ${it-1}!")
+    step()
+}
 
 inline fun <T> assertPass(value: ParserResult<T>): Pass<T> =
     assertIs<Pass<T>>(
