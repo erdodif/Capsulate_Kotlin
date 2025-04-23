@@ -384,13 +384,10 @@ data class Select(
     constructor(label: String, set: String, match: MatchPos) :
             this(label, set, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult {
-        TODO("Implement 'Zsák objektum'")
-    }
+    override fun evaluate(env: Environment): EvaluationResult =
+        AbortEvaluation("Sets are not implemented") //TODO Implement Zsák objektum
 
-    override fun Formatting.format(state: ParserState): Int {
-        TODO("Not yet implemented")
-    }
+    override fun Formatting.format(state: ParserState): Int = print(state[match])
 }
 
 @KParcelize
