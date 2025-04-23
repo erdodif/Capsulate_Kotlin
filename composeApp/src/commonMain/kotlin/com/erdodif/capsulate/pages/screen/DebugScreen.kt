@@ -123,9 +123,8 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     executionJob = null
                     evalLoading = false
                     debug = EvaluationContext(
-                        screen.structogram.toEnv(debug.env.seed),
+                        screen.structogram.toEnv(debug.seed),
                         EvalSequence(screen.structogram.program),
-                        debug.seed
                     )
                     stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
                     step = 0

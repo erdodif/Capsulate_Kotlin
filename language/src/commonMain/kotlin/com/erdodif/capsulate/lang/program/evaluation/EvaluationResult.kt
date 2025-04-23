@@ -34,7 +34,6 @@ class FunctionState<R : Value, T : Value>(
     val head: Statement?
         get() = context.head
 
-    @OptIn(ExperimentalUuidApi::class)
     @Suppress("UNCHECKED_CAST")
     fun step(): Either<R, EvaluationResult> {
         if (context.head != null) {
@@ -72,16 +71,14 @@ data class PendingMethodEvaluation(
     val head: Statement?
         get() = context.head
 
-    constructor(method: Method, env: ProxyEnv) : this(
-        method,
-        EvaluationContext(env, EvalSequence(method.program), env.seed)
-    )
+    constructor(method: Method, env: ProxyEnv) :
+            this(method, EvaluationContext(env, EvalSequence(method.program)))
 
     override fun evaluate(env: Environment): EvaluationResult {
         context.step()
         return when {
             context.error != null -> AbortEvaluation(context.error!!)
-            context.head == null -> Finished
+            head == null -> Finished
             else -> this
         }
     }
@@ -143,10 +140,11 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
     override val id: Uuid
         get() = statements.firstOrNull()?.id ?: Uuid.NIL
 
+    constructor(vararg statements: Statement) : this(ArrayDeque(statements.toList()))
     constructor(statements: List<Statement>) : this(ArrayDeque(statements))
 
     override fun evaluate(env: Environment): EvaluationResult {
-        val result = statements.removeAt(0)
+        val result = (if (statements.isNotEmpty()) statements.removeAt(0) else Skip(MatchPos.ZERO))
             .evaluate(env) // https://youtrack.jetbrains.com/issue/KT-71375/Prevent-Kotlins-removeFirst-and-removeLast-from-causing-crashes-on-Android-14-and-below-after-upgrading-to-Android-API-Level-35#:~:text=removeLast()%20extension%20functions.,running%20Android%2014%20or%20lower
         return if (statements.isEmpty()) {
             result

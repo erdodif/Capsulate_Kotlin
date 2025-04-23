@@ -56,8 +56,11 @@ data class MethodCall(
     val method: Method,
     val values: List<Variable>,
     override val match: MatchPos,
-    override val id: Uuid = Uuid.random()
+    override val id: Uuid
 ) : Statement(id, match) {
+    constructor(method: Method, values: List<Variable>, match: MatchPos) :
+            this(method, values, match, Uuid.random())
+
     override fun evaluate(env: Environment): EvaluationResult = PendingMethodEvaluation(
         method,
         env.proxyWith(values.mapIndexed { i, variable -> variable.id to method.pattern.variables[i].id }

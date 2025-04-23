@@ -2,6 +2,7 @@
 
 package com.erdodif.capsulate
 
+import com.erdodif.capsulate.lang.program.evaluation.EvaluationContext
 import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.util.Fail
 import com.erdodif.capsulate.lang.util.MatchPos
@@ -11,7 +12,36 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Pass
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+inline fun EvaluationContext.assertEnded() {
+    assertNull(
+        functionOngoing,
+        "There's still a function ongoing with ${functionOngoing?.head} on $functionOngoing."
+    )
+    assertNull(head, "Expected end of statements, but still got: $head.")
+    assertNull(
+        returnValue,
+        "Expected no return value, but a return value of $returnValue has been set."
+    )
+}
+
+inline fun EvaluationContext.assertAborted() {
+    assertEnded()
+    assertNotNull(error, "Expected error, actual null")
+}
+
+inline fun EvaluationContext.assertFinished() {
+    assertEnded()
+    assertNull(error, "Expected no error, but got: \"$error\"")
+}
+
+inline fun EvaluationContext.performStep(count: Int) = (1..count).forEach {
+    assertNotNull(head, "Execution ended early at step ${it - 1}!")
+    step()
+}
 
 inline fun <T> assertPass(value: ParserResult<T>): Pass<T> =
     assertIs<Pass<T>>(

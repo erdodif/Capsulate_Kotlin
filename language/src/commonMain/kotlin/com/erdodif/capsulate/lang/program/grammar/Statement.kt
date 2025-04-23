@@ -148,6 +148,7 @@ data class When(
     ) : this(block.toMutableList(), elseBlock, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult {
+        if (blocks.isEmpty()) return AbortEvaluation("When conditions exhausted, Abort happens by definition")
         val source = blocks.removeAt(env.random.nextInt(blocks.size))
         return source.first.join(env) {
             if (it is VBool) {
@@ -287,7 +288,7 @@ data class DoWhile(
             this(condition, statements, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        EvalSequence(statements + While(condition, statements, MatchPos.ZERO))
+        EvalSequence(statements + While(condition, statements, id, MatchPos.ZERO))
 
     override fun Formatting.format(state: ParserState): Int {
         val result = preFormat {
@@ -384,13 +385,10 @@ data class Select(
     constructor(label: String, set: String, match: MatchPos) :
             this(label, set, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult {
-        TODO("Implement 'Zsák objektum'")
-    }
+    override fun evaluate(env: Environment): EvaluationResult =
+        AbortEvaluation("Sets are not implemented") //TODO Implement Zsák objektum
 
-    override fun Formatting.format(state: ParserState): Int {
-        TODO("Not yet implemented")
-    }
+    override fun Formatting.format(state: ParserState): Int = print(state[match])
 }
 
 @KParcelize
