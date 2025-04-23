@@ -15,6 +15,12 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+@OptIn(ExperimentalUuidApi::class)
+val Int.id: Uuid
+    get() = Uuid.fromLongs(0L, toLong())
 
 inline fun EvaluationContext.assertEnded() {
     assertNull(
@@ -39,7 +45,7 @@ inline fun EvaluationContext.assertFinished() {
 }
 
 inline fun EvaluationContext.performStep(count: Int) = (1..count).forEach {
-    assertNotNull(head, "Execution ended early at step ${it-1}!")
+    assertNotNull(head, "Execution ended early at step ${it - 1}!")
     step()
 }
 
