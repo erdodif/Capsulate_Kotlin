@@ -287,7 +287,7 @@ data class DoWhile(
             this(condition, statements, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        EvalSequence(statements + While(condition, statements, MatchPos.ZERO))
+        EvalSequence(statements + While(condition, statements, id, MatchPos.ZERO))
 
     override fun Formatting.format(state: ParserState): Int {
         val result = preFormat {

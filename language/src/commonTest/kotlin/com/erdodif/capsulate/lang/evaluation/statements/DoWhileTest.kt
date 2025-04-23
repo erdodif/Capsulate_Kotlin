@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
+import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.id
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
@@ -26,6 +27,7 @@ class DoWhileTest {
     /**
      * A Boolean expression that must not be evaluated
      */
+    @KParcelize
     private object NeverCondition : Exp<VBool> {
         override fun getType(assumptions: Map<String, Type>) = BOOL
         override fun toString(state: ParserState, parentStrength: Int) = ""
