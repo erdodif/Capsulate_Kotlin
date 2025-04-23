@@ -27,7 +27,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run detekt
-        run: ./gradlew :composeApp:detekt
+        run: ./gradlew :detekt
   test:
     runs-on: ubuntu-latest
     steps:
@@ -44,4 +44,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run tests
-        run: ./gradlew :composeApp:test
+        run: ./gradlew :test
