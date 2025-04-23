@@ -1,6 +1,5 @@
 package com.erdodif.capsulate.lang.evaluation.expressions
 
-import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.grammar.expression.ARRAY
 import com.erdodif.capsulate.lang.program.grammar.expression.ArrayLit
 import com.erdodif.capsulate.lang.program.grammar.expression.ChrLit
@@ -18,6 +17,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.WHOLE
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.bg
+import com.erdodif.capsulate.utils.EMPTY_ENVIRONMENT
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -27,7 +27,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate NatLit`() {
-        val result = NatLit(0, pos).evaluate(Environment.EMPTY)
+        val result = NatLit(0, pos).evaluate(EMPTY_ENVIRONMENT)
         assertIs<Left<*>>(result)
         assertIs<VNat>(result.value)
         assertEquals(0.bg, result.value.value)
@@ -35,7 +35,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate IntLit`() {
-        val result = IntLit(0, pos).evaluate(Environment.EMPTY)
+        val result = IntLit(0, pos).evaluate(EMPTY_ENVIRONMENT)
         assertIs<Left<*>>(result)
         assertIs<VWhole>(result.value)
         assertEquals(0.bg, result.value.value)
@@ -43,7 +43,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate StrLit`() {
-        val result = StrLit("text", pos).evaluate(Environment.EMPTY)
+        val result = StrLit("text", pos).evaluate(EMPTY_ENVIRONMENT)
         assertIs<Left<*>>(result)
         assertIs<VStr>(result.value)
         assertEquals("text", result.value.value)
@@ -51,7 +51,7 @@ class LiteralTest {
 
     @Test
     fun `evaluate ChrLit`() {
-        val result = ChrLit('c', pos).evaluate(Environment.EMPTY)
+        val result = ChrLit('c', pos).evaluate(EMPTY_ENVIRONMENT)
         assertIs<Left<*>>(result)
         assertIs<VChr>(result.value)
         assertEquals('c', result.value.value)
@@ -67,7 +67,7 @@ class LiteralTest {
                     IntLit(5, pos)
                 ), pos
             )
-                .evaluate(Environment.EMPTY)
+                .evaluate(EMPTY_ENVIRONMENT)
         ).value
         assertIs<VArray<VNum<*>>>(result)
         assertEquals(ARRAY(WHOLE, 3), result.type)
@@ -93,7 +93,7 @@ class LiteralTest {
                     ArrayLit(arrayOf<Exp<VNum<*>>>(IntLit(5, pos), IntLit(6, pos)), pos)
                 ), pos
             )
-                .evaluate(Environment.EMPTY)
+                .evaluate(EMPTY_ENVIRONMENT)
         ).value
         assertIs<VArray<VNum<*>>>(result)
         assertEquals(ARRAY(ARRAY(WHOLE, 2), 3), result.type)

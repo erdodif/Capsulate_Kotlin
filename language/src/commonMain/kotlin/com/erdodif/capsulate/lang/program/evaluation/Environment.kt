@@ -68,11 +68,6 @@ sealed interface Environment : KParcelable {
     fun proxyWith(renames: Map<String, String>): ProxyEnv = ProxyEnv(renames, this)
 
     override fun toString(): String
-
-    companion object {
-        val EMPTY: Env
-            get() = Env(mapOf(), mapOf(), mutableListOf())
-    }
 }
 
 /**
@@ -90,7 +85,7 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
         get() = env.methods
     override val assumptions: Map<String, Type>
         get() = (shadowEnv.assumptions + env.assumptions.filter { renames.containsKey(it.key) })
-    private val shadowEnv = Environment.EMPTY
+    private val shadowEnv = Env(seed = env.seed)
 
     @KIgnoredOnParcel
     private val newNames = renames.map { it.value to it.key }.associate { it }

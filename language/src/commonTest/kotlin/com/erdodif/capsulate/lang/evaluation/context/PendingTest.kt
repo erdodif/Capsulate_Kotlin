@@ -3,7 +3,6 @@
 package com.erdodif.capsulate.lang.evaluation.context
 
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.FunctionState
 import com.erdodif.capsulate.lang.program.grammar.Abort
 import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
@@ -17,6 +16,7 @@ import com.erdodif.capsulate.lang.program.grammar.function.FunctionCall
 import com.erdodif.capsulate.lang.program.grammar.function.Return
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.utils.EMPTY_ENVIRONMENT
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -41,7 +41,7 @@ class PendingTest {
             listOf(Return(StrLit("value", MatchPos.ZERO), match = MatchPos.ZERO))
         )
         val exp = FunctionState(
-            Environment.EMPTY, PendingExpression<Value, Value>(
+            EMPTY_ENVIRONMENT, PendingExpression<Value, Value>(
                 FunctionCall(function, listOf(), MatchPos.ZERO), function
             ) { Left(TestValue) })
         exp.step()
@@ -62,7 +62,7 @@ class PendingTest {
             listOf(Abort(MatchPos.ZERO))
         )
         val exp = FunctionState(
-            Environment.EMPTY, PendingExpression<Value, Value>(
+            EMPTY_ENVIRONMENT, PendingExpression<Value, Value>(
                 FunctionCall<Value>(function, listOf(), MatchPos.ZERO), function
             ) { Left(TestValue) })
         exp.step()
@@ -80,7 +80,7 @@ class PendingTest {
             listOf()
         )
         val exp = FunctionState(
-            Environment.EMPTY, PendingExpression<Value, Value>(
+            EMPTY_ENVIRONMENT, PendingExpression<Value, Value>(
                 FunctionCall<Value>(function, listOf(), MatchPos.ZERO), function
             ) { Left(TestValue) })
         exp.step()

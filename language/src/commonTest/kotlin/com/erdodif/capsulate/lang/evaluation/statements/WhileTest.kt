@@ -1,7 +1,6 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
-import com.erdodif.capsulate.id
-import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.utils.id
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.grammar.Abort
@@ -9,6 +8,7 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.While
 import com.erdodif.capsulate.lang.program.grammar.expression.BoolLit
 import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.utils.EMPTY_ENVIRONMENT
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -21,7 +21,7 @@ class WhileTest {
     @Test
     fun `while finishes on failed condition`() {
         val underTest = While(BoolLit(false, pos), listOf(Skip(2.id, pos)), 1.id, pos)
-        val result = underTest.evaluate(Environment.EMPTY)
+        val result = underTest.evaluate(EMPTY_ENVIRONMENT)
         assertIs<Finished>(result)
     }
 
@@ -32,7 +32,7 @@ class WhileTest {
             listOf(Skip(2.id, pos), Abort(3.id, pos), Skip(4.id, pos)),
             1.id, pos
         )
-        val result = underTest.evaluate(Environment.EMPTY)
+        val result = underTest.evaluate(EMPTY_ENVIRONMENT)
         assertIs<EvalSequence>(result)
         assertEquals(4, result.statements.size)
         assertIs<Skip>(result.statements[0])

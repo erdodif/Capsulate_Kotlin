@@ -1,12 +1,12 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
-import com.erdodif.capsulate.id
-import com.erdodif.capsulate.lang.program.evaluation.Environment
+import com.erdodif.capsulate.utils.id
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.util.MatchPos
+import com.erdodif.capsulate.utils.EMPTY_ENVIRONMENT
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -21,7 +21,7 @@ class ParallelTest {
     @Test
     fun `unobtainable empty block returns correctly`() {
         val underTest = Parallel(listOf(), 1.id, pos)
-        val result = underTest.evaluate(Environment.EMPTY)
+        val result = underTest.evaluate(EMPTY_ENVIRONMENT)
         assertIs<ParallelEvaluation>(result)
         assertEquals(0, result.entries.size)
     }
@@ -29,7 +29,7 @@ class ParallelTest {
     @Test
     fun `single block parallel returns correctly`() {
         val underTest = Parallel(listOf(listOf(Skip(2.id, pos), Skip(3.id, pos))), 1.id, pos)
-        val result = underTest.evaluate(Environment.EMPTY)
+        val result = underTest.evaluate(EMPTY_ENVIRONMENT)
         assertIs<ParallelEvaluation>(result)
         assertEquals(1, result.entries.size)
         val sequence = result.entries.first()
@@ -48,7 +48,7 @@ class ParallelTest {
                 listOf(Skip(5.id, pos), Skip(6.id, pos), Skip(7.id, pos))
             ), 1.id, pos
         )
-        val result = underTest.evaluate(Environment.EMPTY)
+        val result = underTest.evaluate(EMPTY_ENVIRONMENT)
         assertIs<ParallelEvaluation>(result)
         assertEquals(3, result.entries.size)
         val (sequence1, sequence2, sequence3) = result.entries
@@ -65,5 +65,4 @@ class ParallelTest {
         assertEquals(6.id, sequence3.statements[1].id)
         assertEquals(7.id, sequence3.statements[2].id)
     }
-
 }

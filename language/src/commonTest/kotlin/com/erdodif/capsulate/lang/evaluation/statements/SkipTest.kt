@@ -1,12 +1,12 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
 import com.erdodif.capsulate.lang.evaluation.MockEnvironments.intEnv
-import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.expression.VNat
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.bg
+import com.erdodif.capsulate.utils.EMPTY_ENVIRONMENT
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -15,7 +15,7 @@ class SkipTest {
 
     @Test
     fun `skip on empty environment`() {
-        val env = Environment.EMPTY
+        val env = EMPTY_ENVIRONMENT
         val result = Skip(MatchPos.ZERO).evaluate(env)
         assertIs<Finished>(result)
         assertEquals(0, env.parameters.size)

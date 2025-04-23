@@ -148,6 +148,7 @@ data class When(
     ) : this(block.toMutableList(), elseBlock, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult {
+        if (blocks.isEmpty()) return AbortEvaluation("When conditions exhausted, Abort happens by definition")
         val source = blocks.removeAt(env.random.nextInt(blocks.size))
         return source.first.join(env) {
             if (it is VBool) {

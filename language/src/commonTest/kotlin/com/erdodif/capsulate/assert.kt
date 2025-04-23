@@ -15,12 +15,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
-
-@OptIn(ExperimentalUuidApi::class)
-val Int.id: Uuid
-    get() = Uuid.fromLongs(0L, toLong())
 
 inline fun EvaluationContext.assertEnded() {
     assertNull(

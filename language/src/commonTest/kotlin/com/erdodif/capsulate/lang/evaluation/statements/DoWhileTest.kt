@@ -1,7 +1,7 @@
 package com.erdodif.capsulate.lang.evaluation.statements
 
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.id
+import com.erdodif.capsulate.utils.id
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.grammar.Abort
@@ -14,6 +14,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Type
 import com.erdodif.capsulate.lang.program.grammar.expression.VBool
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
+import com.erdodif.capsulate.utils.EMPTY_ENVIRONMENT
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -42,7 +43,7 @@ class DoWhileTest {
             listOf(Skip(2.id, pos), Abort(3.id, pos), Skip(4.id, pos)),
             1.id, MatchPos(1, 2)
         )
-        val result = underTest.evaluate(Environment.EMPTY)
+        val result = underTest.evaluate(EMPTY_ENVIRONMENT)
         assertIs<EvalSequence>(result)
         assertEquals(4, result.statements.size)
         assertIs<Skip>(result.statements[0])
