@@ -5,7 +5,6 @@ import androidx.compose.runtime.saveable.SaverScope
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.project.OpenFile
 import dev.zwander.kotlin.file.PlatformFile
-import kotlin.toString
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -13,7 +12,7 @@ import kotlin.uuid.Uuid
 object OpenFileSaver : Saver<OpenFile, String> {
     override fun restore(value: String): OpenFile? = if (value.isBlank()) null else
         try {
-            val id = Uuid.fromByteArray(value.encodeToByteArray())
+            val id = Uuid.parse(value)
             OpenFile(id)
         } catch (_: Exception) {
             OpenFile(PlatformFile(value))
