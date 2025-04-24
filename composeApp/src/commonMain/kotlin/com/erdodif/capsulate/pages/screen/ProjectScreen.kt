@@ -67,8 +67,11 @@ class ProjectPresenter(
         val openFiles = rememberSaveable(saver = stateListSaver<OpenFile>()) {
             mutableStateListOf<OpenFile>(*screen.project.openFiles.toTypedArray())
         }
-        val backStack = rememberSaveableBackStack(EditorScreen(opened, channel))
-        val editorNavigator = remember(backStack) { Navigator(backStack, navigator::pop) }
+        val editor = remember(opened) { EditorScreen(opened, channel) }
+        val backStack = rememberSaveableBackStack(editor)
+        val editorNavigator by remember(backStack) {
+            mutableStateOf(Navigator(backStack, navigator::pop))
+        }
         val project = Project(screen.project.directory, openFiles)
         LaunchedEffect(channel) {
             opened = channel.receive()
