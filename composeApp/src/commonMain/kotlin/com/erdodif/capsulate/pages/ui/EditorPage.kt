@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +22,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
@@ -70,6 +73,7 @@ import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.overlay.OverlayEffect
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -138,7 +142,8 @@ class EditorPage : Ui<State> {
         BottomAppBar {
             ScrollableLazyRow(
                 modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 item {
                     Row(
@@ -182,11 +187,15 @@ class EditorPage : Ui<State> {
                 item {
                     OutlinedIconButton(
                         { state.eventHandler(Event.Close) },
-                        Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand)
+                        Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = ButtonDefaults.buttonColors().contentColor
+                        )
                     ) {
                         Icon(
                             painterResource(Res.drawable.close),
-                            stringResource(Res.string.close)
+                            stringResource(Res.string.close),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -229,7 +238,7 @@ class EditorPage : Ui<State> {
 
 }
 
-@OptIn(ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class, ExperimentalSharedTransitionApi::class)
 internal fun structogram(): Ui<State> = ui { state, modifier ->
     val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     if (state.showStructogram)
@@ -239,14 +248,21 @@ internal fun structogram(): Ui<State> = ui { state, modifier ->
             verticalArrangement = Arrangement.Center
         ) {
             if (state.structogram != null) {
-                state.structogram.Content(
-                    Modifier.horizontalScroll(
-                        rememberScrollState()
-                    ),
-                    state.dragStatements,
-                    null,
-                    { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
-                )
+                SharedElementTransitionScope {
+                    state.structogram.Content(
+                        Modifier.horizontalScroll(
+                            rememberScrollState()
+                        ).sharedElement(
+                            rememberSharedContentState(state.structogram),
+                            requireAnimatedScope(
+                                SharedElementTransitionScope.AnimatedScope.Navigation
+                            )
+                        ),
+                        state.dragStatements,
+                        null,
+                        { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
+                    )
+                }
             } else {
                 Text("Error", Modifier.fillMaxWidth())
             }

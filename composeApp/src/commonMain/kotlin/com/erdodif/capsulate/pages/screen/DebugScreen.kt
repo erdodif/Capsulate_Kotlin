@@ -56,6 +56,7 @@ class DebugScreen(val structogram: Structogram) : Screen {
     sealed interface Event : CircuitUiEvent {
         data object StepForward : Event
         data object StepOver : Event
+        data object Run : Event
         data object Reset : Event
         data object ResetRenew : Event
         data object Pause : Event
@@ -142,6 +143,23 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
                     stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
                     step = 0
                     error = null
+                }
+
+                is Event.Run -> {
+                    evalLoading = true
+                    executionJob?.cancel()
+                    executionJob = scope.launch(Dispatchers.IO) {
+                        do {
+                            debug = debug.step()
+                            step = step + 1
+                            if (debug.error != null) {
+                                error = debug.error
+                            }
+                            stackTrace = debug.getCallStack(screen.structogram.name ?: "Program")
+                            yield()
+                        } while (debug.head != null && debug.error == null)
+                        evalLoading = false
+                    }
                 }
 
                 is Event.StepOver -> {

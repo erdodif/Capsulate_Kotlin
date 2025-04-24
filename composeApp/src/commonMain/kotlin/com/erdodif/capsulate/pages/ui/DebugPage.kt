@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -60,6 +61,7 @@ import com.erdodif.capsulate.resources.step_over
 import com.erdodif.capsulate.resources.stop
 import com.erdodif.capsulate.utility.IconTextButton
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
 class DebugPage : Ui<State> {
@@ -76,6 +78,7 @@ class DebugPage : Ui<State> {
         }
     }
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     @Composable
     private fun StructogramList(state: State, paddingValues: PaddingValues) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {
@@ -92,12 +95,19 @@ class DebugPage : Ui<State> {
                 flingBehavior = rememberSnapFlingBehavior(state.strucListState)
             ) {
                 item {
-                    Box(itemModifier.verticalScroll(rememberScrollState())) {
-                        state.structogram.Content(
-                            modifier = Modifier.fillMaxWidth(),
-                            draggable = false,
-                            activeStatement = state.activeStatement,
-                        )
+                    SharedElementTransitionScope {
+                        Box(itemModifier.verticalScroll(rememberScrollState())) {
+                            state.structogram.Content(
+                                modifier = Modifier.fillMaxWidth().sharedElement(
+                                    rememberSharedContentState(state.structogram),
+                                    requireAnimatedScope(
+                                        SharedElementTransitionScope.AnimatedScope.Navigation
+                                    )
+                                ),
+                                draggable = false,
+                                activeStatement = state.activeStatement,
+                            )
+                        }
                     }
                 }
                 items(state.structogram.methods) { method ->
@@ -233,7 +243,12 @@ class DebugPage : Ui<State> {
                                 state.eventHandler(Event.Pause)
                             }
                         } else {
-                            IconTextButton(Res.drawable.play, Res.string.step_forward) {
+                            IconTextButton(
+                                Res.drawable.play,
+                                Res.string.step_forward,
+                                onLongClick = {
+                                    state.eventHandler(Event.Run)
+                                }) {
                                 state.eventHandler(Event.StepForward)
                             }
                         }
