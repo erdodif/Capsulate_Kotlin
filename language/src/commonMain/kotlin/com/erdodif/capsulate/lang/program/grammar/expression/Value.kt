@@ -1,8 +1,10 @@
 package com.erdodif.capsulate.lang.program.grammar.expression
 
+import com.erdodif.capsulate.BigIntParceler
+import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.RawValue
+import com.erdodif.capsulate.KTypeParceler
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
@@ -27,7 +29,10 @@ sealed interface VNum<T : BigNumber<T>> : Value {
 
 @KParcelize
 @JvmInline
-value class VNat(override val value: @RawValue BigInteger) : VNum<BigInteger> { // ℕ
+@KTypeParceler<BigInteger, BigIntParceler>
+value class VNat(
+    override val value: BigInteger
+) : VNum<BigInteger> { // ℕ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -44,7 +49,10 @@ value class VNat(override val value: @RawValue BigInteger) : VNum<BigInteger> { 
 
 @KParcelize
 @JvmInline
-value class VWhole(override val value: @RawValue BigInteger) : VNum<BigInteger> { // ℤ
+@KTypeParceler<BigInteger, BigIntParceler>
+value class VWhole(
+    override val value: BigInteger
+) : VNum<BigInteger> { // ℤ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -107,6 +115,7 @@ data class VArray<T : Value>(
     val contentType: Type
         get() = type.contentType
 
+    @KIgnoredOnParcel
     val depth: Int = ((value.first() as? VArray<*>)?.depth ?: 0) + 1
 
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")

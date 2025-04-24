@@ -1,5 +1,6 @@
 package com.erdodif.capsulate
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import com.slack.circuit.foundation.animation.AnimatedScreenTransform
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.ExperimentalCircuitApi
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.sharedelements.SharedElementTransitionLayout
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.Job
@@ -55,7 +57,7 @@ val defaultScreenError: @Composable (Screen, Modifier) -> Unit = { screen, modif
 
 val applicationExitJob = Job()
 
-@OptIn(ExperimentalCircuitApi::class)
+@OptIn(ExperimentalCircuitApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun App() {
     val backStack = rememberSaveableBackStack(root = LandingScreen)
@@ -74,27 +76,29 @@ fun App() {
         .addPresenterFactory(DebugPresenter.Factory)
         .addUiFactory(DebugPage.Factory)
         .build()
-    MaterialTheme(colorScheme = resolveColors()) {
-        Theme.initialize()
-        Surface(Modifier.fillMaxSize()) {
-            Column(
-                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircuitCompositionLocals(circuit) {
-                    NavigableCircuitContent(
-                        navigator = navigator,
-                        backStack = backStack,
-                        modifier = Modifier.fillMaxSize(),
-                        decoration = AnimatedNavDecoration(
-                            animatedScreenTransforms = mapOf<KClass<out Screen>, AnimatedScreenTransform>(
-                                ProjectScreen::class to DefaultScreenTransform
-                            ).toImmutableMap(),
-                            decoratorFactory = GestureNavigationDecorationFactory {
-                                navigator.pop()
-                            }),
-                        unavailableRoute = defaultScreenError
-                    )
+    SharedElementTransitionLayout {
+        MaterialTheme(colorScheme = resolveColors()) {
+            Theme.initialize()
+            Surface(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircuitCompositionLocals(circuit) {
+                        NavigableCircuitContent(
+                            navigator = navigator,
+                            backStack = backStack,
+                            modifier = Modifier.fillMaxSize(),
+                            decoration = AnimatedNavDecoration(
+                                animatedScreenTransforms = mapOf<KClass<out Screen>, AnimatedScreenTransform>(
+                                    ProjectScreen::class to DefaultScreenTransform
+                                ).toImmutableMap(),
+                                decoratorFactory = GestureNavigationDecorationFactory {
+                                    navigator.pop()
+                                }),
+                            unavailableRoute = defaultScreenError
+                        )
+                    }
                 }
             }
         }

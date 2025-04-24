@@ -38,6 +38,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.material.kolor)
             implementation(libs.kermit)
+            implementation(libs.bignum)
         }
         androidTarget {
             @OptIn(ExperimentalKotlinGradlePluginApi::class)

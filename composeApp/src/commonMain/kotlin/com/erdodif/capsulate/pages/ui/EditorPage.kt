@@ -1,14 +1,18 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,12 +21,17 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
@@ -39,8 +48,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.erdodif.capsulate.CodeEditor
-import com.erdodif.capsulate.LocalDraggingStatement
-import com.erdodif.capsulate.StatementDragProvider
 import com.erdodif.capsulate.StatementDrawer
 import com.erdodif.capsulate.UnicodeOverlay
 import com.erdodif.capsulate.lang.program.grammar.tokenizeProgram
@@ -60,9 +67,12 @@ import com.erdodif.capsulate.resources.run
 import com.erdodif.capsulate.resources.save
 import com.erdodif.capsulate.resources.save_file
 import com.erdodif.capsulate.resources.struk
+import com.erdodif.capsulate.structogram.LocalDraggingStatement
+import com.erdodif.capsulate.structogram.StatementDragProvider
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.IconTextButton
 import com.erdodif.capsulate.utility.PreviewTheme
+import com.erdodif.capsulate.utility.imageExportable
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.erdodif.capsulate.utility.screenUiFactory
 import com.mohamedrejeb.compose.dnd.DragAndDropContainer
@@ -70,6 +80,7 @@ import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.overlay.OverlayEffect
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.runtime.ui.ui
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -103,24 +114,31 @@ class EditorPage : Ui<State> {
                         } else {
                             Box(Modifier.fillMaxSize()) {
                                 Column(
-                                    Modifier.verticalScroll(rememberScrollState())
-                                        .padding(innerPadding),
+                                    Modifier.padding(innerPadding),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    codeEdit().Content(
-                                        state, Modifier.fillMaxWidth().heightIn(50.dp, 500.dp)
-                                    )
+                                    Column(Modifier.fillMaxWidth().weight(1f)) {
+                                        codeEdit().Content(
+                                            state,
+                                            Modifier.fillMaxWidth()
+                                                .defaultMinSize(minHeight = 60.dp)
+                                        )
+                                    }
                                     if (state.showCode && state.showStructogram)
                                         Spacer(
                                             Modifier.fillMaxWidth().padding(3.dp, 2.dp)
                                                 .background(MaterialTheme.colorScheme.surface)
                                                 .height(3.dp)
                                         )
-                                    structogram().Content(
-                                        state,
-                                        Modifier.heightIn(250.dp, 500.dp)
-                                    )
+                                    if (!state.dragStatements) {
+                                        StructogramList(state, Modifier.weight(1f).padding(0.dp))
+                                    } else {
+                                        structogram().Content(
+                                            state,
+                                            Modifier.weight(1f).heightIn(250.dp, 500.dp)
+                                        )
+                                    }
                                 }
                                 if (keyboardUp && !state.input) {
                                     KeyBoardExtension(state)
@@ -138,7 +156,8 @@ class EditorPage : Ui<State> {
         BottomAppBar {
             ScrollableLazyRow(
                 modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 item {
                     Row(
@@ -182,11 +201,15 @@ class EditorPage : Ui<State> {
                 item {
                     OutlinedIconButton(
                         { state.eventHandler(Event.Close) },
-                        Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand)
+                        Modifier.padding(5.dp, 1.dp).pointerHoverIcon(PointerIcon.Hand),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        )
                     ) {
                         Icon(
                             painterResource(Res.drawable.close),
-                            stringResource(Res.string.close)
+                            stringResource(Res.string.close),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -227,86 +250,157 @@ class EditorPage : Ui<State> {
         }
     }
 
-}
-
-@OptIn(ExperimentalUuidApi::class)
-internal fun structogram(): Ui<State> = ui { state, modifier ->
-    val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    if (state.showStructogram)
-        Column(
-            modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            if (state.structogram != null) {
-                state.structogram.Content(
-                    Modifier.horizontalScroll(
-                        rememberScrollState()
-                    ),
-                    state.dragStatements,
-                    null,
-                    { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
+    @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalUuidApi::class)
+    @Composable
+    private fun StructogramList(state: State, modifier: Modifier) {
+        BoxWithConstraints(modifier) {
+            val itemModifier = Modifier.width(maxWidth).height(maxHeight)
+                .padding(15.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerLow,
+                    RoundedCornerShape(15.dp)
                 )
+                .padding(15.dp)
+            if (state.structogram != null) {
+                val listState = rememberLazyListState()
+                ScrollableLazyRow(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    flingBehavior = rememberSnapFlingBehavior(listState)
+                ) {
+                    item(state.structogram) {
+                        SharedElementTransitionScope {
+                            Box(itemModifier.verticalScroll(rememberScrollState())) {
+                                state.structogram.Content(
+                                    modifier = Modifier.fillMaxWidth().sharedElement(
+                                        rememberSharedContentState(state.structogram),
+                                        requireAnimatedScope(
+                                            SharedElementTransitionScope.AnimatedScope.Navigation
+                                        )
+                                    ).imageExportable(),
+                                    state.dragStatements,
+                                    null,
+                                    {
+                                        state.eventHandler(
+                                            Event.DroppedStatement(
+                                                it.first,
+                                                it.second
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    items(state.structogram.methods, { it.hashCode() }) { method ->
+                        Box(itemModifier.verticalScroll(rememberScrollState())) {
+                            method.asStructogram().Content(
+                                modifier = Modifier.fillMaxWidth().imageExportable(),
+                                draggable = false,
+                            )
+                        }
+                    }
+                    items(state.structogram.functions) { function ->
+                        Box(itemModifier.verticalScroll(rememberScrollState())) {
+                            function.asStructogram().Content(
+                                modifier = Modifier.fillMaxWidth().imageExportable(),
+                                draggable = false,
+                            )
+                        }
+                    }
+                }
             } else {
                 Text("Error", Modifier.fillMaxWidth())
             }
-            if (!keyboardUp && state.dragStatements) {
-                StatementDrawer(
-                    Modifier.heightIn(100.dp, 400.dp)
-                        .padding(20.dp)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer)
-                )
-            }
         }
-}
+    }
 
-internal fun codeEdit(): Ui<State> = ui { state, modifier ->
-    if (state.showCode)
-        CodeEditor(
-            modifier,
-            state.code,
-            state.tokenized,
-            state.focusRequester,
-            { state.eventHandler(Event.OpenUnicodeInput) }
-        ) {
-            state.eventHandler(Event.TextInput(it))
-        }
-    if (state.input)
-        OverlayEffect(state) {
-            val result = show(UnicodeOverlay(false))
-            if (result.isEmpty()) {
-                state.eventHandler(Event.CloseUnicodeInput)
-                return@OverlayEffect
-            } else {
-                val code = state.code
-                state.eventHandler(Event.TextInput(code.copy(buildString {
-                    append(code.text.substring(0, code.selection.start))
-                    append(result)
-                    append(code.text.substring(code.selection.start, code.text.length))
-                }, TextRange(code.selection.start + result.length))))
-                state.eventHandler(Event.CloseUnicodeInput)
+    @OptIn(ExperimentalUuidApi::class, ExperimentalSharedTransitionApi::class)
+    internal fun structogram(): Ui<State> = ui { state, modifier ->
+        val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        if (state.showStructogram)
+            Column(
+                modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                if (state.structogram != null) {
+                    SharedElementTransitionScope {
+                        state.structogram.Content(
+                            Modifier.horizontalScroll(
+                                rememberScrollState()
+                            ).sharedElement(
+                                rememberSharedContentState(state.structogram),
+                                requireAnimatedScope(
+                                    SharedElementTransitionScope.AnimatedScope.Navigation
+                                )
+                            ),
+                            state.dragStatements,
+                            null,
+                            { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
+                        )
+                    }
+                } else {
+                    Text("Error", Modifier.fillMaxWidth())
+                }
+                if (!keyboardUp && state.dragStatements) {
+                    StatementDrawer(
+                        Modifier.heightIn(100.dp, 400.dp)
+                            .padding(20.dp)
+                            .background(MaterialTheme.colorScheme.tertiaryContainer)
+                    )
+                }
             }
-        }
-}
+    }
 
-@Preview
-@Composable
-private fun EditorPagePreview() = PreviewTheme {
-    val code = TextFieldValue(presets[1].demos[2].code)
-    val structorgram =
-        (runBlocking { Structogram.fromString(code.text) } as Left<Structogram>).value
-    EditorPage().Content(
-        State(
-            code,
-            tokenizeProgram(code.text),
-            structorgram,
-            true,
-            false,
-            FocusRequester(),
-            true,
-            false,
-            OpenFile(),
-            false
-        ) {}, Modifier.fillMaxSize()
-    )
+    internal fun codeEdit(): Ui<State> = ui { state, modifier ->
+        if (state.showCode)
+            CodeEditor(
+                modifier,
+                state.code,
+                state.tokenized,
+                state.focusRequester,
+                { state.eventHandler(Event.OpenUnicodeInput) }
+            ) {
+                state.eventHandler(Event.TextInput(it))
+            }
+        if (state.input)
+            OverlayEffect(state) {
+                val result = show(UnicodeOverlay(false))
+                if (result.isEmpty()) {
+                    state.eventHandler(Event.CloseUnicodeInput)
+                    return@OverlayEffect
+                } else {
+                    val code = state.code
+                    state.eventHandler(Event.TextInput(code.copy(buildString {
+                        append(code.text.substring(0, code.selection.start))
+                        append(result)
+                        append(code.text.substring(code.selection.start, code.text.length))
+                    }, TextRange(code.selection.start + result.length))))
+                    state.eventHandler(Event.CloseUnicodeInput)
+                }
+            }
+    }
+
+    @Preview
+    @Composable
+    private fun EditorPagePreview() = PreviewTheme {
+        val code = TextFieldValue(presets[1].demos[2].code)
+        val structorgram =
+            (runBlocking { Structogram.fromString(code.text) } as Left<Structogram>).value
+        EditorPage().Content(
+            State(
+                code,
+                tokenizeProgram(code.text),
+                structorgram,
+                true,
+                false,
+                FocusRequester(),
+                true,
+                false,
+                OpenFile(),
+                false
+            ) {}, Modifier.fillMaxSize()
+        )
+    }
 }

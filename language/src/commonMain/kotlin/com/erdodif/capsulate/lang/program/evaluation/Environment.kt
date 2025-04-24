@@ -85,6 +85,7 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
         get() = env.methods
     override val assumptions: Map<String, Type>
         get() = (shadowEnv.assumptions + env.assumptions.filter { renames.containsKey(it.key) })
+    @KIgnoredOnParcel
     private val shadowEnv = Env(seed = env.seed)
 
     @KIgnoredOnParcel

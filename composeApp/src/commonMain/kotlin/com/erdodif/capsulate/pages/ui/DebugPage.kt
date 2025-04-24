@@ -1,5 +1,6 @@
 package com.erdodif.capsulate.pages.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -59,7 +61,9 @@ import com.erdodif.capsulate.resources.step_forward
 import com.erdodif.capsulate.resources.step_over
 import com.erdodif.capsulate.resources.stop
 import com.erdodif.capsulate.utility.IconTextButton
+import com.erdodif.capsulate.utility.imageExportable
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
 class DebugPage : Ui<State> {
@@ -76,6 +80,7 @@ class DebugPage : Ui<State> {
         }
     }
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     @Composable
     private fun StructogramList(state: State, paddingValues: PaddingValues) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {
@@ -92,18 +97,25 @@ class DebugPage : Ui<State> {
                 flingBehavior = rememberSnapFlingBehavior(state.strucListState)
             ) {
                 item {
-                    Box(itemModifier.verticalScroll(rememberScrollState())) {
-                        state.structogram.Content(
-                            modifier = Modifier.fillMaxWidth(),
-                            draggable = false,
-                            activeStatement = state.activeStatement,
-                        )
+                    SharedElementTransitionScope {
+                        Box(itemModifier.verticalScroll(rememberScrollState())) {
+                            state.structogram.Content(
+                                modifier = Modifier.fillMaxWidth().sharedElement(
+                                    rememberSharedContentState(state.structogram),
+                                    requireAnimatedScope(
+                                        SharedElementTransitionScope.AnimatedScope.Navigation
+                                    )
+                                ).imageExportable(),
+                                draggable = false,
+                                activeStatement = state.activeStatement,
+                            )
+                        }
                     }
                 }
                 items(state.structogram.methods) { method ->
                     Box(itemModifier.verticalScroll(rememberScrollState())) {
                         method.asStructogram().Content(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().imageExportable(),
                             draggable = false,
                             activeStatement = state.activeStatement,
                         )
@@ -112,7 +124,7 @@ class DebugPage : Ui<State> {
                 items(state.structogram.functions) { function ->
                     Box(itemModifier.verticalScroll(rememberScrollState())) {
                         function.asStructogram().Content(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().imageExportable(),
                             draggable = false,
                             activeStatement = state.activeStatement,
                         )
@@ -211,15 +223,21 @@ class DebugPage : Ui<State> {
                         "Finished in ${state.stepCount + 1} steps!",
                         color = MaterialTheme.colorScheme.tertiary,
                     )
-                    Row {
-                        IconTextButton(Res.drawable.reset, Res.string.reset) {
-                            state.eventHandler(Event.Reset)
+                    LazyRow {
+                        item {
+                            IconTextButton(Res.drawable.reset, Res.string.reset) {
+                                state.eventHandler(Event.Reset)
+                            }
                         }
-                        IconTextButton(Res.drawable.random, Res.string.reset_new_seed) {
-                            state.eventHandler(Event.ResetRenew)
+                        item {
+                            IconTextButton(Res.drawable.random, Res.string.reset_new_seed) {
+                                state.eventHandler(Event.ResetRenew)
+                            }
                         }
-                        IconTextButton(Res.drawable.close, Res.string.close) {
-                            state.eventHandler(Event.Close)
+                        item {
+                            IconTextButton(Res.drawable.close, Res.string.close) {
+                                state.eventHandler(Event.Close)
+                            }
                         }
                     }
                 } else {
@@ -227,25 +245,38 @@ class DebugPage : Ui<State> {
                         "Steps taken: ${state.stepCount + 1}",
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    Row {
+                    LazyRow {
                         if (state.evalLoading) {
-                            IconTextButton(Res.drawable.pause, Res.string.stop) {
-                                state.eventHandler(Event.Pause)
+                            item {
+                                IconTextButton(Res.drawable.pause, Res.string.stop) {
+                                    state.eventHandler(Event.Pause)
+                                }
                             }
                         } else {
-                            IconTextButton(Res.drawable.play, Res.string.step_forward) {
-                                state.eventHandler(Event.StepForward)
+                            item {
+                                IconTextButton(
+                                    Res.drawable.play,
+                                    Res.string.step_forward,
+                                    onLongClick = {
+                                        state.eventHandler(Event.Run)
+                                    }) {
+                                    state.eventHandler(Event.StepForward)
+                                }
                             }
                         }
-                        IconTextButton(
-                            Res.drawable.step_over,
-                            Res.string.step_over,
-                            enabled = !state.evalLoading
-                        ) {
-                            state.eventHandler(Event.StepOver)
+                        item {
+                            IconTextButton(
+                                Res.drawable.step_over,
+                                Res.string.step_over,
+                                enabled = !state.evalLoading
+                            ) {
+                                state.eventHandler(Event.StepOver)
+                            }
                         }
-                        IconTextButton(Res.drawable.close, Res.string.close) {
-                            state.eventHandler(Event.Close)
+                        item {
+                            IconTextButton(Res.drawable.close, Res.string.close) {
+                                state.eventHandler(Event.Close)
+                            }
                         }
                     }
                 }
