@@ -1,6 +1,7 @@
 package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -61,6 +62,7 @@ import com.erdodif.capsulate.resources.step_forward
 import com.erdodif.capsulate.resources.step_over
 import com.erdodif.capsulate.resources.stop
 import com.erdodif.capsulate.utility.IconTextButton
+import com.erdodif.capsulate.utility.imageExportable
 import com.erdodif.capsulate.utility.layout.ScrollableLazyRow
 import com.slack.circuit.sharedelements.SharedElementTransitionScope
 
@@ -79,7 +81,7 @@ class DebugPage : Ui<State> {
         }
     }
 
-    @OptIn(ExperimentalSharedTransitionApi::class)
+    @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalFoundationApi::class)
     @Composable
     private fun StructogramList(state: State, paddingValues: PaddingValues) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {
@@ -104,7 +106,7 @@ class DebugPage : Ui<State> {
                                     requireAnimatedScope(
                                         SharedElementTransitionScope.AnimatedScope.Navigation
                                     )
-                                ),
+                                ).imageExportable(),
                                 draggable = false,
                                 activeStatement = state.activeStatement,
                             )
@@ -114,7 +116,7 @@ class DebugPage : Ui<State> {
                 items(state.structogram.methods) { method ->
                     Box(itemModifier.verticalScroll(rememberScrollState())) {
                         method.asStructogram().Content(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().imageExportable(),
                             draggable = false,
                             activeStatement = state.activeStatement,
                         )
@@ -123,7 +125,7 @@ class DebugPage : Ui<State> {
                 items(state.structogram.functions) { function ->
                     Box(itemModifier.verticalScroll(rememberScrollState())) {
                         function.asStructogram().Content(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().imageExportable(),
                             draggable = false,
                             activeStatement = state.activeStatement,
                         )
