@@ -5,6 +5,7 @@ package com.erdodif.capsulate
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
+import com.ionspin.kotlin.bignum.integer.BigInteger
 
 @Composable
 expect fun resolveColors(): ColorScheme
@@ -30,7 +31,9 @@ expect interface KParceler<T>
 @Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 @Retention(value = AnnotationRetention.SOURCE)
 @Repeatable
-expect annotation class KTypeParceler<T, R: KParceler<in T>>
+expect annotation class KTypeParceler<T, P: KParceler<in T>>()
+
+expect object BigIntParceler: KParceler<BigInteger>
 
 @Composable
 expect fun LocateSetting()

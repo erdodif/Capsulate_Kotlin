@@ -1,7 +1,6 @@
 package com.erdodif.capsulate.pages.ui
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -81,7 +80,7 @@ class DebugPage : Ui<State> {
         }
     }
 
-    @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalSharedTransitionApi::class)
     @Composable
     private fun StructogramList(state: State, paddingValues: PaddingValues) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(paddingValues)) {

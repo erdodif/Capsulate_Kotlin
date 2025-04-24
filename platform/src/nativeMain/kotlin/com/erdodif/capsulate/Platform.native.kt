@@ -5,6 +5,7 @@ package com.erdodif.capsulate
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asSkiaBitmap
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -32,7 +33,9 @@ actual annotation class KIgnoredOnParcel actual constructor()
 @Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 @Retention(value = AnnotationRetention.SOURCE)
 @Repeatable
-actual annotation class KTypeParceler<T, R: KParceler<in T>>
+actual annotation class KTypeParceler<T, P: KParceler<in T>>
+
+actual object BigIntParceler: KParceler<BigInteger>
 
 @OptIn(ExperimentalEncodingApi::class)
 actual fun ImageBitmap.toPngByteArray(): ByteArray =

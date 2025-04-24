@@ -79,7 +79,7 @@ class Structogram private constructor(
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(24.dp)
+                                RoundedCornerShape(22.dp)
                             ).defaultMinSize(100.dp, 25.dp)
                             .border(
                                 Theme.borderWidth,
