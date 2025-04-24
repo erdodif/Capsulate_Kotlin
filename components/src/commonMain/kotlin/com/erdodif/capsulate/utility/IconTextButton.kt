@@ -52,21 +52,20 @@ fun IconTextButton(
         contentColor = colors.contentColor,
         modifier = modifier
             .semantics { role = Role.Button }
-            .background(colors.containerColor, RoundedCornerShape(100))
-            .combinedClickable(
-                interactionSource = MutableInteractionSource(),
-                indication = LocalIndication.current,
-                enabled = enabled,
-                role = Role.Button,
-                onLongClick = onLongClick,
-                onClick = onClick
-            ),
+            .background(colors.containerColor, RoundedCornerShape(100)),
         border = ButtonDefaults.outlinedButtonBorder()
     ) {
         Row(
             Modifier.defaultMinSize(
                 minWidth = ButtonDefaults.MinWidth,
                 minHeight = ButtonDefaults.MinHeight
+            ).combinedClickable(
+                interactionSource = MutableInteractionSource(),
+                indication = LocalIndication.current,
+                enabled = enabled,
+                role = Role.Button,
+                onLongClick = onLongClick,
+                onClick = onClick
             ).padding(IconButtonPaddingValues),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,

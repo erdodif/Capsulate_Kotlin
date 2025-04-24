@@ -244,30 +244,38 @@ class DebugPage : Ui<State> {
                         "Steps taken: ${state.stepCount + 1}",
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    Row {
+                    LazyRow {
                         if (state.evalLoading) {
-                            IconTextButton(Res.drawable.pause, Res.string.stop) {
-                                state.eventHandler(Event.Pause)
+                            item {
+                                IconTextButton(Res.drawable.pause, Res.string.stop) {
+                                    state.eventHandler(Event.Pause)
+                                }
                             }
                         } else {
-                            IconTextButton(
-                                Res.drawable.play,
-                                Res.string.step_forward,
-                                onLongClick = {
-                                    state.eventHandler(Event.Run)
-                                }) {
-                                state.eventHandler(Event.StepForward)
+                            item {
+                                IconTextButton(
+                                    Res.drawable.play,
+                                    Res.string.step_forward,
+                                    onLongClick = {
+                                        state.eventHandler(Event.Run)
+                                    }) {
+                                    state.eventHandler(Event.StepForward)
+                                }
                             }
                         }
-                        IconTextButton(
-                            Res.drawable.step_over,
-                            Res.string.step_over,
-                            enabled = !state.evalLoading
-                        ) {
-                            state.eventHandler(Event.StepOver)
+                        item {
+                            IconTextButton(
+                                Res.drawable.step_over,
+                                Res.string.step_over,
+                                enabled = !state.evalLoading
+                            ) {
+                                state.eventHandler(Event.StepOver)
+                            }
                         }
-                        IconTextButton(Res.drawable.close, Res.string.close) {
-                            state.eventHandler(Event.Close)
+                        item {
+                            IconTextButton(Res.drawable.close, Res.string.close) {
+                                state.eventHandler(Event.Close)
+                            }
                         }
                     }
                 }
