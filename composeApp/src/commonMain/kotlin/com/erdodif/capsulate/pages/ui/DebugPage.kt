@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -221,15 +222,21 @@ class DebugPage : Ui<State> {
                         "Finished in ${state.stepCount + 1} steps!",
                         color = MaterialTheme.colorScheme.tertiary,
                     )
-                    Row {
-                        IconTextButton(Res.drawable.reset, Res.string.reset) {
-                            state.eventHandler(Event.Reset)
+                    LazyRow {
+                        item {
+                            IconTextButton(Res.drawable.reset, Res.string.reset) {
+                                state.eventHandler(Event.Reset)
+                            }
                         }
-                        IconTextButton(Res.drawable.random, Res.string.reset_new_seed) {
-                            state.eventHandler(Event.ResetRenew)
+                        item {
+                            IconTextButton(Res.drawable.random, Res.string.reset_new_seed) {
+                                state.eventHandler(Event.ResetRenew)
+                            }
                         }
-                        IconTextButton(Res.drawable.close, Res.string.close) {
-                            state.eventHandler(Event.Close)
+                        item {
+                            IconTextButton(Res.drawable.close, Res.string.close) {
+                                state.eventHandler(Event.Close)
+                            }
                         }
                     }
                 } else {
