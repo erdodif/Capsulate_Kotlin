@@ -7,6 +7,7 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.lang.program.grammar.expression.pAssumption
 import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pExp
+import com.erdodif.capsulate.lang.program.grammar.expression.pVariable
 import com.erdodif.capsulate.lang.program.grammar.function.sMethodCall
 import com.erdodif.capsulate.lang.program.grammar.function.sReturn
 import com.erdodif.capsulate.lang.util.Fail
@@ -81,9 +82,9 @@ val sAbort: Parser<Statement> = delimit(_keyword("abort") * { _, pos -> Abort(po
 val sAtom: Parser<Statement> =
     delimit(middle(_keyword("["), blockOrParallel, _keyword("]")))[{ (atom, state, pos) ->
         if (inFunctionScope) {
-            Fail("Cannot use Atomic statement in a function!", state)
+            fail("Cannot use Atomic statement in a function!")
         } else {
-            Pass(Atomic(atom, pos), state, pos)
+            pass(pos.start, Atomic(atom, pos))
         }
     }]
 val sWait: Parser<Statement> = delimit(
@@ -152,9 +153,9 @@ val sDoWhile: Parser<Statement> = right(
 ) * { (block, condition), pos -> DoWhile(condition, block, pos) }
 
 val pIndex: Parser<VArray.Index> =
-    (_nonKeyword + some(middle(_char('['), pExp, _char(']'))))[{ (value, state, match) ->
+    (pVariable + many(middle(_char('['), pExp, _char(']'))))[{ (value, state, match) ->
         val (id, indexers) = value
-        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id, indexers), state, match)
+        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id.id, indexers), state, match)
         for (indexer in indexers) {
             if (indexer.getType(assumptions) !is NUM) {
                 result = Fail(
@@ -170,7 +171,7 @@ val pIndex: Parser<VArray.Index> =
     }]
 
 val sParallelAssign: Parser<Statement> =
-    (delimited(or(pIndex, _nonKeyword), _char(',')) + right(
+    (delimited(pIndex, _char(',')) + right(
         tok(string(":=")),
         delimit(delimited(pExp, _char(',')))
     ))[{
@@ -179,17 +180,17 @@ val sParallelAssign: Parser<Statement> =
             fail("The number of parameters does not match the number of values to assign.")
         else {
             for ((i, variable) in params.withIndex()) {
-                if (variable is Right) {
-                    if (assumptions[variable.value] != null &&
-                        assumptions[variable.value] != values[i].getType(assumptions)
+                if (variable.indexers.isEmpty()) {
+                    if (assumptions[variable.id] != null &&
+                        assumptions[variable.id] != values[i].getType(assumptions)
                     ) {
                         raiseError(
                             "Possible type mismatch! " +
-                                    "(already assumed ${assumptions[variable.value]}, " +
+                                    "(already assumed ${assumptions[variable.id]}, " +
                                     "but the value has ${values[i].getType(assumptions)}"
                         )
                     } else {
-                        assumptions[variable.value] = values[i].getType(assumptions)
+                        assumptions[variable.id] = values[i].getType(assumptions)
                     }
                 }
             }
@@ -230,23 +231,23 @@ val pType: Parser<Type> = {
 }
 
 val sAssign: Parser<Statement> =
-    delimit(or(pIndex, _nonKeyword) + right(_keyword(":="), pExp))[{ (combined, state, match) ->
+    delimit(pIndex + right(_keyword(":="), pExp))[{ (combined, state, match) ->
         val variable = combined.first
         val value = combined.second
         var out: ParserResult<Statement> = Pass(Assign(variable, value, match), state, match)
-        if (variable is Right) {
-            if (assumptions[variable.value] != null) {
-                if (assumptions[variable.value] != value.getType(assumptions)) {
+        if (variable.indexers.isEmpty()) {
+            if (assumptions[variable.id] != null) {
+                if (assumptions[variable.id] != value.getType(assumptions)) {
                     raiseError(
                         "Possible type mismatch! " +
-                                "(already assumed ${assumptions[variable.value]}, " +
+                                "(already assumed ${assumptions[variable.id]}, " +
                                 "but the value has ${value.getType(assumptions)}"
                     )
                     out = Fail("Type mismatch!", state)
                 }
             } else {
-                assumptions[variable.value] = value.getType(assumptions)
-                raiseError("${variable.value} : ${assumptions[variable.value]}")
+                assumptions[variable.id] = value.getType(assumptions)
+                raiseError("${variable.id} : ${assumptions[variable.id]}")
             }
         }
         out

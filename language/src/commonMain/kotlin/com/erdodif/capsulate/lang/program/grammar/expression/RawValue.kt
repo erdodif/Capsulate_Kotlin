@@ -11,9 +11,19 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Token(match),
+@KParcelize
+@Serializable
+sealed class RawValue<out T : Value>(@SerialName("value_match") override val match: MatchPos) :
+    Exp<T>, Token(match),
     KParcelable {
     abstract fun get(context: Environment): T
     final override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
