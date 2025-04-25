@@ -1,9 +1,9 @@
 package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.lang.program.grammar.expression.ARRAY
+import com.erdodif.capsulate.lang.program.grammar.expression.Index
 import com.erdodif.capsulate.lang.program.grammar.expression.NUM
 import com.erdodif.capsulate.lang.program.grammar.expression.Type
-import com.erdodif.capsulate.lang.program.grammar.expression.VArray
 import com.erdodif.capsulate.lang.program.grammar.expression.pAssumption
 import com.erdodif.capsulate.lang.program.grammar.expression.pComment
 import com.erdodif.capsulate.lang.program.grammar.expression.pExp
@@ -152,10 +152,10 @@ val sDoWhile: Parser<Statement> = right(
     blockOrParallel + delimit(right(_keyword("while"), pExp)),
 ) * { (block, condition), pos -> DoWhile(condition, block, pos) }
 
-val pIndex: Parser<VArray.Index> =
+val pIndex: Parser<Index> =
     (pVariable + many(middle(_char('['), pExp, _char(']'))))[{ (value, state, match) ->
         val (id, indexers) = value
-        var result: ParserResult<VArray.Index> = Pass(VArray.Index(id.id, indexers), state, match)
+        var result: ParserResult<Index> = Pass(Index(id.id, indexers), state, match)
         for (indexer in indexers) {
             if (indexer.getType(assumptions) !is NUM) {
                 result = Fail(

@@ -17,7 +17,7 @@ import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
-import com.erdodif.capsulate.lang.program.grammar.expression.VArray.Index
+import com.erdodif.capsulate.lang.program.grammar.expression.Index
 import com.erdodif.capsulate.lang.program.grammar.expression.VNum
 import com.erdodif.capsulate.lang.util.toInt
 import com.erdodif.capsulate.lang.util.toIntOrNull
@@ -332,6 +332,7 @@ data class Assign(
     val label: Index, val value: Exp<*>,
     override val id: Uuid, override val match: MatchPos
 ) : Statement(id, match) {
+    constructor(label: String, value: Exp<*>, match: MatchPos) : this(Index(label), value, match)
     constructor(label: Index, value: Exp<*>, match: MatchPos) :
             this(label, value, Uuid.random(), match)
 
