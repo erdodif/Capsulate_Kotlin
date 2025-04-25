@@ -22,14 +22,12 @@ import com.erdodif.capsulate.lang.program.grammar.expression.VNum
 import com.erdodif.capsulate.lang.util.toInt
 import com.erdodif.capsulate.lang.util.toIntOrNull
 import com.ionspin.kotlin.bignum.integer.BigInteger
-import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
 import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
-import com.erdodif.capsulate.lang.util.filterLeft
-import com.erdodif.capsulate.lang.util.mapLeft
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.collections.plus
 import kotlin.uuid.ExperimentalUuidApi
@@ -37,7 +35,9 @@ import kotlin.uuid.Uuid
 
 @Serializable
 abstract class Statement(
+    @SerialName("base_id")
     open val id: Uuid = Uuid.random(),
+    @SerialName("base-match")
     open val match: MatchPos
 ) : KParcelable {
     abstract fun evaluate(env: Environment): EvaluationResult
@@ -71,6 +71,7 @@ abstract class Statement(
 }
 
 @KParcelize
+@Serializable
 data class If(
     val condition: Exp<*>,
     val statementsTrue: List<Statement>,
@@ -136,6 +137,7 @@ data class If(
 }
 
 @KParcelize
+@Serializable
 data class When(
     val blocks: MutableList<Pair<Exp<*>, List<Statement>>>,
     val elseBlock: List<Statement>? = null,
@@ -205,6 +207,7 @@ data class When(
 }
 
 @KParcelize
+@Serializable
 data class Skip(override val id: Uuid, override val match: MatchPos) : Statement(id, match) {
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
@@ -213,6 +216,7 @@ data class Skip(override val id: Uuid, override val match: MatchPos) : Statement
 }
 
 @KParcelize
+@Serializable
 data class Abort(override val id: Uuid, override val match: MatchPos) : Statement(id, match) {
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
@@ -220,14 +224,20 @@ data class Abort(override val id: Uuid, override val match: MatchPos) : Statemen
     override fun Formatting.format(state: ParserState) = print("abort")
 }
 
+@Serializable
 abstract class Loop(
+    @SerialName("base_condition")
     open val condition: Exp<*>,
+    @SerialName("base_statements")
     open val statements: List<Statement>,
+    @SerialName("base_loop_id")
     override val id: Uuid,
+    @SerialName("base_loop_match")
     override val match: MatchPos
 ) : Statement(id, match)
 
 @KParcelize
+@Serializable
 data class While(
     override val condition: Exp<*>,
     override val statements: List<Statement>,
@@ -279,6 +289,7 @@ data class While(
 }
 
 @KParcelize
+@Serializable
 data class DoWhile(
     override val condition: Exp<*>,
     override val statements: List<Statement>,
@@ -318,22 +329,14 @@ data class DoWhile(
 
 @KParcelize
 data class Assign(
-    val label: Either<Index, String>, val value: Exp<*>,
+    val label: Index, val value: Exp<*>,
     override val id: Uuid, override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(label: String, value: Exp<*>, match: MatchPos) :
-            this(Right(label), value, Uuid.random(), match)
-
-    constructor(label: Either<Index, String>, value: Exp<*>, match: MatchPos) :
+    constructor(label: Index, value: Exp<*>, match: MatchPos) :
             this(label, value, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult = when (label) {
-        is Right -> value.join(env) {
-            env.set(label.value, it)
-            Finished
-        }
-
-        is Left -> label.value.indexers.joinAll(env) { indexers ->
+    override fun evaluate(env: Environment): EvaluationResult =
+        label.indexers.joinAll(env) { indexers ->
             if (indexers.any { it !is VNum<*> }) {
                 error(
                     "Non number indexer found " + indexers
@@ -346,29 +349,22 @@ data class Assign(
             }
             value.join(env) { value ->
                 env.set(
-                    label.value.id,
+                    label.id,
                     value,
                     *indexers.mapNotNull { ((it as? VNum<*>)?.value as? BigInteger)?.toIntOrNull() }
                         .toIntArray()
                 )
                 Finished
             }
-
         }
-    }
 
     override fun Formatting.format(state: ParserState): Int {
         print(buildString {
-            when (label) {
-                is Right -> append(label.value)
-                is Left -> {
-                    append(label.value.id)
-                    label.value.indexers.forEach {
-                        append('[')
-                        append(it.toString(state))
-                        append(']')
-                    }
-                }
+            append(label.id)
+            label.indexers.forEach {
+                append('[')
+                append(it.toString(state))
+                append(']')
             }
             append(" := ")
             append(value.toString(state))
@@ -395,17 +391,17 @@ data class Select(
 @KParcelize
 @Serializable
 data class ParallelAssign(
-    val assigns: List<Pair<Either<Index, String>, Exp<Value>>>,
+    val assigns: List<Pair<Index, Exp<Value>>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(assigns: List<Pair<Either<Index, String>, Exp<Value>>>, match: MatchPos) :
+    constructor(assigns: List<Pair<Index, Exp<Value>>>, match: MatchPos) :
             this(assigns, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        assigns.map { it.first }.filterLeft().flatMap { it.indexers }.joinAll(env) { indexValues ->
+        assigns.map { it.first }.flatMap { it.indexers }.joinAll(env) { indexValues ->
             var i = 0
-            val indexes = assigns.map { it.first }.mapLeft { arrayIndexer ->
+            val indexes = assigns.map { (arrayIndexer, _) ->
                 val subList = indexValues.subList(i, i + arrayIndexer.indexers.size)
                 require(subList.all { it is VNum<*> && it.value is BigInteger }) {
                     "Indexer must be at least an integer, got: " + subList.joinToString()
@@ -414,14 +410,8 @@ data class ParallelAssign(
                 arrayIndexer.id to subList.map { ((it as VNum<*>).value as BigInteger).toInt() }
             }
             assigns.map { it.second }.joinAll(env) { values ->
-                for ((label, value) in indexes.zip(values)) {
-                    when (label) {
-                        is Right -> env.set(label.value, value)
-                        is Left -> {
-                            val (name, indexes) = label.value
-                            env.set(name, value, indexes = indexes.toIntArray())
-                        }
-                    }
+                for ((index, value) in indexes.zip(values)) {
+                    env.set(index.first, value, indexes = index.second.toIntArray())
                 }
                 Finished
             }
@@ -430,11 +420,8 @@ data class ParallelAssign(
 
     override fun Formatting.format(state: ParserState): Int {
         print(assigns.joinToString(", ") {
-            when (val label = it.first) {
-                is Right -> label.value
-                is Left -> label.value.id + label.value.indexers.joinToString {
-                    "[${it.toString(state)}]"
-                }
+            it.first.id + it.first.indexers.joinToString {
+                "[${it.toString(state)}]"
             }
         })
         print(" := ")
@@ -528,12 +515,11 @@ data class Parallel(
 @KParcelize
 @Serializable
 data class Atomic(
-    val statements: ArrayDeque<Statement>,
+    val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
-    constructor(statements: List<Statement>, match: MatchPos) :
-            this(ArrayDeque(statements), Uuid.random(), match)
+    constructor(statements: List<Statement>, pos: MatchPos) : this(statements, Uuid.random(), pos)
 
     override fun evaluate(env: Environment): EvaluationResult = AtomicEvaluation(this.statements)
     override fun Formatting.format(state: ParserState): Int {

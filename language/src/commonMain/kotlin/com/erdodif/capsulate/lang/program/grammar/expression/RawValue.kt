@@ -38,10 +38,21 @@ data class StrLit(val value: String, override val match: MatchPos) : RawValue<VS
     override fun toString(): String = "StrLit:$value"
 }
 
+object BigIntSerializer : KSerializer<BigInteger> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor(BigInteger::class.toString(), PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: BigInteger) =
+        encoder.encodeString(value.toString())
+
+    override fun deserialize(decoder: Decoder): BigInteger = decoder.decodeString().toBigInteger()
+}
+
 @KParcelize
 @Serializable
 @KTypeParceler<BigInteger, BigIntParceler>
 data class IntLit(
+    @Serializable(with = BigIntSerializer::class)
     val value: BigInteger,
     override val match: MatchPos
 ) : RawValue<VWhole>(match) {
@@ -56,6 +67,7 @@ data class IntLit(
 @Serializable
 @KTypeParceler<BigInteger, BigIntParceler>
 data class NatLit(
+    @Serializable(with = BigIntSerializer::class)
     val value: BigInteger,
     override val match: MatchPos
 ) : RawValue<VNat>(match) {
