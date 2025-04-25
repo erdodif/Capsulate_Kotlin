@@ -212,12 +212,14 @@ data class VArray<T : Value>(
                     )
                 }
                 when (val param = context.get(id)) {
-                    is Left -> when (val value = param.value) {
-                        is VArray<*> -> value.get(indexes = indexers.map { (it.value as BigInteger).toInt() }
-                            .toIntArray())
+                    is Left -> if (indexers.isEmpty()) param.value else
+                        when (val value =
+                            param.value) {
+                            is VArray<*> -> value.get(indexes = indexers.map { (it.value as BigInteger).toInt() }
+                                .toIntArray())
 
-                        else -> error("Can't index non-array ($id : ${value.type})")
-                    }
+                            else -> error("Can't index non-array ($id : ${value.type})")
+                        }
 
                     is Right -> error("Can't index on missing parameter '$id'")
                 }

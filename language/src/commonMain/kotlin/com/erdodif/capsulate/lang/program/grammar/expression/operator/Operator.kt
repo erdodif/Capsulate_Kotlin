@@ -51,7 +51,7 @@ abstract class UnaryOperator<T : Value, R : Value>(
             orEither(left(strongerParser, operatorParser) / { producer(it) }, strongerParser)
     }
 
-    override fun toString(): String = when(fixation){
+    override fun toString(): String = when (fixation) {
         Fixation.PREFIX -> "$label\$ $bindingStrength"
         Fixation.POSTFIX -> "\$$label $bindingStrength"
     }
@@ -77,11 +77,12 @@ abstract class BinaryOperator<T : Value, R : Value>(
         Association.NONE -> nonAssoc(::producer, strongerParser, operatorParser)
     }
 
-    override fun toString(): String = when(association){
+    override fun toString(): String = when (association) {
         Association.LEFT -> "\$$label\$ L$bindingStrength"
         Association.RIGHT -> "\$$label\$ R$bindingStrength"
         Association.NONE -> "\$$label\$ N$bindingStrength"
     }
+
     abstract fun type(firstType: Type, secondType: Type): Type
 
 }
