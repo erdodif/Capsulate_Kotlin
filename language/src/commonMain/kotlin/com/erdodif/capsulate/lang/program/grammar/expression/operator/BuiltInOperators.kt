@@ -21,10 +21,10 @@ const val decimalError = "Decimal numbers are unsupported!"
 
 @KParcelize
 data object Add : BinaryOperator<VNum<*>, VNum<*>>(
-    14,
+    13,
     "+",
     _char('+'),
-    Association.RIGHT,
+    Association.LEFT,
     { a, b ->
         if (a is VNat && b is VNat) {
             VNat(a.value + b.value)
@@ -41,7 +41,7 @@ data object Add : BinaryOperator<VNum<*>, VNum<*>>(
 
 @KParcelize
 data object Sub : BinaryOperator<VNum<*>, VNum<*>>(
-    12,
+    13,
     "-",
     _char('-'),
     Association.LEFT,
@@ -55,10 +55,10 @@ data object Sub : BinaryOperator<VNum<*>, VNum<*>>(
 
 @KParcelize
 data object Mul : BinaryOperator<VNum<*>, VNum<*>>(
-    18,
+    14,
     "*",
     _char('*'),
-    Association.RIGHT,
+    Association.LEFT,
     { a, b ->
         require(a.value is BigInteger && b.value is BigInteger) { decimalError }
         if (a is VNat && b.value is BigInteger) {
@@ -74,7 +74,7 @@ data object Mul : BinaryOperator<VNum<*>, VNum<*>>(
 
 @KParcelize
 data object Div : BinaryOperator<VNum<*>, VNum<*>>(
-    16,
+    14,
     "/",
     _char('/'),
     Association.LEFT,
