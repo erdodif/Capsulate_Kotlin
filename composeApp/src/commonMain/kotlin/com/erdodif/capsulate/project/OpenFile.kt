@@ -25,7 +25,7 @@ import kotlin.uuid.Uuid
 @KParcelize
 @Serializable
 data class OpenFile(
-    @KIgnoredOnParcel var file: Either<IPlatformFile, Uuid>,
+    @KIgnoredOnParcel var file: Either<IPlatformFile, Uuid> = Right(Uuid.random()),
     var content: String? = null
 ) : KParcelable {
     constructor() : this(Right(Uuid.random()))

@@ -15,6 +15,7 @@ import com.erdodif.capsulate.lang.util.Left
 import com.erdodif.capsulate.lang.util.Right
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 @KParcelize
@@ -24,6 +25,7 @@ data class Parameter(val id: String, val type: Type, var value: Value) : KParcel
     }
 }
 
+@Serializable
 sealed interface Environment : KParcelable {
     val functions: Map<String, Function<Value>>
     val methods: Map<Pattern, Method>
@@ -74,6 +76,7 @@ sealed interface Environment : KParcelable {
  * Renames are stored as Map, where the key is the original name and the value is the new name
  */
 @KParcelize
+@Serializable
 data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : Environment {
     override val random: Random
         get() = env.random
@@ -117,6 +120,7 @@ data class ProxyEnv(val renames: Map<String, String>, val env: Environment) : En
 }
 
 @KParcelize
+@Serializable
 data class Env(
     override val functions: Map<String, Function<Value>>,
     override val methods: Map<Pattern, Method>,

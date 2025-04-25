@@ -25,8 +25,10 @@ import com.erdodif.capsulate.lang.util.asum
 import com.erdodif.capsulate.lang.util.get
 import com.erdodif.capsulate.lang.util.isWordChar
 import com.erdodif.capsulate.lang.util.tok
+import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 data class Pattern(
     val prefix: String?,
     val delimiters: List<String>,

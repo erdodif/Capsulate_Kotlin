@@ -1,6 +1,9 @@
 package com.erdodif.capsulate.lang.program.grammar.expression
 
+import com.erdodif.capsulate.BigIntParceler
+import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.KTypeParceler
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
@@ -8,8 +11,11 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import kotlinx.serialization.Serializable
 
-sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Token(match) {
+@Serializable
+sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Token(match),
+    KParcelable {
     abstract fun get(context: Environment): T
     final override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
         Left(get(context))
@@ -18,6 +24,7 @@ sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Tok
 }
 
 @KParcelize
+@Serializable
 data class ChrLit(val value: Char, override val match: MatchPos) : RawValue<VChr>(match) {
     override fun getType(assumptions: Map<String, Type>): CHAR = CHAR
     override fun get(context: Environment): VChr = VChr(value)
@@ -25,6 +32,7 @@ data class ChrLit(val value: Char, override val match: MatchPos) : RawValue<VChr
 }
 
 @KParcelize
+@Serializable
 data class StrLit(val value: String, override val match: MatchPos) : RawValue<VStr>(match) {
     override fun getType(assumptions: Map<String, Type>): STRING = STRING
     override fun get(context: Environment): VStr = VStr(value)
@@ -32,8 +40,10 @@ data class StrLit(val value: String, override val match: MatchPos) : RawValue<VS
 }
 
 @KParcelize
+@Serializable
+@KTypeParceler<BigInteger, BigIntParceler>
 data class IntLit(
-    val value: @com.erdodif.capsulate.RawValue BigInteger,
+    val value: BigInteger,
     override val match: MatchPos
 ) : RawValue<VWhole>(match) {
     constructor(value: Int, match: MatchPos) : this(value.toBigInteger(), match)
@@ -44,8 +54,10 @@ data class IntLit(
 }
 
 @KParcelize
+@Serializable
+@KTypeParceler<BigInteger, BigIntParceler>
 data class NatLit(
-    val value: @com.erdodif.capsulate.RawValue BigInteger,
+    val value: BigInteger,
     override val match: MatchPos
 ) : RawValue<VNat>(match) {
     constructor(value: Int, match: MatchPos) : this(value.toBigInteger(), match)
@@ -56,6 +68,7 @@ data class NatLit(
 }
 
 @KParcelize
+@Serializable
 data class BoolLit(val value: Boolean, override val match: MatchPos) : RawValue<VBool>(match) {
     override fun getType(assumptions: Map<String, Type>): BOOL = BOOL
     override fun get(context: Environment): VBool = VBool(value)
@@ -63,6 +76,7 @@ data class BoolLit(val value: Boolean, override val match: MatchPos) : RawValue<
 }
 
 @KParcelize
+@Serializable
 data class ArrayLit<T : Value>(val value: Array<Exp<T>>, val match: MatchPos) : Exp<VArray<T>> {
     override fun getType(assumptions: Map<String, Type>): ARRAY =
         ARRAY(value.first().getType(assumptions), value.size)
@@ -91,6 +105,7 @@ data class ArrayLit<T : Value>(val value: Array<Exp<T>>, val match: MatchPos) : 
 }
 
 @KParcelize
+@Serializable
 data class Variable(val id: String, override val match: MatchPos) : RawValue<Value>(match) {
     override fun getType(assumptions: Map<String, Type>): Type = assumptions[this.id] ?: NEVER
     override fun get(context: Environment): Value {

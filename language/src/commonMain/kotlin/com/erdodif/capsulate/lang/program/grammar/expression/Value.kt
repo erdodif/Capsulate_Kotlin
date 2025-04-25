@@ -1,8 +1,10 @@
 package com.erdodif.capsulate.lang.program.grammar.expression
 
+import com.erdodif.capsulate.BigIntParceler
+import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.RawValue
+import com.erdodif.capsulate.KTypeParceler
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Left
@@ -12,14 +14,17 @@ import com.erdodif.capsulate.lang.util.toInt
 import com.ionspin.kotlin.bignum.BigNumber
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
+@Serializable
 interface Value : KParcelable {
     override operator fun equals(other: Any?): Boolean
     override fun hashCode(): Int
     val type: Type
 }
 
+@Serializable
 sealed interface VNum<T : BigNumber<T>> : Value {
     override val type: NUM
     val value: BigNumber<T>
@@ -27,7 +32,11 @@ sealed interface VNum<T : BigNumber<T>> : Value {
 
 @KParcelize
 @JvmInline
-value class VNat(override val value: @RawValue BigInteger) : VNum<BigInteger> { // ℕ
+@Serializable
+@KTypeParceler<BigInteger, BigIntParceler>
+value class VNat(
+    override val value: BigInteger
+) : VNum<BigInteger> { // ℕ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -44,7 +53,9 @@ value class VNat(override val value: @RawValue BigInteger) : VNum<BigInteger> { 
 
 @KParcelize
 @JvmInline
-value class VWhole(override val value: @RawValue BigInteger) : VNum<BigInteger> { // ℤ
+@Serializable
+@KTypeParceler<BigInteger, BigIntParceler>
+value class VWhole(override val value: BigInteger) : VNum<BigInteger> { // ℤ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -55,6 +66,7 @@ value class VWhole(override val value: @RawValue BigInteger) : VNum<BigInteger> 
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
     override val type: CHAR
@@ -63,6 +75,7 @@ value class VChr(val value: Char) : Value {  // ℂ
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VStr(val value: String) : Value { // 𝕊
     override fun toString(): String = value.toString()
     override val type: STRING
@@ -71,6 +84,7 @@ value class VStr(val value: String) : Value { // 𝕊
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
     override val type: BOOL
@@ -78,6 +92,7 @@ value class VBool(val value: Boolean) : Value { // 𝔹
 }
 
 @KParcelize
+@Serializable
 data object UNSET : Value {
     override val type: NEVER
         get() = NEVER
@@ -85,6 +100,7 @@ data object UNSET : Value {
 
 @KParcelize
 @Suppress("UNCHECKED_CAST")
+@Serializable
 data class VArray<T : Value>(
     private val value: Array<T?>,
     override val type: ARRAY
@@ -107,6 +123,7 @@ data class VArray<T : Value>(
     val contentType: Type
         get() = type.contentType
 
+    @KIgnoredOnParcel
     val depth: Int = ((value.first() as? VArray<*>)?.depth ?: 0) + 1
 
     fun unsafeGet(index: Int): T = value[index] ?: error("Value uninitialized at [$index]")
@@ -171,6 +188,7 @@ data class VArray<T : Value>(
     override fun hashCode(): Int = type.hashCode() * 3100 + value.contentHashCode()
 
     @KParcelize
+    @Serializable
     data class Index(val id: String, val indexers: List<Exp<Value>>) : Exp<Value> {
         constructor(id: String, vararg indexes: Exp<Value>) : this(id, indexes.toList())
 

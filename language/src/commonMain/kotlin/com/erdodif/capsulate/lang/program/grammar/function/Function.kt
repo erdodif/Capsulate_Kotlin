@@ -18,6 +18,7 @@ import com.erdodif.capsulate.lang.program.grammar.right
 import com.erdodif.capsulate.lang.program.grammar.plus
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
+import com.erdodif.capsulate.lang.program.evaluation.ExpressionEvaluator
 import com.erdodif.capsulate.lang.program.evaluation.ReturnEvaluation
 import com.erdodif.capsulate.lang.program.grammar.expression.NEVER
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
@@ -40,10 +41,13 @@ import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
+import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmSerializableLambda
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @KParcelize
+@Serializable
 data class Function<out T : Value>(
     val name: String,
     val parameters: List<Variable>,
@@ -81,7 +85,9 @@ data class Function<out T : Value>(
     }
 }
 
+
 @KParcelize
+@Serializable
 data class FunctionCall<T : Value>(
     val name: String,
     val values: List<Exp<Value>>,
@@ -97,15 +103,14 @@ data class FunctionCall<T : Value>(
     override fun evaluate(context: Environment): Right<PendingExpression<Value, T>> = Right(
         PendingExpression(
             this as FunctionCall<Value>,
-            context.functions[name]!!
-        ) { Left(it as T) })
+            context.functions[name]!!,
+        ) @JvmSerializableLambda { Left(it as T) })
 
-    override fun toString(state: ParserState, parentStrength: Int) =
-        values.joinToString(
-            prefix = "$name(",
-            separator = ", ",
-            postfix = ")"
-        ) { it.toString(state) }
+    override fun toString(state: ParserState, parentStrength: Int) = values.joinToString(
+        prefix = "$name(",
+        separator = ", ",
+        postfix = ")"
+    ) { it.toString(state) }
 }
 
 val sFunction: Parser<Function<Value>> = {
@@ -157,17 +162,16 @@ val sFunction: Parser<Function<Value>> = {
 
 @OptIn(ExperimentalUuidApi::class)
 @KParcelize
-data class Return<out T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
+@Serializable
+data class Return<T : Value> @OptIn(ExperimentalUuidApi::class) constructor(
     val value: Exp<T>,
     override val id: Uuid,
     override val match: MatchPos
-) : Statement(id, match) {
+) : Statement(id, match), ExpressionEvaluator<T> {
     constructor(value: Exp<T>, match: MatchPos) : this(value, Uuid.random(), match)
 
-    @OptIn(ExperimentalUuidApi::class)
-    override fun evaluate(env: Environment): EvaluationResult = value.join(env) { returnValue: T ->
-        ReturnEvaluation(returnValue)
-    }
+    override fun evaluate(env: Environment): EvaluationResult = value.join(env)
+    override fun onValue(context: Environment, value: T): EvaluationResult = ReturnEvaluation(value)
 
     override fun Formatting.format(state: ParserState): Int =
         print("return " + value.toString(state))

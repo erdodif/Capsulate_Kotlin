@@ -45,6 +45,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 open class PendingExpression<R : Value, out T : Value>(
     open val call: FunctionCall<R>,
     open val function: Function<R>,
@@ -60,7 +61,7 @@ open class PendingExpression<R : Value, out T : Value>(
         }
 
     fun <S : Value> addTransform(
-        transform: Environment.(T) -> Either<S, PendingExpression<Value, S>>
+        transform: @Serializable Environment.(T) -> Either<S, PendingExpression<Value, S>>
     ): PendingExpression<R, S> = PendingExpression(call, function) _env@{
         when (val result = onValue(it)) {
             is Left -> transform(this, result.value)
@@ -69,6 +70,7 @@ open class PendingExpression<R : Value, out T : Value>(
     }
 }
 
+@Serializable
 interface Exp<out T : Value> : KParcelable {
     fun getType(assumptions: Map<String, Type>): Type
     fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>>
@@ -77,30 +79,31 @@ interface Exp<out T : Value> : KParcelable {
 
 fun <T : Value, R : Value> List<Exp<T>>.withRawValue(
     env: Environment,
-    onValue: Environment.(List<T>) -> R
+    onValue: @Serializable Environment.(List<T>) -> R
 ) = withRawValue(env, emptyList(), onValue)
 
 private fun <T : Value, R : Value> List<Exp<T>>.withRawValue(
     env: Environment,
     accumulated: List<T>,
-    onValue: Environment.(List<T>) -> R
+    onValue: @Serializable Environment.(List<T>) -> R
 ): Either<R, PendingExpression<Value, R>> = if (this.isEmpty()) {
     Left(onValue(env, accumulated))
 } else {
     first().withValue(env) tmp@{
-        this@withRawValue.drop(1).withRawValue(env, accumulated + it, onValue)
+        this@withRawValue.drop(1)
+            .withRawValue(env, accumulated + it, onValue)
     }
 }
 
 fun <T : Value, R : Value> List<Exp<T>>.withValue(
     env: Environment,
-    onValue: Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
+    onValue: @Serializable Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
 ) = withValue(env, emptyList(), onValue)
 
 private fun <T : Value, R : Value> List<Exp<T>>.withValue(
     env: Environment,
     accumulated: List<T>,
-    onValue: Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
+    onValue: @Serializable Environment.(List<T>) -> Either<R, PendingExpression<Value, R>>
 ): Either<R, PendingExpression<Value, R>> = if (this.isEmpty()) {
     onValue(env, accumulated)
 } else {
@@ -109,7 +112,7 @@ private fun <T : Value, R : Value> List<Exp<T>>.withValue(
 
 fun <R : Value, T : Value> Exp<T>.withRawValue(
     env: Environment,
-    onValue: Environment.(T) -> R
+    onValue: @Serializable Environment.(T) -> R
 ): Either<R, PendingExpression<Value, R>> =
     when (val result = evaluate(env)) {
         is Right -> Right(result.value.map(onValue))
@@ -118,7 +121,7 @@ fun <R : Value, T : Value> Exp<T>.withRawValue(
 
 fun <R : Value, T : Value> Exp<T>.withValue(
     env: Environment,
-    onValue: Environment.(T) -> Either<R, PendingExpression<Value, R>>
+    onValue: @Serializable Environment.(T) -> Either<R, PendingExpression<Value, R>>
 ): Either<R, PendingExpression<Value, R>> =
     when (val result = evaluate(env)) {
         is Left -> onValue(env, result.value)
@@ -128,7 +131,7 @@ fun <R : Value, T : Value> Exp<T>.withValue(
 
 fun <R : Value, T : Value, S : Value> Pair<Exp<T>, Exp<S>>.withValue(
     env: Environment,
-    onValue: Environment.(T, S) -> Either<R, PendingExpression<Value, R>>
+    onValue: @Serializable Environment.(T, S) -> Either<R, PendingExpression<Value, R>>
 ): Either<R, PendingExpression<Value, R>> = first.withValue(env) { a ->
     second.withValue(env) { b ->
         onValue(a, b)
@@ -146,26 +149,31 @@ open class Token(open val match: MatchPos) : KParcelable {
 }
 
 @KParcelize
+@Serializable
 data class KeyWord(val id: String, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(id = id, match = match)
 }
 
 @KParcelize
+@Serializable
 data class Symbol(val id: Char, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(id = id, match = match)
 }
 
 @KParcelize
+@Serializable
 data class LineEnd(val char: Char, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(char = char, match = match)
 }
 
 @KParcelize
+@Serializable
 data class Comment(val content: String, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(content = content, match = match)
 }
 
 @KParcelize
+@Serializable
 data class Assume(val id: String, val type: Type, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(id = id, match = match)
 }

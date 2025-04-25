@@ -9,10 +9,12 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.util.MatchPos
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 @ConsistentCopyVisibility
 @KParcelize
+@Serializable
 data class EvaluationContext private constructor(
     var env: Environment,
     private var currentStatement: Statement?,

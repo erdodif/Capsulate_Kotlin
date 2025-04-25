@@ -9,11 +9,13 @@ import com.erdodif.capsulate.lang.program.grammar.expression.Exp
 import com.erdodif.capsulate.lang.program.grammar.expression.VBool
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.program.evaluation.AbortEvaluation
+import com.erdodif.capsulate.lang.program.evaluation.AdditionalExpressionEvaluator
 import com.erdodif.capsulate.lang.program.evaluation.AtomicEvaluation
-import com.erdodif.capsulate.lang.program.evaluation.PendingFunctionEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
 import com.erdodif.capsulate.lang.program.evaluation.EvaluationResult
+import com.erdodif.capsulate.lang.program.evaluation.ExpressionEvaluator
+import com.erdodif.capsulate.lang.program.evaluation.ExpressionListEvaluator
 import com.erdodif.capsulate.lang.program.evaluation.Finished
 import com.erdodif.capsulate.lang.program.evaluation.ParallelEvaluation
 import com.erdodif.capsulate.lang.program.evaluation.SingleStatement
@@ -31,6 +33,7 @@ import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.filterLeft
 import kotlinx.serialization.Serializable
 import kotlin.collections.plus
+import kotlin.jvm.JvmSerializableLambda
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -46,37 +49,17 @@ abstract class Statement(
     fun onFormat(formatting: Formatting, state: ParserState): Int = formatting.format(state)
     fun getFormat(state: ParserState): String = Formatting(0).apply { format(state) }.finalize()
 
-    fun <T : Value> Exp<T>.join(
-        context: Environment,
-        onValue: Environment.(T) -> EvaluationResult
-    ): EvaluationResult = try {
-        when (val result = evaluate(context)) {
-            is Left -> onValue(context, result.value)
-            is Right -> PendingFunctionEvaluation(result.value, onValue)
-        }
-    } catch (e: Exception) {
-        AbortEvaluation(e.message ?: "Error while evaluating expression: $e")
-    }
-
-    fun <T : Value> List<Exp<T>>.joinAll(
-        context: Environment,
-        onEvery: Environment.(List<T>) -> EvaluationResult
-    ): EvaluationResult = if (isEmpty()) onEvery(context, emptyList()) else
-        this[0].join(context) {
-            this@joinAll.drop(1).joinAll(context) { values ->
-                onEvery(this, buildList { add(it); addAll(values) })
-            }
-        }
 }
 
 @KParcelize
+@Serializable
 data class If(
     val condition: Exp<*>,
     val statementsTrue: List<Statement>,
     val statementsFalse: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
-) : Statement(id, match) {
+) : Statement(id, match), ExpressionEvaluator<Value> {
     constructor(
         condition: Exp<*>,
         statementsTrue: List<Statement>,
@@ -84,12 +67,11 @@ data class If(
         match: MatchPos
     ) : this(condition, statementsTrue, statementsFalse, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult = condition.join(env) {
-        when {
-            it is VBool && it.value -> EvalSequence(statementsTrue)
-            it is VBool -> EvalSequence(statementsFalse)
-            else -> AbortEvaluation("Condition must be a logical expression")
-        }
+    override fun evaluate(env: Environment): EvaluationResult = condition.join(env)
+    override fun onValue(context: Environment, value: Value): EvaluationResult = when {
+        value is VBool && value.value -> EvalSequence(statementsTrue)
+        value is VBool -> EvalSequence(statementsFalse)
+        else -> AbortEvaluation("Condition must be a logical expression")
     }
 
     override fun Formatting.format(state: ParserState): Int {
@@ -135,34 +117,40 @@ data class If(
 }
 
 @KParcelize
+@Serializable
 data class When(
     val blocks: MutableList<Pair<Exp<*>, List<Statement>>>,
     val elseBlock: List<Statement>? = null,
     override val id: Uuid,
     override val match: MatchPos
-) : Statement(id, match) {
+) : Statement(id, match), AdditionalExpressionEvaluator<Value, List<Statement>> {
     constructor(
         block: List<Pair<Exp<*>, List<Statement>>>,
         elseBlock: List<Statement>? = null,
         match: MatchPos
     ) : this(block.toMutableList(), elseBlock, Uuid.random(), match)
 
+    override fun onValue(
+        context: Environment,
+        value: Value,
+        extra: List<Statement>
+    ): EvaluationResult = if (value is VBool) {
+        when {
+            value.value -> EvalSequence(extra)
+            blocks.isEmpty() ->
+                AbortEvaluation("When conditions exhausted, Abort happens by definition")
+
+            else -> SingleStatement(this@When)
+        }
+    } else {
+        AbortEvaluation("Condition must be a logical expression")
+    }
+
+
     override fun evaluate(env: Environment): EvaluationResult {
         if (blocks.isEmpty()) return AbortEvaluation("When conditions exhausted, Abort happens by definition")
         val source = blocks.removeAt(env.random.nextInt(blocks.size))
-        return source.first.join(env) {
-            if (it is VBool) {
-                when {
-                    it.value -> EvalSequence(source.second)
-                    blocks.isEmpty() ->
-                        AbortEvaluation("When conditions exhausted, Abort happens by definition")
-
-                    else -> SingleStatement(this@When)
-                }
-            } else {
-                AbortEvaluation("Condition must be a logical expression")
-            }
-        }
+        return source.first.join(env, source.second)
     }
 
     override fun Formatting.format(state: ParserState): Int {
@@ -204,6 +192,7 @@ data class When(
 }
 
 @KParcelize
+@Serializable
 data class Skip(override val id: Uuid, override val match: MatchPos) : Statement(id, match) {
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
@@ -212,6 +201,7 @@ data class Skip(override val id: Uuid, override val match: MatchPos) : Statement
 }
 
 @KParcelize
+@Serializable
 data class Abort(override val id: Uuid, override val match: MatchPos) : Statement(id, match) {
     constructor(match: MatchPos) : this(Uuid.random(), match)
 
@@ -219,6 +209,7 @@ data class Abort(override val id: Uuid, override val match: MatchPos) : Statemen
     override fun Formatting.format(state: ParserState) = print("abort")
 }
 
+@Serializable
 abstract class Loop(
     open val condition: Exp<*>,
     open val statements: List<Statement>,
@@ -227,27 +218,20 @@ abstract class Loop(
 ) : Statement(id, match)
 
 @KParcelize
+@Serializable
 data class While(
     override val condition: Exp<*>,
     override val statements: List<Statement>,
     override val id: Uuid,
     override val match: MatchPos
-) : Loop(condition, statements, id, match) {
+) : Loop(condition, statements, id, match), ExpressionEvaluator<Value> {
     constructor(condition: Exp<*>, statements: List<Statement>, match: MatchPos) :
             this(condition, statements, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult = condition.join(env) {
-        when (it) {
-            is VBool -> {
-                if (it.value) {
-                    EvalSequence(statements + this@While)
-                } else {
-                    Finished
-                }
-            }
-
-            else -> AbortEvaluation("Condition must be a logical expression")
-        }
+    override fun evaluate(env: Environment): EvaluationResult = condition.join(env)
+    override fun onValue(context: Environment, value: Value): EvaluationResult = when (value) {
+        is VBool -> if (value.value) EvalSequence(statements + this@While) else Finished
+        else -> AbortEvaluation("Condition must be a logical expression")
     }
 
     override fun Formatting.format(state: ParserState): Int {
@@ -278,6 +262,7 @@ data class While(
 }
 
 @KParcelize
+@Serializable
 data class DoWhile(
     override val condition: Exp<*>,
     override val statements: List<Statement>,
@@ -316,23 +301,40 @@ data class DoWhile(
 }
 
 @KParcelize
+@Serializable
 data class Assign(
     val label: Either<Index, String>, val value: Exp<*>,
     override val id: Uuid, override val match: MatchPos
-) : Statement(id, match) {
+) : Statement(id, match), AdditionalExpressionEvaluator<Value, String>,
+    ExpressionListEvaluator<Value> {
     constructor(label: String, value: Exp<*>, match: MatchPos) :
             this(Right(label), value, Uuid.random(), match)
 
     constructor(label: Either<Index, String>, value: Exp<*>, match: MatchPos) :
             this(label, value, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult = when (label) {
-        is Right -> value.join(env) {
-            env.set(label.value, it)
-            Finished
-        }
+    override fun onValue(context: Environment, value: Value, label: String): EvaluationResult {
+        context.set(label, value)
+        return Finished
+    }
 
-        is Left -> label.value.indexers.joinAll(env) { indexers ->
+    override fun onEvery(context: Environment, values: List<Value>): EvaluationResult {
+        if (values.any { it !is VNum<*> }) {
+            error(
+                "Non number indexer found " + values
+                    .mapIndexed { i, v -> v to i }
+                    .filter { it.first !is VNum<*> }
+                    .joinToString(prefix = "(", postfix = ")") { (v, i) ->
+                        "$v at $i"
+                    }
+            )
+        }
+        value.join(env)
+    }
+
+    override fun evaluate(env: Environment): EvaluationResult = when (label) {
+        is Right -> value.join(env, label.value)
+        is Left -> label.value.indexers.joinAll(env) @JvmSerializableLambda { indexers ->
             if (indexers.any { it !is VNum<*> }) {
                 error(
                     "Non number indexer found " + indexers
@@ -343,7 +345,7 @@ data class Assign(
                         }
                 )
             }
-            value.join(env) { value ->
+            value.join(env) @JvmSerializableLambda { value ->
                 env.set(
                     label.value.id,
                     value,
@@ -377,6 +379,7 @@ data class Assign(
 }
 
 @KParcelize
+@Serializable
 data class Select(
     val label: String, val set: String /*Specification: Type*/,
     override val id: Uuid,
@@ -392,6 +395,7 @@ data class Select(
 }
 
 @KParcelize
+@Serializable
 data class ParallelAssign(
     val assigns: List<Pair<Either<Index, String>, Exp<Value>>>,
     override val id: Uuid,
@@ -401,9 +405,9 @@ data class ParallelAssign(
             this(assigns, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        assigns.map { it.first }.filterLeft().joinAll(env) { indexes ->
+        assigns.map { it.first }.filterLeft().joinAll(env) @JvmSerializableLambda { indexes ->
             var count = 0
-            assigns.map { it.second }.joinAll(env) {
+            assigns.map { it.second }.joinAll(env) @JvmSerializableLambda {
                 for (assign in assigns.map { it.first }.zip(it)) {
                     when (val label = assign.first) {
                         is Right -> env.set(
@@ -444,22 +448,23 @@ data class ParallelAssign(
         })
         print(" := ")
         print(assigns.joinToString(", ") { it.second.toString(state) })
-        breakLine()
         return 1
     }
 }
 
 @KParcelize
+@Serializable
 data class Expression(
     val expression: Exp<Value>,
     override val id: Uuid,
     override val match: MatchPos
-) : Statement(id, match) {
+) : Statement(id, match), ExpressionEvaluator<Value> {
     constructor(expression: Exp<Value>, match: MatchPos) : this(expression, Uuid.random(), match)
 
+    override fun onValue(context: Environment, value: Value): EvaluationResult = Finished
     override fun evaluate(env: Environment): EvaluationResult {
         return try {
-            expression.join(env) { Finished }
+            expression.join(env)
         } catch (e: Exception) {
             AbortEvaluation(e.message ?: "Error while evaluating Expression!")
         }
@@ -469,6 +474,7 @@ data class Expression(
 }
 
 @KParcelize
+@Serializable
 data class LineError(val content: String, val line: Int) : KParcelable {
     init {
         Logger.e("LINEERROR") { " $line: $content" }
@@ -476,6 +482,7 @@ data class LineError(val content: String, val line: Int) : KParcelable {
 }
 
 @KParcelize
+@Serializable
 data class Parallel(
     val blocks: List<List<Statement>>,
     override val id: Uuid,
@@ -528,6 +535,7 @@ data class Parallel(
 }
 
 @KParcelize
+@Serializable
 data class Atomic(
     val statements: ArrayDeque<Statement>,
     override val id: Uuid,
@@ -557,29 +565,22 @@ data class Atomic(
 }
 
 @KParcelize
+@Serializable
 data class Wait(
     val condition: Exp<*>,
     val atomic: Atomic,
     override val id: Uuid,
     override val match: MatchPos
-) : Statement(id, match) {
+) : Statement(id, match), ExpressionEvaluator<Value> {
     constructor(condition: Exp<*>, atomic: Atomic, match: MatchPos) :
             this(condition, atomic, Uuid.random(), match)
 
-    override fun evaluate(env: Environment): EvaluationResult =
-        condition.join(env) {
-            when (it) {
-                is VBool -> {
-                    if (it.value) {
-                        AtomicEvaluation(atomic.statements)
-                    } else {
-                        SingleStatement(this@Wait)
-                    }
-                }
-
-                else -> AbortEvaluation("Condition must be a logical expression")
-            }
-        }
+    override fun evaluate(env: Environment): EvaluationResult = condition.join(env)
+    override fun onValue(context: Environment, value: Value): EvaluationResult = when {
+        value is VBool && value.value -> AtomicEvaluation(atomic.statements)
+        value is VBool -> SingleStatement(this@Wait)
+        else -> AbortEvaluation("Condition must be a logical expression")
+    }
 
     override fun Formatting.format(state: ParserState): Int =
         print("await ${condition.toString(state)} ") + atomic.onFormat(this, state)
