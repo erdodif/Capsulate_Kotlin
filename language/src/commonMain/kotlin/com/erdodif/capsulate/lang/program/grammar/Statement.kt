@@ -29,6 +29,7 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.filterLeft
+import com.erdodif.capsulate.lang.util.mapLeft
 import kotlinx.serialization.Serializable
 import kotlin.collections.plus
 import kotlin.uuid.ExperimentalUuidApi
@@ -392,6 +393,7 @@ data class Select(
 }
 
 @KParcelize
+@Serializable
 data class ParallelAssign(
     val assigns: List<Pair<Either<Index, String>, Exp<Value>>>,
     override val id: Uuid,
@@ -401,32 +403,25 @@ data class ParallelAssign(
             this(assigns, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        assigns.map { it.first }.filterLeft().joinAll(env) { indexes ->
-            var count = 0
-            assigns.map { it.second }.joinAll(env) {
-                for (assign in assigns.map { it.first }.zip(it)) {
-                    when (val label = assign.first) {
-                        is Right -> env.set(
-                            label.value,
-                            assign.second
-                        )
-
+        assigns.map { it.first }.filterLeft().flatMap { it.indexers }.joinAll(env) { indexValues ->
+            var i = 0
+            val indexes = assigns.map { it.first }.mapLeft { arrayIndexer ->
+                val subList = indexValues.subList(i, i + arrayIndexer.indexers.size)
+                require(subList.all { it is VNum<*> && it.value is BigInteger }) {
+                    "Indexer must be at least an integer, got: " + subList.joinToString()
+                }
+                i += subList.size
+                arrayIndexer.id to subList.map { ((it as VNum<*>).value as BigInteger).toInt() }
+            }
+            assigns.map { it.second }.joinAll(env) { values ->
+                for ((label, value) in indexes.zip(values)) {
+                    when (label) {
+                        is Right -> env.set(label.value, value)
                         is Left -> {
-                            when (val index = indexes[count]) {
-                                is VNum<*> -> env.set(
-                                    label.value.id,
-                                    assign.second,
-                                    (index.value as? BigInteger)?.toInt()
-                                        ?: error("Decimal index is not supported!")
-                                )
-
-                                else -> error("Non number indexer found (namely $index)")
-                            }
-                            count += 1
+                            val (name, indexes) = label.value
+                            env.set(name, value, indexes = indexes.toIntArray())
                         }
-
                     }
-
                 }
                 Finished
             }
@@ -450,6 +445,7 @@ data class ParallelAssign(
 }
 
 @KParcelize
+@Serializable
 data class Expression(
     val expression: Exp<Value>,
     override val id: Uuid,
@@ -469,6 +465,7 @@ data class Expression(
 }
 
 @KParcelize
+@Serializable
 data class LineError(val content: String, val line: Int) : KParcelable {
     init {
         Logger.e("LINEERROR") { " $line: $content" }
@@ -476,6 +473,7 @@ data class LineError(val content: String, val line: Int) : KParcelable {
 }
 
 @KParcelize
+@Serializable
 data class Parallel(
     val blocks: List<List<Statement>>,
     override val id: Uuid,
@@ -528,6 +526,7 @@ data class Parallel(
 }
 
 @KParcelize
+@Serializable
 data class Atomic(
     val statements: ArrayDeque<Statement>,
     override val id: Uuid,
@@ -557,6 +556,7 @@ data class Atomic(
 }
 
 @KParcelize
+@Serializable
 data class Wait(
     val condition: Exp<*>,
     val atomic: Atomic,
