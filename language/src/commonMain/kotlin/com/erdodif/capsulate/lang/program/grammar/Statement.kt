@@ -471,7 +471,9 @@ data class Parallel(
             this(blocks, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
-        ParallelEvaluation(blocks.map { EvalSequence(it) })
+        ParallelEvaluation(blocks.map {
+            if (it.size == 1) it.first() else EvalSequence(it)
+        })
 
     override fun Formatting.format(state: ParserState): Int {
         val results = buildList<List<Pair<String, Int>>> {
@@ -547,11 +549,12 @@ data class Atomic(
 data class Wait(
     val condition: Exp<*>,
     val atomic: Atomic,
+    val didLock: Boolean = false,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
     constructor(condition: Exp<*>, atomic: Atomic, match: MatchPos) :
-            this(condition, atomic, Uuid.random(), match)
+            this(condition, atomic, false, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
         condition.join(env) {
@@ -560,7 +563,7 @@ data class Wait(
                     if (it.value) {
                         AtomicEvaluation(atomic.statements)
                     } else {
-                        SingleStatement(this@Wait)
+                        SingleStatement(this@Wait.copy(didLock = true))
                     }
                 }
 

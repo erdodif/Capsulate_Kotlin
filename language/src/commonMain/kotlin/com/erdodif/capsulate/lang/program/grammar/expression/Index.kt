@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 
 @KParcelize
 @Serializable
-data class Index(val id: String, val indexers: List<Exp<Value>>) : Exp<Value> {
+data class Index(val id: String, val indexers: List<Exp<@Serializable Value>>) : Exp<Value> {
     constructor(id: String, vararg indexes: Exp<Value>) : this(id, indexes.toList())
 
     override fun getType(assumptions: Map<String, Type>): Type =

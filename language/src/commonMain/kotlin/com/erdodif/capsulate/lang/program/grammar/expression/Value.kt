@@ -8,6 +8,8 @@ import com.erdodif.capsulate.KTypeParceler
 import com.ionspin.kotlin.bignum.BigNumber
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 interface Value : KParcelable {
@@ -16,6 +18,7 @@ interface Value : KParcelable {
     val type: Type
 }
 
+@Serializable
 sealed interface VNum<T : BigNumber<T>> : Value {
     override val type: NUM
     val value: BigNumber<T>
@@ -23,10 +26,12 @@ sealed interface VNum<T : BigNumber<T>> : Value {
 
 @KParcelize
 @JvmInline
+@Serializable
 @KTypeParceler<BigInteger, BigIntParceler>
 value class VNat(
+    @Serializable(with = BigIntSerializer::class)
     override val value: BigInteger
-) : VNum<BigInteger> { // ℕ
+) : VNum<@Serializable(with = BigIntSerializer::class) BigInteger> { // ℕ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -44,9 +49,11 @@ value class VNat(
 @KParcelize
 @JvmInline
 @KTypeParceler<BigInteger, BigIntParceler>
+@Serializable
 value class VWhole(
+    @Serializable(with = BigIntSerializer::class)
     override val value: BigInteger
-) : VNum<BigInteger> { // ℤ
+) : VNum<@Serializable(with = BigIntSerializer::class) BigInteger> { // ℤ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -57,6 +64,7 @@ value class VWhole(
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
     override val type: CHAR
@@ -65,6 +73,7 @@ value class VChr(val value: Char) : Value {  // ℂ
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VStr(val value: String) : Value { // 𝕊
     override fun toString(): String = value.toString()
     override val type: STRING
@@ -73,6 +82,7 @@ value class VStr(val value: String) : Value { // 𝕊
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
     override val type: BOOL
@@ -80,15 +90,17 @@ value class VBool(val value: Boolean) : Value { // 𝔹
 }
 
 @KParcelize
+@Serializable
 data object UNSET : Value {
     override val type: NEVER
         get() = NEVER
 }
 
 @KParcelize
+@Serializable
 @Suppress("UNCHECKED_CAST")
 data class VArray<T : Value>(
-    private val value: Array<T?>,
+    @Contextual private val value: Array<T?>,
     override val type: ARRAY
 ) : Value {
     init {
