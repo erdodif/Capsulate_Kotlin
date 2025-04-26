@@ -7,9 +7,11 @@ import com.erdodif.capsulate.lang.program.grammar.Atomic
 import com.erdodif.capsulate.lang.program.grammar.Parallel
 import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
+import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.util.MatchPos
 import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
 
 @ConsistentCopyVisibility
 @KParcelize
@@ -27,8 +29,8 @@ data class EvaluationContext private constructor(
         currentStatement: Statement?,
     ) : this(env, currentStatement, null)
 
-    @KIgnoredOnParcel
-    private val random = Random(env.seed)
+    private val random: Random
+        get() = env.random
 
     val seed: Int
         get() = env.seed
@@ -81,18 +83,32 @@ data class EvaluationContext private constructor(
         return this.copy()
     }
 
+    private fun handleAbort(reason: String) {
+        error = reason
+        entries.clear()
+        function = null
+        atomicOngoing = null
+        currentStatement = null
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private fun checkDeadLock(stack: EvaluationResult) {
+        if (stack is SingleStatement && stack.next is Wait && stack.next.didLock) {
+            if (entries.isEmpty() || entries.all { it is Wait && it.didLock }) {
+                handleAbort("All statements are waiting, the program has deadlocked!")
+            }
+        } else {
+            entries.forEachIndexed { i, statement ->
+                if (statement is Wait) entries[i] = statement.copy(didLock = false)
+            }
+        }
+    }
+
     private fun handleResult(stack: EvaluationResult) {
         when (stack) {
             is Finished -> {}
             is ReturnEvaluation<*> -> returnValue = stack.value
-            is AbortEvaluation -> {
-                error = stack.reason
-                entries.clear()
-                function = null
-                atomicOngoing = null
-                currentStatement = null
-            }
-
+            is AbortEvaluation -> handleAbort(stack.reason)
             is EvalSequence -> entries.add(stack)
             is AtomicEvaluation -> atomicOngoing =
                 EvaluationContext(env, EvalSequence(stack.statements))
@@ -105,6 +121,7 @@ data class EvaluationContext private constructor(
                 entries.add(stack)
             }
         }
+        checkDeadLock(stack)
         currentStatement =
             if (entries.isEmpty()) null else entries.removeAt(random.nextInt(entries.size))
     }

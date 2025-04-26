@@ -3,7 +3,10 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class Type(open vararg val labels: String) : KParcelable {
     @KIgnoredOnParcel
     open val label: String
@@ -40,27 +43,35 @@ sealed class Type(open vararg val labels: String) : KParcelable {
     }
 }
 
-sealed class NUM(override vararg val labels: String) : Type(*labels)
+@Serializable
+sealed class NUM(@SerialName("numlabels") override vararg val labels: String) : Type(*labels)
 
 @KParcelize
+@Serializable
 data object NAT : NUM("ℕ", "Nat")
 
 @KParcelize
+@Serializable
 data object WHOLE : NUM("ℤ", "Whole", "Int", "Integer")
 
 @KParcelize
+@Serializable
 data object STRING : Type("𝕊", "String")
 
 @KParcelize
+@Serializable
 data object BOOL : Type("𝔹", "Bool", "Boolean")
 
 @KParcelize
+@Serializable
 data object CHAR : Type("ℂ", "Char")
 
 @KParcelize
+@Serializable
 data object NEVER : Type("⊥", "Bot", "Never")
 
 @KParcelize
+@Serializable
 data class ARRAY(val contentType: Type, val size: Int) : Type("Array") {
     @KIgnoredOnParcel
     override val label: String
@@ -87,13 +98,17 @@ data class ARRAY(val contentType: Type, val size: Int) : Type("Array") {
 
 /*Not yet supported*/
 @KParcelize
+@Serializable
 data object FILE : Type("File")
 
 @KParcelize
+@Serializable
 data object STREAM : Type("Stream")
 
 @KParcelize
+@Serializable
 data object TUPLE : Type("Pair")
 
 @KParcelize
+@Serializable
 data object SET : Type("Set")

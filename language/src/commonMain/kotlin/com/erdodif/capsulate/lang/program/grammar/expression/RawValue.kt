@@ -11,9 +11,19 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-sealed class RawValue<out T : Value>(override val match: MatchPos) : Exp<T>, Token(match),
+@KParcelize
+@Serializable
+sealed class RawValue<out T : Value>(@SerialName("value_match") override val match: MatchPos) :
+    Exp<T>, Token(match),
     KParcelable {
     abstract fun get(context: Environment): T
     final override fun evaluate(context: Environment): Either<T, PendingExpression<Value, T>> =
@@ -38,10 +48,21 @@ data class StrLit(val value: String, override val match: MatchPos) : RawValue<VS
     override fun toString(): String = "StrLit:$value"
 }
 
+object BigIntSerializer : KSerializer<BigInteger> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor(BigInteger::class.toString(), PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: BigInteger) =
+        encoder.encodeString(value.toString())
+
+    override fun deserialize(decoder: Decoder): BigInteger = decoder.decodeString().toBigInteger()
+}
+
 @KParcelize
 @Serializable
 @KTypeParceler<BigInteger, BigIntParceler>
 data class IntLit(
+    @Serializable(with = BigIntSerializer::class)
     val value: BigInteger,
     override val match: MatchPos
 ) : RawValue<VWhole>(match) {
@@ -56,6 +77,7 @@ data class IntLit(
 @Serializable
 @KTypeParceler<BigInteger, BigIntParceler>
 data class NatLit(
+    @Serializable(with = BigIntSerializer::class)
     val value: BigInteger,
     override val match: MatchPos
 ) : RawValue<VNat>(match) {

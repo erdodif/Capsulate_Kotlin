@@ -45,6 +45,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @KParcelize
+@Serializable
 open class PendingExpression<R : Value, out T : Value>(
     open val call: FunctionCall<R>,
     open val function: Function<R>,
@@ -138,7 +139,7 @@ fun <R : Value, T : Value, S : Value> Pair<Exp<T>, Exp<S>>.withValue(
 @KParcelize
 @Serializable
 @SerialName("token")
-open class Token(open val match: MatchPos) : KParcelable {
+open class Token(@SerialName("token_match") open val match: MatchPos) : KParcelable {
     inline fun matchedToken(parserState: ParserState): String =
         parserState.input[match.start, match.end]
 
@@ -146,26 +147,31 @@ open class Token(open val match: MatchPos) : KParcelable {
 }
 
 @KParcelize
+@Serializable
 data class KeyWord(val id: String, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(id = id, match = match)
 }
 
 @KParcelize
+@Serializable
 data class Symbol(val id: Char, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(id = id, match = match)
 }
 
 @KParcelize
+@Serializable
 data class LineEnd(val char: Char, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(char = char, match = match)
 }
 
 @KParcelize
+@Serializable
 data class Comment(val content: String, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(content = content, match = match)
 }
 
 @KParcelize
+@Serializable
 data class Assume(val id: String, val type: Type, override val match: MatchPos) : Token(match) {
     override fun copy(match: MatchPos): Token = copy(id = id, match = match)
 }

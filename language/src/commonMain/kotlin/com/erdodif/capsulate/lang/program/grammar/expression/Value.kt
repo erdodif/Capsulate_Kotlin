@@ -5,15 +5,11 @@ import com.erdodif.capsulate.KIgnoredOnParcel
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.KTypeParceler
-import com.erdodif.capsulate.lang.program.evaluation.Environment
-import com.erdodif.capsulate.lang.util.Either
-import com.erdodif.capsulate.lang.util.Left
-import com.erdodif.capsulate.lang.util.ParserState
-import com.erdodif.capsulate.lang.util.Right
-import com.erdodif.capsulate.lang.util.toInt
 import com.ionspin.kotlin.bignum.BigNumber
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 interface Value : KParcelable {
@@ -22,6 +18,7 @@ interface Value : KParcelable {
     val type: Type
 }
 
+@Serializable
 sealed interface VNum<T : BigNumber<T>> : Value {
     override val type: NUM
     val value: BigNumber<T>
@@ -29,10 +26,12 @@ sealed interface VNum<T : BigNumber<T>> : Value {
 
 @KParcelize
 @JvmInline
+@Serializable
 @KTypeParceler<BigInteger, BigIntParceler>
 value class VNat(
+    @Serializable(with = BigIntSerializer::class)
     override val value: BigInteger
-) : VNum<BigInteger> { // ℕ
+) : VNum<@Serializable(with = BigIntSerializer::class) BigInteger> { // ℕ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -50,9 +49,11 @@ value class VNat(
 @KParcelize
 @JvmInline
 @KTypeParceler<BigInteger, BigIntParceler>
+@Serializable
 value class VWhole(
+    @Serializable(with = BigIntSerializer::class)
     override val value: BigInteger
-) : VNum<BigInteger> { // ℤ
+) : VNum<@Serializable(with = BigIntSerializer::class) BigInteger> { // ℤ
     constructor(value: String) : this(value.toBigInteger())
     constructor(value: Int) : this(value.toBigInteger())
 
@@ -63,6 +64,7 @@ value class VWhole(
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VChr(val value: Char) : Value {  // ℂ
     override fun toString(): String = value.toString()
     override val type: CHAR
@@ -71,6 +73,7 @@ value class VChr(val value: Char) : Value {  // ℂ
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VStr(val value: String) : Value { // 𝕊
     override fun toString(): String = value.toString()
     override val type: STRING
@@ -79,6 +82,7 @@ value class VStr(val value: String) : Value { // 𝕊
 
 @KParcelize
 @JvmInline
+@Serializable
 value class VBool(val value: Boolean) : Value { // 𝔹
     override fun toString(): String = value.toString()
     override val type: BOOL
@@ -86,15 +90,17 @@ value class VBool(val value: Boolean) : Value { // 𝔹
 }
 
 @KParcelize
+@Serializable
 data object UNSET : Value {
     override val type: NEVER
         get() = NEVER
 }
 
 @KParcelize
+@Serializable
 @Suppress("UNCHECKED_CAST")
 data class VArray<T : Value>(
-    private val value: Array<T?>,
+    @Contextual private val value: Array<T?>,
     override val type: ARRAY
 ) : Value {
     init {
@@ -179,51 +185,4 @@ data class VArray<T : Value>(
     override fun toString(): String = value.joinToString(prefix = "[", postfix = "]")
     override fun hashCode(): Int = type.hashCode() * 3100 + value.contentHashCode()
 
-    @KParcelize
-    data class Index(val id: String, val indexers: List<Exp<Value>>) : Exp<Value> {
-        constructor(id: String, vararg indexes: Exp<Value>) : this(id, indexes.toList())
-
-        override fun getType(assumptions: Map<String, Type>): Type =
-            when (val assume = assumptions[id]) {
-                is ARRAY -> assume.contentType
-                else -> NEVER
-            }
-
-        override fun evaluate(context: Environment): Either<Value, PendingExpression<Value, Value>> =
-            indexers.withRawValue(context) { indexers ->
-                if (indexers.any { it !is VNum<*> || it.value !is BigInteger }) {
-                    error(
-                        "Cannot index with non-numbers! Got: " + indexers
-                            .mapIndexed { index, a -> a to index }
-                            .filter { it.first !is VNum<*> }
-                            .joinToString(postfix = ".") { (value, index) -> "${value.type} at ${index + 1}" }
-
-                    )
-                }
-                indexers as List<VNum<BigInteger>>
-                if (indexers.any { it.value.compareTo(Int.MAX_VALUE.toBigInteger()) > 0 }) {
-                    error(
-                        "Cannot index with numbers larger than the platform's maximum number " +
-                                "(which is ${Int.MAX_VALUE})! Got: " + indexers
-                            .mapIndexed { index, a -> a to index }
-                            .filter { it.first.value.compareTo(Int.MAX_VALUE.toBigInteger()) > 0 }
-                            .joinToString(postfix = ".") { (value, index) -> "${value.value} at ${index + 1}" }
-
-                    )
-                }
-                when (val param = context.get(id)) {
-                    is Left -> when (val value = param.value) {
-                        is VArray<*> -> value.get(indexes = indexers.map { (it.value as BigInteger).toInt() }
-                            .toIntArray())
-
-                        else -> error("Can't index non-array ($id : ${value.type})")
-                    }
-
-                    is Right -> error("Can't index on missing parameter '$id'")
-                }
-            }
-
-        override fun toString(state: ParserState, parentStrength: Int): String =
-            id + indexers.joinToString(separator = "") { "[${it.toString(state, parentStrength)}]" }
-    }
 }

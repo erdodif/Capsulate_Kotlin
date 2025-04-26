@@ -71,7 +71,7 @@ open class ParserState(
         }
     }
 
-    internal inline fun <T> withFunctionScope(label:String, crossinline parser: Parser<T>): ParserResult<T> {
+    internal inline fun <T> withFunctionScope(label: String, crossinline parser: Parser<T>): ParserResult<T> {
         currentFunctionLabel = label
         val result = parser()
         currentFunctionLabel = null

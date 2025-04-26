@@ -2,7 +2,6 @@ package com.erdodif.capsulate.lang.program.grammar
 
 import com.erdodif.capsulate.assert
 import com.erdodif.capsulate.at
-import com.erdodif.capsulate.fail
 import com.erdodif.capsulate.lang.program.grammar.expression.IntLit
 import com.erdodif.capsulate.lang.util.bg
 import com.erdodif.capsulate.pass
@@ -40,8 +39,8 @@ class IndexTest {
     }
 
     @Test
-    fun `indexer fails on missing indexer`() {
-        index fail "a" at 1
+    fun `indexer passes without indexer`() {
+        index pass "a" at 1
     }
 
     @Test
