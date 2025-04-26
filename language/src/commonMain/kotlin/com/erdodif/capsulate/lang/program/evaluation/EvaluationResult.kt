@@ -15,11 +15,14 @@ import com.erdodif.capsulate.lang.util.MatchPos
 import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.fold
+import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@Serializable
 sealed interface EvaluationResult : KParcelable
 
+@Serializable
 class FunctionState<R : Value, T : Value>(
     val env: Environment, exp: PendingExpression<R, T>
 ) : PendingExpression<R, T>(exp.call, exp.function, exp.onValue) {
@@ -62,6 +65,7 @@ class FunctionState<R : Value, T : Value>(
 }
 
 @KParcelize
+@Serializable
 data class PendingMethodEvaluation(
     val method: Method, val context: EvaluationContext
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
@@ -87,8 +91,10 @@ data class PendingMethodEvaluation(
 }
 
 @KParcelize
+@Serializable
 data class PendingFunctionEvaluation<T : Value>(
-    val expression: PendingExpression<Value, T>, val callback: Environment.(T) -> EvaluationResult
+    val expression: PendingExpression<Value, T>,
+    val callback: @Serializable Environment.(T) -> EvaluationResult
 ) : EvaluationResult, Statement(match = MatchPos.ZERO) {
     val head: Statement?
         get() = if (expression is FunctionState) expression.head else Skip(MatchPos.ZERO)
@@ -187,15 +193,19 @@ data class EvalSequence(val statements: ArrayDeque<Statement>) : EvaluationResul
 }
 
 @KParcelize
+@Serializable
 data class SingleStatement(val next: Statement) : EvaluationResult
 
 @KParcelize
+@Serializable
 data object Finished : EvaluationResult
 
 @KParcelize
+@Serializable
 data class ReturnEvaluation<T : Value>(val value: T) : EvaluationResult
 
 @KParcelize
+@Serializable
 data class AbortEvaluation(val reason: String = "") : EvaluationResult {
     companion object {
         fun logged(reason: String): AbortEvaluation =
@@ -204,7 +214,9 @@ data class AbortEvaluation(val reason: String = "") : EvaluationResult {
 }
 
 @KParcelize
+@Serializable
 data class AtomicEvaluation(val statements: List<Statement>) : EvaluationResult
 
 @KParcelize
+@Serializable
 data class ParallelEvaluation(val entries: List<Statement>) : EvaluationResult
