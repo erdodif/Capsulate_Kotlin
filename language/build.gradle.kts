@@ -12,6 +12,11 @@ plugins {
     kotlin("plugin.serialization") version "1.5.30"
 }
 
+dependencies {
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.koin.test.junit4)
+}
+
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -48,6 +53,10 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(kotlin("reflect"))
         }
+        androidInstrumentedTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(kotlin("reflect"))
+        }
         androidTarget {
             @OptIn(ExperimentalKotlinGradlePluginApi::class)
             compilerOptions.freeCompilerArgs.addAll(
@@ -67,6 +76,10 @@ android {
     }
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    testOptions {
+        animationsDisabled = true
     }
 }
 

@@ -26,7 +26,7 @@ actual annotation class KParcelize
 @OptIn(ExperimentalMultiplatform::class)
 @Target(AnnotationTarget.TYPE)
 @Retention(AnnotationRetention.BINARY)
-actual annotation class RawValue
+actual annotation class KRawValue
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 actual annotation class KIgnoredOnParcel actual constructor()

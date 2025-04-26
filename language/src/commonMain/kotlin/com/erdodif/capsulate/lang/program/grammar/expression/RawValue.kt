@@ -3,6 +3,7 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 import com.erdodif.capsulate.BigIntParceler
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.KRawValue
 import com.erdodif.capsulate.KTypeParceler
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.util.Either
@@ -60,10 +61,10 @@ object BigIntSerializer : KSerializer<BigInteger> {
 
 @KParcelize
 @Serializable
-@KTypeParceler<BigInteger, BigIntParceler>
 data class IntLit(
+    @KTypeParceler<BigInteger, BigIntParceler>
     @Serializable(with = BigIntSerializer::class)
-    val value: BigInteger,
+    val value: @KRawValue BigInteger,
     override val match: MatchPos
 ) : RawValue<VWhole>(match) {
     constructor(value: Int, match: MatchPos) : this(value.toBigInteger(), match)
@@ -75,10 +76,10 @@ data class IntLit(
 
 @KParcelize
 @Serializable
-@KTypeParceler<BigInteger, BigIntParceler>
 data class NatLit(
+    @KTypeParceler<BigInteger, BigIntParceler>
     @Serializable(with = BigIntSerializer::class)
-    val value: BigInteger,
+    val value: @KRawValue BigInteger,
     override val match: MatchPos
 ) : RawValue<VNat>(match) {
     constructor(value: Int, match: MatchPos) : this(value.toBigInteger(), match)

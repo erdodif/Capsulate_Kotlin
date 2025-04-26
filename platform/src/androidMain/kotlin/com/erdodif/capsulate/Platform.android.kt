@@ -44,7 +44,7 @@ actual typealias KParcelable = Parcelable
 actual typealias KIgnoredOnParcel = IgnoredOnParcel
 actual typealias KParceler<T> = Parceler<T>
 actual typealias KTypeParceler<T, P> = TypeParceler<T, P>
-actual typealias RawValue = RawValue
+actual typealias KRawValue = RawValue
 
 @Composable
 actual fun LocateSetting() {
