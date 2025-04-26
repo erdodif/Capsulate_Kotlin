@@ -18,8 +18,8 @@ data class Index(val id: String, val indexers: @KRawValue List<Exp<Value>>) : Ex
     constructor(id: String, vararg indexes: Exp<Value>) : this(id, indexes.toList())
 
     override fun getType(assumptions: Map<String, Type>): Type =
-        when (val assume = assumptions[id]) {
-            is ARRAY -> assume.contentType
+        if (indexers.isEmpty()) assumptions[id] ?: NEVER else when (val assume = assumptions[id]) {
+            is ARRAY -> assume.typeOnLevel(indexers.size)
             else -> NEVER
         }
 
