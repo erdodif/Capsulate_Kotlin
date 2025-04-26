@@ -292,7 +292,7 @@ class EditorPage : Ui<State> {
                             }
                         }
                     }
-                    items(state.structogram.methods, { it.hashCode() }) { method ->
+                    items(state.structogram.methods) { method ->
                         Box(itemModifier.verticalScroll(rememberScrollState())) {
                             method.asStructogram().Content(
                                 modifier = Modifier.fillMaxWidth().imageExportable(),

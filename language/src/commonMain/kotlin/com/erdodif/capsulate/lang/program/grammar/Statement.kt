@@ -392,12 +392,16 @@ data class Select(
 @KParcelize
 @Serializable
 data class ParallelAssign(
-    val assigns: List<Pair<Index, Exp<Value>>>,
+    private val indexes: List<Index>,
+    private val values: List<Exp<Value>>,
     override val id: Uuid,
     override val match: MatchPos
 ) : Statement(id, match) {
+    val assigns: List<Pair<Index, Exp<Value>>>
+        get() = indexes.zip(values)
+
     constructor(assigns: List<Pair<Index, Exp<Value>>>, match: MatchPos) :
-            this(assigns, Uuid.random(), match)
+            this(assigns.map { it.first }, assigns.map { it.second }, Uuid.random(), match)
 
     override fun evaluate(env: Environment): EvaluationResult =
         assigns.map { it.first }.flatMap { it.indexers }.joinAll(env) { indexValues ->

@@ -11,9 +11,11 @@ compose-plugin = "1.7.3"
 composeDnd = "0.3.0"
 coreSplashscreen = "1.0.1"
 detektRulesCompose = "1.4.0"
+espressoCore = "3.6.1"
 filekitCore = "0.8.8"
 kermit = "2.0.5"
 kmpfileFilekit = "0.7.0"
+koinTestJunit4 = "3.0.2"
 kotlin = "2.1.20"
 kotlinCodepoints = "0.9.0"
 kotlinx-coroutines = "1.10.2"
@@ -32,6 +34,7 @@ kotlinx-collection = "0.3.8"
 
 [libraries]
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 circuit-foundation = { module = "com.slack.circuit:circuit-foundation", version.ref = "circuitFoundation" }
 circuit-overlay = { module = "com.slack.circuit:circuit-overlay", version.ref = "circuitFoundation" }
@@ -44,6 +47,7 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kmpfile = { module = "dev.zwander:kmpfile", version.ref = "kmpfileFilekit" }
 kmpfile-filekit = { module = "dev.zwander:kmpfile-filekit", version.ref = "kmpfileFilekit" }
 kmpfile-okio = { module = "dev.zwander:kmpfile-okio", version.ref = "kmpfileFilekit" }
+koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4", version.ref = "koinTestJunit4" }
 kotlin-codepoints = { module = "de.cketti.unicode:kotlin-codepoints-deluxe", version.ref = "kotlinCodepoints" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

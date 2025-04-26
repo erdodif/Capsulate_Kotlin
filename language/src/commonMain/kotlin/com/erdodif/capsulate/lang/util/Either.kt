@@ -2,7 +2,7 @@ package com.erdodif.capsulate.lang.util
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
-import com.erdodif.capsulate.RawValue
+import com.erdodif.capsulate.KRawValue
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,11 +10,11 @@ sealed interface Either<out T, out R> : KParcelable
 
 @Serializable
 @KParcelize
-data class Left<out T>(val value: @RawValue T) : Either<T, Nothing>
+data class Left<out T>(val value: @KRawValue T) : Either<T, Nothing>
 
 @Serializable
 @KParcelize
-data class Right<out R>(val value: @RawValue R) : Either<Nothing, R>
+data class Right<out R>(val value: @KRawValue R) : Either<Nothing, R>
 
 inline operator fun <T, R, S> Either<T, R>.get(
     crossinline left: (T) -> S,

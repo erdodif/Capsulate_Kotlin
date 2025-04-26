@@ -29,7 +29,7 @@ actual annotation class KParcelize
 @OptIn(ExperimentalMultiplatform::class)
 @Target(AnnotationTarget.TYPE)
 @Retention(AnnotationRetention.BINARY)
-actual annotation class RawValue
+actual annotation class KRawValue
 @Repeatable
 @Retention(value = AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)

@@ -18,7 +18,7 @@ expect annotation class KParcelize()
 @OptIn(ExperimentalMultiplatform::class)
 @Target(AnnotationTarget.TYPE)
 @Retention(AnnotationRetention.BINARY)
-expect annotation class RawValue()
+expect annotation class KRawValue()
 
 expect interface KParcelable
 

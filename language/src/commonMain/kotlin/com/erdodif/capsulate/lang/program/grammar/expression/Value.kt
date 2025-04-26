@@ -27,8 +27,8 @@ sealed interface VNum<T : BigNumber<T>> : Value {
 @KParcelize
 @JvmInline
 @Serializable
-@KTypeParceler<BigInteger, BigIntParceler>
 value class VNat(
+    @KTypeParceler<BigInteger, BigIntParceler>
     @Serializable(with = BigIntSerializer::class)
     override val value: BigInteger
 ) : VNum<@Serializable(with = BigIntSerializer::class) BigInteger> { // ℕ
@@ -48,9 +48,9 @@ value class VNat(
 
 @KParcelize
 @JvmInline
-@KTypeParceler<BigInteger, BigIntParceler>
 @Serializable
 value class VWhole(
+    @KTypeParceler<BigInteger, BigIntParceler>
     @Serializable(with = BigIntSerializer::class)
     override val value: BigInteger
 ) : VNum<@Serializable(with = BigIntSerializer::class) BigInteger> { // ℤ
