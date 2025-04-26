@@ -118,20 +118,11 @@ class EditorPage : Ui<State> {
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Column(Modifier.fillMaxWidth().weight(1f)) {
-                                        codeEdit().Content(
-                                            state,
-                                            Modifier.fillMaxWidth()
-                                                .defaultMinSize(minHeight = 60.dp)
-                                        )
-                                    }
-                                    if (state.showCode && state.showStructogram)
-                                        Spacer(
-                                            Modifier.fillMaxWidth().padding(3.dp, 2.dp)
-                                                .background(MaterialTheme.colorScheme.surface)
-                                                .height(3.dp)
-                                        )
-                                    if (!state.dragStatements) {
+                                    codeEdit().Content(
+                                        state,
+                                        Modifier.fillMaxWidth().weight(1f)
+                                    )
+                                    if (!state.dragStatements && !state.showStructogram) {
                                         StructogramList(state, Modifier.weight(1f).padding(0.dp))
                                     } else {
                                         structogram().Content(
@@ -185,17 +176,19 @@ class EditorPage : Ui<State> {
                         )
                     }
                 }
-                item {
-                    Row(
-                        Modifier.padding(5.dp, 0.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(Res.string.drag))
-                        Switch(
-                            state.dragStatements,
-                            { state.eventHandler(Event.ToggleStatementDrag) },
-                            Modifier.padding(5.dp, 1.dp)
-                        )
+                if (state.showStructogram) {
+                    item {
+                        Row(
+                            Modifier.padding(5.dp, 0.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(Res.string.drag))
+                            Switch(
+                                state.dragStatements,
+                                { state.eventHandler(Event.ToggleStatementDrag) },
+                                Modifier.padding(5.dp, 1.dp)
+                            )
+                        }
                     }
                 }
                 item {
@@ -318,51 +311,52 @@ class EditorPage : Ui<State> {
     @OptIn(ExperimentalUuidApi::class, ExperimentalSharedTransitionApi::class)
     internal fun structogram(): Ui<State> = ui { state, modifier ->
         val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-        if (state.showStructogram)
-            Column(
-                modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                if (state.structogram != null) {
-                    SharedElementTransitionScope {
-                        state.structogram.Content(
-                            Modifier.horizontalScroll(
-                                rememberScrollState()
-                            ).sharedElement(
-                                rememberSharedContentState(state.structogram),
-                                requireAnimatedScope(
-                                    SharedElementTransitionScope.AnimatedScope.Navigation
-                                )
-                            ),
-                            state.dragStatements,
-                            null,
-                            { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
-                        )
-                    }
-                } else {
-                    Text("Error", Modifier.fillMaxWidth())
-                }
-                if (!keyboardUp && state.dragStatements) {
-                    StatementDrawer(
-                        Modifier.heightIn(100.dp, 400.dp)
-                            .padding(20.dp)
-                            .background(MaterialTheme.colorScheme.tertiaryContainer)
+        Column(
+            modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (state.structogram != null) {
+                SharedElementTransitionScope {
+                    state.structogram.Content(
+                        Modifier.horizontalScroll(
+                            rememberScrollState()
+                        ).sharedElement(
+                            rememberSharedContentState(state.structogram),
+                            requireAnimatedScope(
+                                SharedElementTransitionScope.AnimatedScope.Navigation
+                            )
+                        ).let { if (state.dragStatements) it else it.imageExportable() },
+                        state.dragStatements,
+                        null,
+                        { state.eventHandler(Event.DroppedStatement(it.first, it.second)) }
                     )
                 }
+            } else {
+                Text("Error", Modifier.fillMaxWidth())
             }
+            if (!keyboardUp && state.dragStatements) {
+                StatementDrawer(
+                    Modifier.heightIn(100.dp, 400.dp)
+                        .padding(20.dp)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                )
+            }
+        }
     }
 
     internal fun codeEdit(): Ui<State> = ui { state, modifier ->
         if (state.showCode)
-            CodeEditor(
-                modifier,
-                state.code,
-                state.tokenized,
-                state.focusRequester,
-                { state.eventHandler(Event.OpenUnicodeInput) }
-            ) {
-                state.eventHandler(Event.TextInput(it))
+            Column(modifier) {
+                CodeEditor(
+                    Modifier.fillMaxWidth().defaultMinSize(minHeight = 60.dp),
+                    state.code,
+                    state.tokenized,
+                    state.focusRequester,
+                    { state.eventHandler(Event.OpenUnicodeInput) }
+                ) {
+                    state.eventHandler(Event.TextInput(it))
+                }
             }
         if (state.input)
             OverlayEffect(state) {
