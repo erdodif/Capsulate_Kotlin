@@ -79,7 +79,7 @@ data class EvaluationContext private constructor(
                 currentStatement = next
             }
         }
-        handleResult(current!!.evaluate(env))
+        handleResult(currentStatement!!.evaluate(env))
         return this.copy()
     }
 

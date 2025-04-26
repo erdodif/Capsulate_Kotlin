@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.erdodif.capsulate.KParcelize
 import com.erdodif.capsulate.lang.program.evaluation.Environment
 import com.erdodif.capsulate.lang.program.evaluation.EvalSequence
@@ -73,8 +74,8 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
     @Composable
     override fun present(): State {
         val listState = rememberLazyListState()
-        var step by remember { mutableStateOf(0) }
-        var debug by remember {
+        var step by rememberSaveable { mutableStateOf(0) }
+        var debug by rememberSaveable {
             mutableStateOf(
                 EvaluationContext(
                     screen.structogram.toEnv(),
