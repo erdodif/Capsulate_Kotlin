@@ -102,10 +102,10 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
         var structogram: Structogram by rememberRetained {
             mutableStateOf(Structogram.fromStatements(Command("", Skip(MatchPos.ZERO))))
         }
-        var showCode by remember { mutableStateOf(true) }
-        var showStructogram by remember { mutableStateOf(true) }
-        var dragStatements by remember { mutableStateOf(false) }
-        var input by remember { mutableStateOf(false) }
+        var showCode by rememberSaveable { mutableStateOf(true) }
+        var showStructogram by rememberSaveable { mutableStateOf(true) }
+        var dragStatements by rememberSaveable { mutableStateOf(false) }
+        var input by rememberSaveable { mutableStateOf(false) }
         var loading by remember { mutableStateOf(true) }
         var tokenized: ParserResult<List<Token>>
                 by remember { mutableStateOf(Fail("", ParserState(inputValue.text))) }
@@ -181,7 +181,12 @@ class EditorPresenter(val screen: EditorScreen, val navigator: Navigator) :
                 }
 
                 is Event.ToggleCode -> showCode = !showCode
-                is Event.ToggleStructogram -> showStructogram = !showStructogram
+                is Event.ToggleStructogram -> {
+                    showStructogram = !showStructogram
+                    if(!showStructogram){
+                        dragStatements = false
+                    }
+                }
                 is Event.Close -> navigator.pop()
                 is Event.Run -> {
                     Logger.d { "Navigating" }
