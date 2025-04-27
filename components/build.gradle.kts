@@ -41,6 +41,9 @@ kotlin {
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
             implementation(libs.kotlin.codepoints)
+            implementation(libs.adaptive)
+            implementation(libs.adaptive.layout)
+            implementation(libs.adaptive.navigation)
             // -- Modules --
             implementation(projects.platform)
             implementation(projects.language)
