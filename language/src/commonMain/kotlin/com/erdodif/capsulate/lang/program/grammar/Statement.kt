@@ -158,15 +158,16 @@ data class When(
             if (it is VBool) {
                 when {
                     it.value -> EvalSequence(source.second)
-                    blocks.isEmpty() -> {
-                        if(elseBlock == null){
-                            AbortEvaluation("When conditions exhausted, Abort happens by definition")
-                        }
-                        else{
-                            EvalSequence(elseBlock)
-                        }
-                    }
-                    else -> SingleStatement(this@When.copy(blocks = shallowBlocks))
+                    shallowBlocks.isEmpty() && (this@When.elseBlock == null) ->
+                        AbortEvaluation("When conditions exhausted, Abort happens by definition")
+
+                    shallowBlocks.isEmpty() -> EvalSequence(this@When.elseBlock!!.toList())
+                    else -> SingleStatement(
+                        this@When.copy(
+                            blocks = shallowBlocks,
+                            elseBlock = this@When.elseBlock?.toList()
+                        )
+                    )
                 }
             } else {
                 AbortEvaluation("Condition must be a logical expression")
