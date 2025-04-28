@@ -22,6 +22,7 @@ import com.erdodif.capsulate.pages.screen.DebugScreen.State
 import com.erdodif.capsulate.structogram.ComposableFunction
 import com.erdodif.capsulate.structogram.Structogram
 import com.erdodif.capsulate.utility.screenPresenterFactory
+import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
@@ -75,7 +76,7 @@ class DebugPresenter(val screen: DebugScreen, val navigator: Navigator) : Presen
     override fun present(): State {
         val listState = rememberLazyListState()
         var step by rememberSaveable { mutableStateOf(0) }
-        var debug by rememberSaveable {
+        var debug by rememberRetained {
             mutableStateOf(
                 EvaluationContext(
                     screen.structogram.toEnv(),

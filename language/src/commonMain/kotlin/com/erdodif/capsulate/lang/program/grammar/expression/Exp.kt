@@ -4,6 +4,7 @@ package com.erdodif.capsulate.lang.program.grammar.expression
 
 import com.erdodif.capsulate.KParcelable
 import com.erdodif.capsulate.KParcelize
+import com.erdodif.capsulate.KRawValue
 import com.erdodif.capsulate.lang.program.grammar.EOF
 import com.erdodif.capsulate.lang.program.grammar.and
 import com.erdodif.capsulate.lang.program.grammar.anyChar
@@ -49,7 +50,7 @@ import kotlinx.serialization.Serializable
 open class PendingExpression<R : Value, out T : Value>(
     open val call: FunctionCall<R>,
     open val function: Function<R>,
-    open val onValue: @Serializable Environment.(R) -> Either<T, PendingExpression<Value, T>>
+    open val onValue: @KRawValue @Serializable Environment.(R) -> Either<T, PendingExpression<Value, T>>
 ) : KParcelable {
 
     fun <S : Value> map(transform: Environment.(T) -> S): PendingExpression<R, S> =

@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     id("kotlin-parcelize")
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    kotlin("plugin.serialization") version "1.5.30"
+    kotlin("plugin.serialization") version  libs.versions.kotlinx.serialization
 }
 
 kotlin {

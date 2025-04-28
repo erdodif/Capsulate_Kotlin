@@ -10,11 +10,13 @@ import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.Wait
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
 import com.erdodif.capsulate.lang.util.MatchPos
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 
 @ConsistentCopyVisibility
 @KParcelize
+@Serializable
 data class EvaluationContext private constructor(
     var env: Environment,
     private var currentStatement: Statement?,
