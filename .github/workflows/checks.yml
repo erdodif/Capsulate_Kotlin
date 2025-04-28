@@ -41,6 +41,8 @@ jobs:
           distribution: 'jetbrains'
           java-version: 21
           cache: 'gradle'
+        env: # because of the possible rate-limit
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Setup | Gradle"
         uses: gradle/actions/setup-gradle@v4
