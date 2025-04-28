@@ -7,6 +7,8 @@ import com.erdodif.capsulate.lang.program.grammar.Skip
 import com.erdodif.capsulate.lang.program.grammar.Statement
 import com.erdodif.capsulate.lang.program.grammar.expression.PendingExpression
 import com.erdodif.capsulate.lang.program.grammar.expression.Value
+import com.erdodif.capsulate.lang.program.grammar.function.Function
+import com.erdodif.capsulate.lang.program.grammar.function.FunctionCall
 import com.erdodif.capsulate.lang.program.grammar.function.Method
 import com.erdodif.capsulate.lang.util.Either
 import com.erdodif.capsulate.lang.util.Formatting
@@ -16,6 +18,7 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util.Right
 import com.erdodif.capsulate.lang.util.fold
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -23,9 +26,19 @@ import kotlin.uuid.Uuid
 sealed interface EvaluationResult : KParcelable
 
 @Serializable
-class FunctionState<R : Value, T : Value>(
-    val env: Environment, exp: PendingExpression<R, T>
-) : PendingExpression<R, T>(exp.call, exp.function, exp.onValue) {
+class FunctionState<R : Value, T : Value>
+private constructor(
+    val env: Environment,
+    @SerialName("self_call")
+    override val call: FunctionCall<R>,
+    @SerialName("self_function")
+    override val function: Function<R>,
+    @SerialName("self_on_value")
+    override val onValue: @Serializable (Environment.(R) -> Either<T, PendingExpression<Value, T>>)
+) : PendingExpression<R, T>(call, function, onValue) {
+    constructor(env: Environment, exp: PendingExpression<R, T>) :
+            this(env, exp.call, exp.function, exp.onValue)
+
     val context = EvaluationContext(
         env, when (function.body.size) {
             0 -> null

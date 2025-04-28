@@ -20,10 +20,12 @@ import com.erdodif.capsulate.lang.util.ParserState
 import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
+import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @KParcelize
+@Serializable
 data class Method(
     val pattern: Pattern,
     val program: List<Statement>

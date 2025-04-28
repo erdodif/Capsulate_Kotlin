@@ -40,10 +40,12 @@ import com.erdodif.capsulate.lang.util._keyword
 import com.erdodif.capsulate.lang.util._nonKeyword
 import com.erdodif.capsulate.lang.util.div
 import com.erdodif.capsulate.lang.util.get
+import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @KParcelize
+@Serializable
 data class Function<out T : Value>(
     val name: String,
     val parameters: List<Variable>,
@@ -82,6 +84,7 @@ data class Function<out T : Value>(
 }
 
 @KParcelize
+@Serializable
 data class FunctionCall<T : Value>(
     val name: String,
     val values: List<Exp<Value>>,

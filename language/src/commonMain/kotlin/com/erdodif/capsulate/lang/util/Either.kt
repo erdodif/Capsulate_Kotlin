@@ -10,11 +10,11 @@ sealed interface Either<out T, out R> : KParcelable
 
 @Serializable
 @KParcelize
-data class Left<out T>(val value: @KRawValue T) : Either<T, Nothing>
+data class Left<out T>(val value: @Serializable @KRawValue T) : Either<T, Nothing>
 
 @Serializable
 @KParcelize
-data class Right<out R>(val value: @KRawValue R) : Either<Nothing, R>
+data class Right<out R>(val value: @Serializable @KRawValue R) : Either<Nothing, R>
 
 inline operator fun <T, R, S> Either<T, R>.get(
     crossinline left: (T) -> S,
