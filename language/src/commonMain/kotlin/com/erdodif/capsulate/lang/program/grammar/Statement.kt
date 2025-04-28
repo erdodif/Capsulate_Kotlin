@@ -152,15 +152,22 @@ data class When(
 
     override fun evaluate(env: Environment): EvaluationResult {
         if (blocks.isEmpty()) return AbortEvaluation("When conditions exhausted, Abort happens by definition")
-        val source = blocks.removeAt(env.random.nextInt(blocks.size))
+        val shallowBlocks = blocks.toList().toMutableList()
+        val source = shallowBlocks.removeAt((env.random.nextInt(blocks.size)))
         return source.first.join(env) {
             if (it is VBool) {
                 when {
                     it.value -> EvalSequence(source.second)
-                    blocks.isEmpty() ->
+                    shallowBlocks.isEmpty() && (this@When.elseBlock == null) ->
                         AbortEvaluation("When conditions exhausted, Abort happens by definition")
 
-                    else -> SingleStatement(this@When)
+                    shallowBlocks.isEmpty() -> EvalSequence(this@When.elseBlock!!.toList())
+                    else -> SingleStatement(
+                        this@When.copy(
+                            blocks = shallowBlocks,
+                            elseBlock = this@When.elseBlock?.toList()
+                        )
+                    )
                 }
             } else {
                 AbortEvaluation("Condition must be a logical expression")
@@ -174,16 +181,19 @@ data class When(
             blocks.fencedForEach { block ->
                 print(block.first.toString(state) + " : ")
                 if (block.second.count() < 2) {
-                    val lines = block.second.firstOrNull()?.onFormat(this, state) ?: print("{ }")
+                    print("{")
+                    val lines = block.second.firstOrNull()?.onFormat(this, state) ?: 0
+                    print("}")
                     print(",")
                     lines + 1
                 } else {
-                    printLine("{")
+                    print("{")
                     val lines = singleCondition@ indent {
                         block.second.fencedForEach {
                             it.onFormat(this, state)
                         }
                     }
+                    breakLine()
                     print("},")
                     lines + 2
                 }

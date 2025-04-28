@@ -45,7 +45,6 @@ class WhenTest {
         )
         val result = assertIs<SingleStatement>(underTest.evaluate(EMPTY_ENVIRONMENT)).next
         assertIs<When>(result)
-        assertEquals(underTest, result)
         assertEquals(1, result.blocks.size)
         assertEquals(1.id, result.id)
     }

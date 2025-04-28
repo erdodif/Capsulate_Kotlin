@@ -59,24 +59,19 @@ class WhenStatement(
 ) : ComposableStatement<When>(statement) {
     constructor(statement: When, state: ParserState) : this(statement.blocks.map { block ->
         Block(
-            block.first.toString(state),
-            block.second.map { fromStatement(state, it) }
-        )
+            block.first.toString(state), block.second.map { fromStatement(state, it) })
     }.toMutableList().also { blocks ->
         if (statement.elseBlock != null) blocks.add(
             Block(
                 "else", (statement.elseBlock as Iterable<Any?>).map {
                     fromStatement(state, it as Statement)
-                }
-            )
+                })
         )
     }.toTypedArray(), statement)
 
     @Composable
     override fun Show(
-        modifier: Modifier,
-        draggable: Boolean,
-        activeStatement: Uuid?
+        modifier: Modifier, draggable: Boolean, activeStatement: Uuid?
     ) {
         val density = LocalDensity.current
         var size by remember { mutableStateOf(DpSize.Zero) }
@@ -85,16 +80,13 @@ class WhenStatement(
             derivedStateOf { blocks.takeWhile { it.condition != "else" }.toTypedArray() }
         }
         val elseBranch by remember { derivedStateOf { this.blocks.firstOrNull { it.condition == "else" } } }
-        Column {
+        Column(Modifier.background(MaterialTheme.colorScheme.primary)) {
             if (!isDragging && draggable) {
                 DropTarget(LocalDraggingStatement.current, statement.match.start)
             }
             Row(
                 modifier.dim(isDragging).clip(RectangleShape).fillMaxWidth()
-                    .height(IntrinsicSize.Min)
-                    .onDpSize(density) { size = it }
-                    .conditional(Modifier.background(MaterialTheme.colorScheme.tertiary))
-                    { statement.id == activeStatement }
+                    .height(IntrinsicSize.Min).onDpSize(density) { size = it }
             ) {
                 var maxHeight by remember { mutableStateOf(0.dp) }
                 StackWithSeparator(blocks, {
@@ -103,11 +95,18 @@ class WhenStatement(
                             isDragging = dragging
                             Row(Modifier.height(IntrinsicSize.Min)) {
                                 StatementText(
-                                    it.condition, modifier = Modifier.onSizeChanged {
-                                        maxHeight = max(
-                                            maxHeight, (it.height.toFloat() / density.density).dp
-                                        )
-                                    }.caseIndicator().fillMaxWidth()
+                                    it.condition,
+                                    modifier = Modifier
+                                        .conditional(
+                                            Modifier.background(MaterialTheme.colorScheme.tertiary)
+                                        ) { statement.id == activeStatement }
+                                        .onSizeChanged {
+                                            maxHeight = max(
+                                                maxHeight,
+                                                (it.height.toFloat() / density.density).dp
+                                            )
+                                        }
+                                        .caseIndicator().fillMaxWidth()
                                         .defaultMinSize(minHeight = maxHeight)
                                         .padding(Theme.casePadding)
                                 )
@@ -116,9 +115,13 @@ class WhenStatement(
                         HorizontalBorder()
                         Column(Modifier.fillMaxSize()) {
                             StackWithSeparator(it.statements, {
-                                it.Show(Modifier.fillMaxSize(), draggable && !isDragging)
+                                it.Show(
+                                    Modifier.fillMaxWidth(),
+                                    draggable && !isDragging,
+                                    activeStatement
+                                )
                             }, {
-                                commandPlaceHolder(Modifier.fillMaxSize())
+                                commandPlaceHolder(Modifier.fillMaxWidth())
                             }) { HorizontalBorder() }
                         }
                     }
@@ -133,11 +136,16 @@ class WhenStatement(
                         DraggableArea(Modifier, draggable, size) { dragging ->
                             Row(Modifier.dim(dragging)) {
                                 StatementText(
-                                    "", modifier = Modifier.onSizeChanged {
-                                        maxHeight = max(
-                                            maxHeight, (it.height.toFloat() / density.density).dp
-                                        )
-                                    }.elseIndicator().fillMaxWidth()
+                                    "", modifier = Modifier
+                                        .conditional(
+                                            Modifier.background(MaterialTheme.colorScheme.tertiary)
+                                        ) { statement.id == activeStatement }
+                                        .onSizeChanged {
+                                            maxHeight = max(
+                                                maxHeight,
+                                                (it.height.toFloat() / density.density).dp
+                                            )
+                                        }.elseIndicator().fillMaxWidth()
                                         .defaultMinSize(minHeight = maxHeight)
                                         .padding(Theme.elsePadding)
                                 )
@@ -147,7 +155,8 @@ class WhenStatement(
                         StackWithSeparator(elseBranch!!.statements, {
                             it.Show(
                                 Modifier.fillMaxWidth().weight(1f, true),
-                                draggable && !isDragging
+                                draggable && !isDragging,
+                                activeStatement
                             )
                         }, {
                             commandPlaceHolder(Modifier.fillMaxWidth().weight(1f, true))
@@ -161,8 +170,7 @@ class WhenStatement(
 
 @KParcelize
 class Block(
-    var condition: String,
-    var statements: List<ComposableStatement<*>> = listOf()
+    var condition: String, var statements: List<ComposableStatement<*>> = listOf()
 ) : KParcelable
 
 @Preview
