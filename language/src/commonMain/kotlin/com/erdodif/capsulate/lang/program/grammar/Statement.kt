@@ -152,15 +152,21 @@ data class When(
 
     override fun evaluate(env: Environment): EvaluationResult {
         if (blocks.isEmpty()) return AbortEvaluation("When conditions exhausted, Abort happens by definition")
-        val source = blocks.removeAt(env.random.nextInt(blocks.size))
+        val shallowBlocks = blocks.toList().toMutableList()
+        val source = shallowBlocks.removeAt((env.random.nextInt(blocks.size)))
         return source.first.join(env) {
             if (it is VBool) {
                 when {
                     it.value -> EvalSequence(source.second)
-                    blocks.isEmpty() ->
-                        AbortEvaluation("When conditions exhausted, Abort happens by definition")
-
-                    else -> SingleStatement(this@When)
+                    blocks.isEmpty() -> {
+                        if(elseBlock == null){
+                            AbortEvaluation("When conditions exhausted, Abort happens by definition")
+                        }
+                        else{
+                            EvalSequence(elseBlock)
+                        }
+                    }
+                    else -> SingleStatement(this@When.copy(blocks = shallowBlocks))
                 }
             } else {
                 AbortEvaluation("Condition must be a logical expression")
