@@ -68,7 +68,7 @@ fun StatementDrawer(modifier: Modifier = Modifier) {
                         buildString {
                             append("when{\n")
                             for (i in 0..whenCount) {
-                                append("  case${i + 1}: skip,\n")
+                                append("  case${i + 1}: { skip },\n")
                             }
                             append("\n}\n")
                         }).Show(statementModifier)

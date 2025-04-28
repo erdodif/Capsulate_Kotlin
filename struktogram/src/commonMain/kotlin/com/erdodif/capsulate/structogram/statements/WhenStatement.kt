@@ -116,12 +116,12 @@ class WhenStatement(
                         Column(Modifier.fillMaxSize()) {
                             StackWithSeparator(it.statements, {
                                 it.Show(
-                                    Modifier.fillMaxSize(),
+                                    Modifier.fillMaxWidth(),
                                     draggable && !isDragging,
                                     activeStatement
                                 )
                             }, {
-                                commandPlaceHolder(Modifier.fillMaxSize())
+                                commandPlaceHolder(Modifier.fillMaxWidth())
                             }) { HorizontalBorder() }
                         }
                     }

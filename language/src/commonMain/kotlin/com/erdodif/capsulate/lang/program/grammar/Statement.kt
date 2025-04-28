@@ -181,16 +181,19 @@ data class When(
             blocks.fencedForEach { block ->
                 print(block.first.toString(state) + " : ")
                 if (block.second.count() < 2) {
-                    val lines = block.second.firstOrNull()?.onFormat(this, state) ?: print("{ }")
+                    print("{")
+                    val lines = block.second.firstOrNull()?.onFormat(this, state) ?: 0
+                    print("}")
                     print(",")
                     lines + 1
                 } else {
-                    printLine("{")
+                    print("{")
                     val lines = singleCondition@ indent {
                         block.second.fencedForEach {
                             it.onFormat(this, state)
                         }
                     }
+                    breakLine()
                     print("},")
                     lines + 2
                 }
