@@ -157,7 +157,7 @@ val pIndex: Parser<Index> =
         val (id, indexers) = value
         var result: ParserResult<Index> = Pass(Index(id.id, indexers), state, match)
         for (indexer in indexers) {
-            if (indexer.getType(assumptions) !is NUM) {
+            if (!inFunctionScope && indexer.getType(assumptions) !is NUM) {
                 result = Fail(
                     "Tried to use non-number as an indexer (assumed type: ${
                         indexer.getType(assumptions)
